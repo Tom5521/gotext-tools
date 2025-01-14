@@ -10,7 +10,13 @@ import (
 )
 
 func main() {
+	help := pflag.Bool("help", false, "Print this message.")
 	pflag.Parse()
+
+	if *help {
+		pflag.PrintDefaults()
+		return
+	}
 
 	parser, err := parser.NewParser(flags.Input)
 	if err != nil {
