@@ -8,13 +8,13 @@ import (
 	"github.com/gookit/color"
 )
 
-type GetterDef struct {
+type getterDef struct {
 	ID      int
 	Plural  int
 	Context int
 }
 
-var gotextGetter = map[string]GetterDef{
+var gotextGetter = map[string]getterDef{
 	"Get":    {0, -1, -1},
 	"GetN":   {0, 1, -1},
 	"GetD":   {1, -1, -1},
