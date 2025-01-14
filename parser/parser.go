@@ -1,12 +1,12 @@
 package parser
 
 import (
-	"bytes"
 	_ "embed"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/Tom5521/xgotext/flags"
 	"github.com/gookit/color"
@@ -49,15 +49,15 @@ func (p *Parser) Parse() {
 }
 
 func (p *Parser) Compile() []byte {
-	var b bytes.Buffer
-	b.WriteString(fmt.Sprintf(PotHeader, flags.ProjectVersion, flags.Language, flags.Nplurals))
+	var b strings.Builder
+	fmt.Fprintf(&b, PotHeader, flags.ProjectVersion, flags.Language, flags.Nplurals)
 
 	for _, f := range p.files {
 		for _, t := range f.Translations {
 			fmt.Fprintln(&b, t)
 		}
 	}
-	return b.Bytes()
+	return []byte(b.String())
 }
 
 // shouldSkipFile determines if a file should be skipped during processing.
