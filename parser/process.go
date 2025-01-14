@@ -3,134 +3,69 @@ package parser
 import (
 	"go/ast"
 	"go/token"
+	"strconv"
+
+	"github.com/gookit/color"
 )
 
-func (f *File) processMethod(method string, callExpr *ast.CallExpr) (Translation, bool) {
-	switch method {
-	case Get, GetD:
-		return handleSimpleGet(f.path, f.content, methodToIndex(method), callExpr)
-	case GetN:
-		return f.processGetN(callExpr)
-	case GetC:
-		return f.processGetC(callExpr)
-	case GetND:
-		return f.processGetND(callExpr)
-	case GetNC:
-		return f.processGetNC(callExpr)
-	case GetNDC:
-		return f.processGetNDC(callExpr)
-	default:
-		return Translation{}, false
-	}
+type GetterDef struct {
+	ID      int
+	Plural  int
+	Context int
 }
 
-func handleSimpleGet(path, content string, index int, callExpr *ast.CallExpr) (Translation, bool) {
-	id, pos, valid := extractArgument(callExpr, index)
-	if !valid {
-		return Translation{}, false
+var gotextGetter = map[string]GetterDef{
+	"Get":    {0, -1, -1},
+	"GetN":   {0, 1, -1},
+	"GetD":   {1, -1, -1},
+	"GetND":  {1, 2, -1},
+	"GetC":   {0, -1, 1},
+	"GetNC":  {0, 1, 3},
+	"GetDC":  {1, -1, 2},
+	"GetNDC": {1, 2, 4},
+}
+
+func (f *File) processMethod(
+	method string,
+	callExpr *ast.CallExpr,
+) (translation Translation, valid bool) {
+	def := gotextGetter[method]
+
+	id, pos, ok := extractArgument(callExpr, def.ID)
+	if ok {
+		valid = true
+		translation.ID = id
+		translation.Locations = append(
+			translation.Locations,
+			Location{findLine(f.content, pos), f.path},
+		)
 	}
-	return Translation{
-		ID: id,
-		Locations: []Location{
-			{File: path, Line: findLine(content, pos)},
-		},
-	}, true
+
+	context, _, ok := extractArgument(callExpr, def.Context)
+	if ok {
+		translation.Context = context
+	}
+
+	plural, _, ok := extractArgument(callExpr, def.Plural)
+	if ok {
+		translation.Plural = plural
+	}
+
+	return
 }
 
 func extractArgument(callExpr *ast.CallExpr, index int) (string, token.Pos, bool) {
+	if index == -1 {
+		return "", 0, false
+	}
 	basicLit, ok := callExpr.Args[index].(*ast.BasicLit)
 	if !ok {
 		return "", 0, false
 	}
-	content := basicLit.Value[1 : len(basicLit.Value)-1] // Strip surrounding quotes.
+	content, err := strconv.Unquote(basicLit.Value)
+	if err != nil {
+		color.Errorln(err)
+		return "", 0, false
+	}
 	return content, basicLit.ValuePos, true
-}
-
-func (f *File) processGetN(callExpr *ast.CallExpr) (Translation, bool) {
-	translation, valid := handleSimpleGet(f.path, f.content, 0, callExpr)
-	if !valid {
-		return Translation{}, false
-	}
-
-	plural, _, valid := extractArgument(callExpr, 1)
-	if !valid {
-		return Translation{}, false
-	}
-	translation.Plural = plural
-	return translation, true
-}
-
-func (f *File) processGetC(callExpr *ast.CallExpr) (Translation, bool) {
-	translation, valid := handleSimpleGet(f.path, f.content, 0, callExpr)
-	if !valid {
-		return Translation{}, false
-	}
-
-	context, _, valid := extractArgument(callExpr, 1)
-	if !valid {
-		return Translation{}, false
-	}
-
-	translation.Context = context
-
-	return translation, true
-}
-
-func (f *File) processGetND(callExpr *ast.CallExpr) (Translation, bool) {
-	translation, valid := handleSimpleGet(f.path, f.content, 1, callExpr)
-	if !valid {
-		return Translation{}, false
-	}
-
-	plural, _, valid := extractArgument(callExpr, 2)
-	if !valid {
-		return Translation{}, false
-	}
-	translation.Plural = plural
-
-	return translation, true
-}
-
-func (f *File) processGetNC(callExpr *ast.CallExpr) (Translation, bool) {
-	translation, valid := handleSimpleGet(f.path, f.content, 0, callExpr)
-	if !valid {
-		return Translation{}, false
-	}
-
-	plural, _, valid := extractArgument(callExpr, 1)
-	if !valid {
-		return Translation{}, false
-	}
-	translation.Plural = plural
-
-	context, _, valid := extractArgument(callExpr, 3)
-	if !valid {
-		return Translation{}, false
-	}
-
-	translation.Context = context
-
-	return translation, true
-}
-
-func (f *File) processGetNDC(callExpr *ast.CallExpr) (Translation, bool) {
-	translation, valid := handleSimpleGet(f.path, f.content, 1, callExpr)
-	if !valid {
-		return Translation{}, false
-	}
-
-	plural, _, valid := extractArgument(callExpr, 2)
-	if !valid {
-		return Translation{}, false
-	}
-	translation.Plural = plural
-
-	context, _, valid := extractArgument(callExpr, 4)
-	if !valid {
-		return Translation{}, false
-	}
-
-	translation.Context = context
-
-	return translation, true
 }

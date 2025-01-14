@@ -5,7 +5,6 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"slices"
 )
 
 type File struct {
@@ -19,20 +18,6 @@ type File struct {
 }
 
 const WantedImport = `"github.com/leonelquinteros/gotext"`
-
-const (
-	Get    = "Get"
-	GetD   = "GetD"
-	GetN   = "GetN"
-	GetC   = "GetC"
-	GetND  = "GetND"
-	GetNC  = "GetNC"
-	GetNDC = "GetNDC"
-)
-
-var KnownMethods = []string{
-	Get, GetD, GetN, GetC, GetND, GetNC, GetNDC,
-}
 
 func NewFile(path string) (*File, error) {
 	file := &File{path: path}
@@ -95,7 +80,7 @@ func (f *File) ParseTranslations() {
 			return true
 		}
 
-		if !slices.Contains(KnownMethods, selectorExpr.Sel.Name) {
+		if _, ok = gotextGetter[selectorExpr.Sel.Name]; !ok {
 			return true
 		}
 
@@ -107,15 +92,4 @@ func (f *File) ParseTranslations() {
 	})
 
 	f.Translations = cleanDuplicates(f.Translations)
-}
-
-func methodToIndex(method string) int {
-	switch method {
-	case Get:
-		return 0
-	case GetD:
-		return 1
-	default:
-		return -1
-	}
 }
