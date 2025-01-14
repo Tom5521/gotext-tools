@@ -1,0 +1,226 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: ../fsize/filecount/print.go:19
+msgid "Reading \"%s\"..."
+msgstr ""
+
+#: ../fsize/filecount/progress.go:15
+msgid "Counting the amount of files..."
+msgstr ""
+
+#: ../fsize/filecount/progress.go:22
+msgid "%v files with %v errors"
+msgstr ""
+
+#: ../fsize/flags.go:14
+msgid "Displays the file/folder properties."
+msgstr ""
+
+#: ../fsize/flags.go:26
+msgid "Prints the name of the file being walked if a directory has been selected."
+msgstr ""
+
+#: ../fsize/flags.go:29
+msgid "Skips walking inside the directories."
+msgstr ""
+
+#: ../fsize/flags.go:32
+msgid "Displays a file count and progress bar when counting and summing file sizes."
+msgstr ""
+
+#: ../fsize/flags.go:41
+msgid "Prints the current configuration values."
+msgstr ""
+
+#: ../fsize/flags.go:44
+msgid "Hide possible warnings."
+msgstr ""
+
+#: ../fsize/flags.go:62
+msgid ""
+msgstr ""
+
+#: ../fsize/flags.go:70
+msgid "Displays the information of the binary"
+msgstr ""
+
+#: ../fsize/main.go:33
+msgid "ERROR:"
+msgstr ""
+
+#: ../fsize/main.go:51
+msgid "Available configuration keys:"
+msgstr ""
+
+#: ../fsize/main.go:64
+msgid "Already in latest version"
+msgstr ""
+
+#: ../fsize/main.go:78
+msgid "Version:"
+msgstr ""
+
+#: ../fsize/main.go:79
+msgid "Updated:"
+msgstr ""
+
+#: ../fsize/main.go:81
+msgid "Latest version:"
+msgstr ""
+
+#: ../fsize/main.go:84
+msgid "Source Code: %s"
+msgstr ""
+
+#: ../fsize/main.go:88
+msgid "No file/directory was specified, the current directory will be used. (.)"
+msgstr ""
+
+#: ../fsize/settings/main.go:60
+msgid "syntax error"
+msgstr ""
+
+#: ../fsize/settings/main.go:66
+msgid "unrecognized value type \"%s\""
+msgstr ""
+
+#: ../fsize/settings/main.go:69
+msgid "unrecognized key \"%s\""
+msgstr ""
+
+#: ../fsize/stat/file.go:21
+msgid "error getting the corresponding structure from fileinfo.Sys()"
+msgstr ""
+
+#: ../fsize/stat/file.go:23
+msgid "not supported on windows"
+msgstr ""
+
+#: ../fsize/stat/file.go:119
+msgid "Name:"
+msgstr ""
+
+#: ../fsize/stat/file.go:120
+msgid "Size:"
+msgstr ""
+
+#: ../fsize/stat/file.go:121
+msgid "Absolute path:"
+msgstr ""
+
+#: ../fsize/stat/file.go:123
+msgid "Physical path:"
+msgstr ""
+
+#: ../fsize/stat/file.go:125
+msgid "Modify:"
+msgstr ""
+
+#: ../fsize/stat/file.go:126
+msgid "Access:"
+msgstr ""
+
+#: ../fsize/stat/file.go:128
+msgid "Birth:"
+msgstr ""
+
+#: ../fsize/stat/file.go:130
+msgid "Is directory:"
+msgstr ""
+
+#: ../fsize/stat/file.go:131
+msgid "Permissions:"
+msgstr ""
+
+#: ../fsize/stat/file.go:133
+msgid "Number of files:"
+msgstr ""
+
+#: ../fsize/stat/file.go:137
+msgid "UID/User:"
+msgstr ""
+
+#: ../fsize/stat/file.go:138
+msgid "GID/Group:"
+msgstr ""
+
+#: ../fsize/update/main.go:25
+msgid "Checking the latest version available..."
+msgstr ""
+
+#: ../fsize/update/main.go:67
+msgid "NB! It seems that you are in a NixOS."
+msgstr ""
+
+#: ../fsize/update/main.go:68
+msgid "Due to the non-standard filesystem implementation of the environment, the update command may not work as expected."
+msgstr ""
+
+#: ../fsize/update/main.go:76
+msgid "Do you want to proceed with the update?"
+msgstr ""
+
+#: ../fsize/update/main.go:80
+msgid "The command has been cancelled."
+msgstr ""
+
+#: ../fsize/update/main.go:92
+msgid "error renaming the old executable [%s] to: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:97
+msgid "error creating a new http request: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:101
+msgid "error getting http response: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:105
+msgid "Downloading latest version..."
+msgstr ""
+
+#: ../fsize/update/main.go:108
+msgid "Error downloading binary to %s: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:109
+msgid "Reversing changes..."
+msgstr ""
+
+#: ../fsize/update/main.go:125
+msgid "error finishing the progress bar"
+msgstr ""
+
+#: ../fsize/update/main.go:129
+msgid "error removing old executable: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:134
+msgid "error getting current user: %v"
+msgstr ""
+
+#: ../fsize/update/main.go:140
+msgid "The user is not root, the completions will not be updated"
+msgstr ""
+
+#: ../fsize/update/main.go:144
+msgid "Updating completions..."
+msgstr ""
+
+#: ../fsize/update/main.go:151
+msgid "Upgrade completed successfully"
+msgstr ""
+
+#: ../fsize/update/update-completions.go:29
+msgid "%s not found."
+msgstr ""
+

@@ -1,0 +1,6 @@
+builds
+vendor
+*.exe
+*.bin
+*.log
+*.diff
