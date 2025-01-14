@@ -1,14 +1,16 @@
 # xgotext
 
-A command-line tool that extracts message IDs from Go source files for internationalization purposes. The tool scans Go files for calls to the `gotext.Get()` function and generates a POT (Portable Object Template) file that can be used with translation tools.
+A command-line tool for extracting translatable strings from Go source code that uses the [gotext](https://github.com/leonelquinteros/gotext) library for internationalization. This tool generates POT (Portable Object Template) files that can be used with standard translation tools.
 
 ## Features
 
-- Extracts message IDs from single files or entire directories
-- Generates standard POT files with file references and line numbers
-- Supports file exclusion patterns
-- Handles custom import aliases for the gotext package
-- Preserves original message formatting and context
+- Extracts translatable strings from Go source files
+- Supports all gotext translation functions (Get, GetD, GetN, GetC, GetND, GetNC, GetNDC)
+- Handles multi-line strings
+- Preserves context and plural forms
+- Automatically removes duplicates while maintaining source references
+- Supports excluding specific files or directories
+- Provides verbose output option for debugging
 
 ## Installation
 
@@ -24,73 +26,74 @@ Basic usage:
 xgotext --input ./path/to/source --output messages.pot
 ```
 
-### Available Flags
+### Command Line Options
 
 - `--input`: Input file or directory path (default: ".")
 - `--output`: Output POT file path (default: "default.pot")
-- `--proyect-version`: Project version to include in the POT file
+- `--project-version`: Project version to include in the POT file
 - `--lang`: Language code to include in the POT file
+- `--nplurals`: Number of plurals for the target language (default: 2)
 - `--exclude`: Files or directories to exclude from processing (can be specified multiple times)
 - `--verbose`: Enable verbose output
 
 ### Examples
 
-Extract messages from a specific directory:
+Extract strings from current directory:
 
 ```bash
-xgotext --input ./src --output messages.pot
+xgotext --output messages.pot
 ```
 
-Extract messages with project metadata:
+Process a specific directory with version information:
 
 ```bash
-xgotext --input . --output messages.pot --proyect-version "1.0.0" --lang "en-US"
+xgotext --input ./cmd --output messages.pot --project-version "1.0.0"
 ```
 
-Exclude specific files or directories:
+Exclude certain directories:
 
 ```bash
-xgotext --input . --output messages.pot --exclude vendor --exclude "**/*_test.go"
+xgotext --input . --output messages.pot --exclude vendor --exclude tests
 ```
 
-## How It Works
+Enable verbose output:
 
-1. The tool recursively scans Go source files in the specified directory
-2. It looks for imports of the `github.com/leonelquinteros/gotext` package
-3. For files that import gotext, it extracts all strings passed to the `Get()` function
-4. Generates a POT file containing all found message IDs with their source locations
-
-## Generated POT File Format
-
-The tool generates a standard POT file with entries in the following format:
-
-```
-#: path/to/file.go:123
-msgid "Original message"
-msgstr ""
+```bash
+xgotext --input . --output messages.pot --verbose
 ```
 
-## Requirements
+## Supported Translation Functions
 
-- Go 1.21 or higher
-- github.com/leonelquinteros/gotext
-- github.com/spf13/pflag
-- github.com/gookit/color
+The tool extracts strings from the following gotext function calls:
+
+- `gotext.Get(message)`
+- `gotext.GetD(domain, message)`
+- `gotext.GetN(message, plural, n)`
+- `gotext.GetC(message, context)`
+- `gotext.GetND(domain, message, plural, n)`
+- `gotext.GetNC(message, plural, n, context)`
+- `gotext.GetNDC(domain, message, plural, n, context)`
+
+## Output Format
+
+The generated POT file follows the standard gettext format, including:
+
+- Source file references with line numbers
+- Context information when available
+- Plural forms
+- Support for multi-line strings
+- Empty msgstr fields ready for translation
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request to [github.com/Tom5521/xgotext](https://github.com/Tom5521/xgotext).
-
-## TODO:
-
-- Add support for other gotext methods like `GetC`,`GetD`,`GetN`,etc.
-
-- Add support for plurals.
-
-- Refactor to work with a full-fledged parser and not juggle with regex.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This is licensed under the MIT license.
+[MIT Licence](LICENCE)
 
-[LICENCE]
+## Acknowledgments
+
+- [xgotext](https://github.com/leonelquinteros/gotext/tree/master/cli/xgotext) - The reason I did this, their tool does not work.
+- [gotext](https://github.com/leonelquinteros/gotext) - The Go internationalization library this tool is designed to work with
+- [spf13/pflag](https://github.com/spf13/pflag) - Command line flag parsing

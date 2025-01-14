@@ -1,6 +1,6 @@
 module github.com/Tom5521/xgotext
 
-go 1.21
+go 1.22
 
 require (
 	github.com/gookit/color v1.5.4

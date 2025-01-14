@@ -4,3 +4,4 @@ vendor
 *.bin
 *.log
 *.diff
+default.pot
