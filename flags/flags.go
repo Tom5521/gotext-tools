@@ -22,7 +22,7 @@ func init() {
 		"",
 		"Project version to include in the POT file",
 	)
-	pflag.StringVar(&Language, "lang", "", "Language code to include in the POT file")
+	pflag.StringVar(&Language, "lang", "en", "Language code to include in the POT file")
 	pflag.UintVar(
 		&Nplurals,
 		"nplurals",
