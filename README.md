@@ -81,6 +81,14 @@ msgstr ""
 
 Contributions are welcome! Please feel free to submit a Pull Request to [github.com/Tom5521/xgotext](https://github.com/Tom5521/xgotext).
 
+## TODO:
+
+- Add support for other gotext methods like `GetC`,`GetD`,`GetN`,etc.
+
+- Add support for plurals.
+
+- Refactor to work with a full-fledged parser and not juggle with regex.
+
 ## License
 
 This is licensed under the MIT license.
