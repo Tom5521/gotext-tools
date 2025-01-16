@@ -7,10 +7,14 @@ import po "github.com/leonelquinteros/gotext"
 
 // This should cover almost all get methods.
 func main() {
+	po.Get("Hi %s!\n", "stranger")
 	po.Get("Hi %s!", "stranger")
 	po.Get("Hi %s!", "stranger")
 	po.Get(`HIIII %s
 
+"Hello World"
+
+\n
 
 a`, "stranger")
 	po.GetC("Hi %s!", "formal", "stranger") // Hello stranger!

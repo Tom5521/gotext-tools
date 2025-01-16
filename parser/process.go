@@ -31,41 +31,54 @@ func (f *File) processMethod(
 ) (translation Translation, valid bool) {
 	def := gotextGetter[method]
 
-	id, pos, ok := extractArgument(callExpr, def.ID)
-	if ok {
-		valid = true
-		translation.ID = id
+	id := extractArgument(callExpr, def.ID)
+	valid = id.valid
+	if id.valid {
+		translation.ID = id.str
 		translation.Locations = append(
 			translation.Locations,
-			Location{findLine(f.content, pos), f.path},
+			Location{findLine(f.content, id.pos), f.path},
 		)
 	}
-
-	context, _, ok := extractArgument(callExpr, def.Context)
-	if ok {
-		translation.Context = context
+	context := extractArgument(callExpr, def.Context)
+	if context.valid {
+		translation.Context = context.str
 	}
-
-	plural, _, ok := extractArgument(callExpr, def.Plural)
-	if ok {
-		translation.Plural = plural
+	plural := extractArgument(callExpr, def.Plural)
+	if plural.valid {
+		translation.Plural = plural.str
 	}
 
 	return
 }
 
-func extractArgument(callExpr *ast.CallExpr, index int) (string, token.Pos, bool) {
+type arg struct {
+	str   string
+	valid bool
+	pos   token.Pos
+}
+
+func extractArgument(callExpr *ast.CallExpr, index int) (a arg) {
 	if index == -1 {
-		return "", 0, false
+		return
 	}
 	basicLit, ok := callExpr.Args[index].(*ast.BasicLit)
 	if !ok {
-		return "", 0, false
+		return
 	}
+	if basicLit.Kind != token.STRING {
+		return
+	}
+
 	content, err := strconv.Unquote(basicLit.Value)
 	if err != nil {
 		color.Errorln(err)
-		return "", 0, false
+		return
 	}
-	return content, basicLit.ValuePos, true
+
+	return arg{
+		str:   content,
+		valid: true,
+		pos:   basicLit.Pos(),
+	}
 }
