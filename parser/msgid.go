@@ -31,7 +31,7 @@ func (t Translation) String() string {
 	plural := formatString(t.Plural)
 
 	for _, location := range t.Locations {
-		fprintfln("# %s:%d", location.File, location.Line)
+		fprintfln("#: %s:%d", location.File, location.Line)
 	}
 
 	if t.Context != "" {
