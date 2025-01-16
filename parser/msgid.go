@@ -60,13 +60,18 @@ func formatString(str string) string {
 func formatMultiline(str string) string {
 	var builder strings.Builder
 	builder.Grow(len(str) * 2)
-	lines := strings.Split(str, "\n")
-	for i, line := range lines {
-		fmt.Fprintf(&builder, `"%s"`, line)
-		if i != len(lines)-1 {
-			builder.WriteRune('\n')
+
+	builder.WriteRune('"')
+
+	for _, char := range str {
+		if char == '\n' {
+			builder.WriteString("\\n")
+			continue
 		}
+		builder.WriteRune(char)
 	}
+
+	builder.WriteRune('"')
 
 	return builder.String()
 }
