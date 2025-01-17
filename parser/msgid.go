@@ -3,8 +3,6 @@ package parser
 import (
 	"fmt"
 	"strings"
-
-	"github.com/Tom5521/xgotext/flags"
 )
 
 type Location struct {
@@ -19,7 +17,7 @@ type Translation struct {
 	Locations []Location
 }
 
-func (t Translation) String() string {
+func (t Translation) Format(nplurals uint) string {
 	var builder strings.Builder
 
 	fprintfln := func(format string, args ...any) {
@@ -42,7 +40,7 @@ func (t Translation) String() string {
 
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		for i := range flags.Nplurals {
+		for i := range nplurals {
 			fprintfln(`msgstr[%d] ""`, i)
 		}
 	} else {

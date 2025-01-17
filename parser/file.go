@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -62,7 +63,7 @@ func (f *File) determinePackageName() {
 	}
 }
 
-func (f *File) ParseTranslations() {
+func (f *File) ParseTranslations() (errs []error) {
 	f.Translations = nil
 	ast.Inspect(f.file, func(node ast.Node) bool {
 		callExpr, ok := node.(*ast.CallExpr)
@@ -84,12 +85,19 @@ func (f *File) ParseTranslations() {
 			return true
 		}
 
-		translation, valid := f.processMethod(selectorExpr.Sel.Name, callExpr)
-		if valid {
+		translation, valid, err := f.processMethod(selectorExpr.Sel.Name, callExpr)
+		if err != nil {
+			errs = append(
+				errs,
+				fmt.Errorf("[%s:%d] %w", f.path, findLine(f.content, selectorExpr.Pos()), err),
+			)
+		}
+		if valid && err == nil {
 			f.Translations = append(f.Translations, translation)
 		}
 		return true
 	})
 
 	f.Translations = cleanDuplicates(f.Translations)
+	return
 }
