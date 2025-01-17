@@ -7,61 +7,76 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-
-	"github.com/Tom5521/xgotext/flags"
-	"github.com/gookit/color"
 )
 
 //go:embed template.pot
 var PotHeader string
 
 type Parser struct {
-	files []*File
+	OnWalk func(string, fs.FileInfo, error)
+
+	files   []*File
+	exclude []string
+	seen    map[string]bool
 }
 
-func NewParser(path string) (p *Parser, err error) {
-	p = &Parser{}
-	err = filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
-		if shouldSkipFile(path, info, err, flags.Exclude) {
+func NewParser(exclude []string, paths ...string) (p *Parser, err error) {
+	p = &Parser{
+		exclude: exclude,
+		seen:    make(map[string]bool),
+	}
+	for _, path := range paths {
+		err = filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
+			if p.shouldSkipFile(path, info, err) {
+				return nil
+			}
+
+			if p.OnWalk != nil {
+				p.OnWalk(path, info, err)
+			}
+
+			file, err := NewFile(path)
+			if err != nil {
+				return err
+			}
+			p.files = append(p.files, file)
+
 			return nil
-		}
-
-		if flags.Verbose {
-			fmt.Println(path)
-		}
-
-		file, err := NewFile(path)
+		})
 		if err != nil {
-			return err
+			return nil, err
 		}
-		p.files = append(p.files, file)
-
-		return nil
-	})
+	}
 
 	return
 }
 
-func (p *Parser) Parse() {
+func (p *Parser) Parse() (errs []error) {
 	for _, f := range p.files {
-		f.ParseTranslations()
+		errs = append(errs, f.ParseTranslations()...)
 	}
+
+	return
 }
 
-func (p *Parser) Compile() []byte {
+func (p Parser) Files() []*File {
+	return p.files
+}
+
+func (p *Parser) Compile(version, lang string, plurals uint) []byte {
 	var b strings.Builder
-	fmt.Fprintf(&b, PotHeader, flags.ProjectVersion, flags.Language, flags.Nplurals)
+	fmt.Fprintf(&b, PotHeader, version, lang, plurals)
 
 	for _, f := range p.files {
 		for _, t := range f.Translations {
-			fmt.Fprintln(&b, t)
+			fmt.Fprintln(&b, t.Format(plurals))
 		}
 	}
 	return []byte(b.String())
 }
 
 // shouldSkipFile determines if a file should be skipped during processing.
-func shouldSkipFile(path string, info fs.FileInfo, err error, exclude []string) bool {
+func (p Parser) shouldSkipFile(path string, info fs.FileInfo, err error) bool {
 	if err != nil || info.IsDir() {
 		return true
 	}
@@ -70,24 +85,25 @@ func shouldSkipFile(path string, info fs.FileInfo, err error, exclude []string) 
 		return true
 	}
 
-	return isExcludedPath(path, exclude)
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return true
+	}
+
+	_, seen := p.seen[abs]
+	if seen {
+		return true
+	}
+	p.seen[abs] = true
+
+	return p.isExcludedPath(path)
 }
 
 // isExcludedPath checks if a path is in the exclude list.
-func isExcludedPath(path string, exclude []string) bool {
-	return slices.ContainsFunc(exclude, func(s string) bool {
-		abs1, err := filepath.Abs(s)
-		if err != nil {
-			color.Errorln(err)
-			return false
-		}
-
-		abs2, err := filepath.Abs(path)
-		if err != nil {
-			color.Errorln(err)
-			return false
-		}
-
-		return abs1 == abs2
+func (p Parser) isExcludedPath(path string) bool {
+	return slices.ContainsFunc(p.exclude, func(s string) bool {
+		abs1, err1 := filepath.Abs(s)
+		abs2, err2 := filepath.Abs(path)
+		return (abs1 == abs2) && (err1 == nil && err2 == nil)
 	})
 }

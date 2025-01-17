@@ -1,11 +1,10 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"strconv"
-
-	"github.com/gookit/color"
 )
 
 type getterDef struct {
@@ -28,11 +27,15 @@ var gotextGetter = map[string]getterDef{
 func (f *File) processMethod(
 	method string,
 	callExpr *ast.CallExpr,
-) (translation Translation, valid bool) {
+) (translation Translation, valid bool, err error) {
 	def := gotextGetter[method]
 
-	id := extractArgument(callExpr, def.ID)
-	valid = id.valid
+	id, err := extractArgument(callExpr, def.ID)
+	valid = id.valid && err == nil
+	if err != nil {
+		err = fmt.Errorf("error extracting msgid: %w", err)
+		return
+	}
 	if id.valid {
 		translation.ID = id.str
 		translation.Locations = append(
@@ -40,11 +43,19 @@ func (f *File) processMethod(
 			Location{findLine(f.content, id.pos), f.path},
 		)
 	}
-	context := extractArgument(callExpr, def.Context)
+	context, err := extractArgument(callExpr, def.Context)
+	if err != nil {
+		err = fmt.Errorf("error extracting context: %w", err)
+		return
+	}
 	if context.valid {
 		translation.Context = context.str
 	}
-	plural := extractArgument(callExpr, def.Plural)
+	plural, err := extractArgument(callExpr, def.Plural)
+	if err != nil {
+		err = fmt.Errorf("error extracting plural: %w", err)
+		return
+	}
 	if plural.valid {
 		translation.Plural = plural.str
 	}
@@ -58,27 +69,26 @@ type arg struct {
 	pos   token.Pos
 }
 
-func extractArgument(callExpr *ast.CallExpr, index int) (a arg) {
+func extractArgument(callExpr *ast.CallExpr, index int) (arg, error) {
 	if index == -1 {
-		return
+		return arg{}, nil
 	}
 	basicLit, ok := callExpr.Args[index].(*ast.BasicLit)
 	if !ok {
-		return
+		return arg{}, nil
 	}
 	if basicLit.Kind != token.STRING {
-		return
+		return arg{}, fmt.Errorf("unexpected type: %v, expected: %v", token.STRING, basicLit.Kind)
 	}
 
 	content, err := strconv.Unquote(basicLit.Value)
 	if err != nil {
-		color.Errorln(err)
-		return
+		return arg{}, fmt.Errorf("error unquoting the argument value: %w", err)
 	}
 
 	return arg{
 		str:   content,
 		valid: true,
 		pos:   basicLit.Pos(),
-	}
+	}, nil
 }
