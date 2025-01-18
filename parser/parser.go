@@ -63,14 +63,18 @@ func (p Parser) Files() []*File {
 	return p.files
 }
 
-func (p *Parser) Compile(version, lang string, plurals uint) []byte {
+func (p Parser) Compile(version, lang string, plurals uint) []byte {
 	var b strings.Builder
 	fmt.Fprintf(&b, PotHeader, version, lang, plurals)
 
+	var translations []Translation
+
 	for _, f := range p.files {
-		for _, t := range f.Translations {
-			fmt.Fprintln(&b, t.Format(plurals))
-		}
+		translations = append(translations, f.Translations...)
+	}
+	translations = cleanDuplicates(translations)
+	for _, t := range translations {
+		fmt.Fprintln(&b, t.Format(plurals))
 	}
 	return []byte(b.String())
 }
