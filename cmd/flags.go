@@ -6,30 +6,31 @@ var (
 	directory string
 	exclude   []string
 	// Output.
-	defaultDomain   string
-	output          string
-	outputDir       string
-	forcePo         bool
-	noLocation      bool
-	addLocation     string
-	omitHeader      bool
-	copyrightHolder string
-	packageName     string
-	packageVersion  string
-	msgstrPrefix    string
-	msgstrSuffix    string
-	lang            string
+	defaultDomain  string
+	output         string
+	outputDir      string
+	forcePo        bool
+	noLocation     bool
+	addLocation    string
+	omitHeader     bool
+	packageName    string
+	packageVersion string
+	msgstrPrefix   string
+	msgstrSuffix   string
+	lang           string
 	// Operation Mode.
 	joinExisting bool
 	excludeFile  string
 	nplurals     uint
 	// Other.
 	extractAll bool
+	verbose    bool
 )
 
 func init() {
 	flag := root.Flags()
 
+	flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
 	flag.StringSliceVarP(&exclude, "exclude", "X", nil, "Specifies which files will be omitted.")
 	flag.BoolVarP(&extractAll, "extract-all", "a", false, "Extract all strings.")
 	flag.StringVarP(
@@ -98,14 +99,6 @@ The optional type can be either ‘full’, ‘file’, or ‘never’. If it is
 		"omit-header",
 		false,
 		`Don’t write header with ‘msgid ""’ entry. Note: Using this option may lead to an error in subsequent operations if the output contains non-ASCII characters.`,
-	)
-	flag.StringVar(
-		&copyrightHolder,
-		"copyright-holder",
-		"",
-		`Set the copyright holder in the output. string should specify the copyright holder of the surrounding package. (Note that the msgstr strings, extracted from the package’s sources, belong to the copyright holder of the package.) Translators are expected to transfer or disclaim the copyright for their translations, so that package maintainers can distribute them without legal risk.
-
-If string is empty, the copyright holder field is omitted entirely from the output files, leaving no explicit indication of copyright ownership. This implies that translators should take appropriate steps to ensure the distribution is legally permissible, such as disclaiming their copyright.`,
 	)
 	flag.StringVar(
 		&packageName,

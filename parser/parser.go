@@ -13,29 +13,28 @@ import (
 var PotHeader string
 
 type Parser struct {
-	OnWalk func(string, fs.FileInfo, error)
+	Config Config
 
-	files   []*File
-	exclude []string
-	seen    map[string]bool
+	files []*File
+	seen  map[string]bool
 }
 
-func NewParser(exclude []string, paths ...string) (p *Parser, err error) {
-	p = &Parser{
-		exclude: exclude,
-		seen:    make(map[string]bool),
+func NewParser(cfg Config) (p *Parser, err error) {
+	cfgErrs := cfg.Validate()
+	if len(cfgErrs) > 0 {
+		return nil, fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
 	}
-	for _, path := range paths {
+	p = &Parser{
+		Config: cfg,
+		seen:   make(map[string]bool),
+	}
+	for _, path := range cfg.Files {
 		err = filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
 			if p.shouldSkipFile(path, info, err) {
 				return nil
 			}
 
-			if p.OnWalk != nil {
-				p.OnWalk(path, info, err)
-			}
-
-			file, err := NewFile(path)
+			file, err := unsafeNewFile(path, cfg)
 			if err != nil {
 				return err
 			}
@@ -105,7 +104,7 @@ func (p Parser) shouldSkipFile(path string, info fs.FileInfo, err error) bool {
 
 // isExcludedPath checks if a path is in the exclude list.
 func (p Parser) isExcludedPath(path string) bool {
-	return slices.ContainsFunc(p.exclude, func(s string) bool {
+	return slices.ContainsFunc(p.Config.Exclude, func(s string) bool {
 		abs1, err1 := filepath.Abs(s)
 		abs2, err2 := filepath.Abs(path)
 		return (abs1 == abs2) && (err1 == nil && err2 == nil)

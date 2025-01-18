@@ -11,6 +11,7 @@ import (
 type File struct {
 	Translations []Translation
 
+	config    Config
 	file      *ast.File
 	content   string
 	path      string
@@ -20,8 +21,19 @@ type File struct {
 
 const WantedImport = `"github.com/leonelquinteros/gotext"`
 
-func NewFile(path string) (*File, error) {
-	file := &File{path: path}
+func NewFile(path string, cfg Config) (*File, error) {
+	cfgErrs := cfg.Validate()
+	if len(cfgErrs) > 0 {
+		return nil, fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
+	}
+	return unsafeNewFile(path, cfg)
+}
+
+func unsafeNewFile(path string, cfg Config) (*File, error) {
+	file := &File{
+		path:   path,
+		config: cfg,
+	}
 	if err := file.generateAST(); err != nil {
 		return nil, err
 	}
