@@ -1,11 +1,10 @@
 package cmd
 
-import "github.com/spf13/pflag"
-
 var (
 	// Input.
 	filesFrom string
 	directory string
+	exclude   []string
 	// Output.
 	defaultDomain   string
 	output          string
@@ -22,46 +21,63 @@ var (
 	lang            string
 	// Operation Mode.
 	joinExisting bool
-	excludeFile  []string
-	addComments  string
+	excludeFile  string
 	nplurals     uint
 	// Other.
 	extractAll bool
 )
 
 func init() {
-	pflag.StringVarP(&lang, "lang", "l", "en", "Language code to include in the POT file")
-	pflag.Uint("nplurals", 2, "Specify the number of plurals forms of the language in question")
-	pflag.StringVarP(&filesFrom, "files-from", "f", "", "get list of input files from FILE")
-	pflag.StringVarP(
+	flag := root.Flags()
+
+	flag.StringSliceVarP(&exclude, "exclude", "X", nil, "Specifies which files will be omitted.")
+	flag.BoolVarP(&extractAll, "extract-all", "a", false, "Extract all strings.")
+	flag.StringVarP(
+		&excludeFile,
+		"exclude-file",
+		"x",
+		"",
+		"Entries from file are not extracted. file should be a PO or POT file.",
+	)
+	flag.BoolVarP(&joinExisting, "join-existing", "j", false, "Join messages with existing file.")
+	flag.StringVarP(&lang, "lang", "l", "en", "Language code to include in the POT file")
+	flag.UintVar(
+		&nplurals,
+		"nplurals",
+		2,
+		"Specify the number of plurals forms of the language in question",
+	)
+	flag.StringVarP(&filesFrom, "files-from", "f", "", "get list of input files from FILE")
+	flag.StringVarP(
 		&directory,
 		"directory",
 		"D",
 		"",
 		"add DIRECTORY to list for input files search\nIf input file is -, standard input is read.",
 	)
-	pflag.StringVarP(
+	flag.StringVarP(
 		&defaultDomain,
 		"default-domain",
 		"d",
 		"default",
 		"use NAME.pot for output (instead of default.pot)",
 	)
-	pflag.StringVarP(&output, "output", "o", "", "write output to specified file")
-	pflag.StringVarP(
+	flag.StringVarP(&output, "output", "o", "", "write output to specified file")
+	flag.StringVarP(
 		&outputDir,
 		"output-dir",
 		"p",
 		"",
-		"output files will be placed in directory DIR\nIf output file is -, output is written to standard output.",
+		`output files will be placed in directory DIR
+If output file is -, output is written to standard output.`,
 	)
-	pflag.BoolVar(
+	flag.BoolVar(
 		&forcePo,
 		"force-po",
 		false,
 		"Always write an output file even if no message is defined.",
 	)
-	pflag.BoolVarP(
+	flag.BoolVarP(
 		&noLocation,
 		"no-location",
 		"n",
@@ -69,7 +85,7 @@ func init() {
 		"Do not write ‘#: filename:line’ lines. Note that using this option makes it harder for technically skilled translators to understand each message’s context.",
 	)
 
-	pflag.StringVar(
+	flag.StringVar(
 		&addLocation,
 		"add-location",
 		"full",
@@ -77,13 +93,13 @@ func init() {
 
 The optional type can be either ‘full’, ‘file’, or ‘never’. If it is not given or ‘full’, it generates the lines with both file name and line number. If it is ‘file’, the line number part is omitted. If it is ‘never’, it completely suppresses the lines (same as --no-location). `,
 	)
-	pflag.BoolVar(
+	flag.BoolVar(
 		&omitHeader,
 		"omit-header",
 		false,
 		`Don’t write header with ‘msgid ""’ entry. Note: Using this option may lead to an error in subsequent operations if the output contains non-ASCII characters.`,
 	)
-	pflag.StringVar(
+	flag.StringVar(
 		&copyrightHolder,
 		"copyright-holder",
 		"",
@@ -91,26 +107,26 @@ The optional type can be either ‘full’, ‘file’, or ‘never’. If it is
 
 If string is empty, the copyright holder field is omitted entirely from the output files, leaving no explicit indication of copyright ownership. This implies that translators should take appropriate steps to ensure the distribution is legally permissible, such as disclaiming their copyright.`,
 	)
-	pflag.StringVar(
+	flag.StringVar(
 		&packageName,
 		"package-name",
 		"",
 		"Set the package name in the header of the output.",
 	)
-	pflag.StringVar(
+	flag.StringVar(
 		&packageVersion,
 		"package-version",
 		"",
 		"Set the package version in the header of the output. This option has an effect only if the ‘--package-name’ option is also used.",
 	)
-	pflag.StringVarP(
+	flag.StringVarP(
 		&msgstrPrefix,
 		"msgstr-prefix",
 		"m",
 		"",
 		`Use string (or "" if not specified) as prefix for msgstr values.`,
 	)
-	pflag.StringVarP(
+	flag.StringVarP(
 		&msgstrSuffix,
 		"msgstr-suffix",
 		"M",
