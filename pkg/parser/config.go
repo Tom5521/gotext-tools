@@ -2,13 +2,20 @@ package parser
 
 import (
 	"errors"
+	"io"
+	"slices"
 )
 
 type Config struct {
-	Files          []string
-	DefaultDomain  string
-	Output         string
-	OutputDir      string
+	Files         []string
+	InputContent  []byte
+	DefaultDomain string
+	Output        string
+	OutputDir     string
+
+	FallbackOutput io.Writer // is used in case the output is -
+	FallbackInput  io.Reader // is used in case the input is -
+
 	ForcePo        bool
 	NoLocation     bool
 	AddLocation    string
@@ -53,11 +60,24 @@ func (c Config) Validate() (errs []error) {
 	}
 
 	if c.NoLocation && c.AddLocation != "never" {
-		errs = append(errs, errors.New("NoLocation and AddLocation are in conflict"))
+		errs = append(errs, errors.New("noLocation and AddLocation are in conflict"))
 	}
 
 	if c.Nplurals == 0 {
 		errs = append(errs, errors.New("nplurals is equal to 0"))
+	}
+
+	if c.Output == "-" && c.FallbackOutput == nil {
+		errs = append(errs, errors.New("output is \"-\", but no fallback has been loaded"))
+	}
+	if len(c.Files) == 1 {
+		if c.Files[0] == "-" && c.FallbackInput == nil {
+			errs = append(errs, errors.New("input is \"-\", but no fallback has been loaded"))
+		}
+	} else if len(c.Files) > 1 {
+		if slices.Contains(c.Files, "-") {
+			errs = append(errs, errors.New("incompatible sources were specified"))
+		}
 	}
 
 	return

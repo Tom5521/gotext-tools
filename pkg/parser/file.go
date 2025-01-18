@@ -6,11 +6,10 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"strconv"
 )
 
 type File struct {
-	Translations []Translation
-
 	config    Config
 	file      *ast.File
 	content   string
@@ -37,8 +36,7 @@ func unsafeNewFile(path string, cfg Config) (*File, error) {
 	if err := file.generateAST(); err != nil {
 		return nil, err
 	}
-	file.determineHasGotext()
-	file.determinePackageName()
+	file.determinePackageInfo()
 	return file, nil
 }
 
@@ -54,19 +52,11 @@ func (f *File) generateAST() error {
 	return err
 }
 
-func (f *File) determineHasGotext() {
-	for _, imprt := range f.file.Imports {
-		if imprt.Path.Value == WantedImport {
-			f.hasGotext = true
-			break
-		}
-	}
-}
-
-func (f *File) determinePackageName() {
+func (f *File) determinePackageInfo() {
 	f.pkgName = "gotext"
 	for _, imprt := range f.file.Imports {
-		if imprt.Path.Value == WantedImport {
+		f.hasGotext = imprt.Path.Value == WantedImport
+		if f.hasGotext {
 			if imprt.Name != nil {
 				f.pkgName = imprt.Name.String()
 			}
@@ -75,27 +65,36 @@ func (f *File) determinePackageName() {
 	}
 }
 
-func (f *File) ParseTranslations() (errs []error) {
-	f.Translations = nil
-	ast.Inspect(f.file, func(node ast.Node) bool {
-		callExpr, ok := node.(*ast.CallExpr)
-		if !ok {
-			return true
+func (f *File) shouldSkip(n ast.Node) bool {
+	if callExpr, ok := n.(*ast.CallExpr); ok {
+		if selectorExpr, ok := callExpr.Fun.(*ast.SelectorExpr); ok {
+			if ident, ok := selectorExpr.X.(*ast.Ident); ok {
+				if ident.Name != f.pkgName {
+					return true
+				}
+				if _, ok = gotextGetter[selectorExpr.Sel.Name]; ok {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
+}
+
+func (f *File) extract() (translations []Translation, errs []error) {
+	for node := range InspectNode(f.file) {
+		if f.shouldSkip(node) {
+			if f.config.ExtractAll {
+				t, e := f.processString(node)
+				translations = append(translations, t...)
+				errs = append(errs, e...)
+			}
+			continue
 		}
 
-		selectorExpr, ok := callExpr.Fun.(*ast.SelectorExpr)
-		if !ok {
-			return true
-		}
-
-		ident, ok := selectorExpr.X.(*ast.Ident)
-		if !ok || ident.Name != f.pkgName {
-			return true
-		}
-
-		if _, ok = gotextGetter[selectorExpr.Sel.Name]; !ok {
-			return true
-		}
+		callExpr := node.(*ast.CallExpr)
+		selectorExpr := callExpr.Fun.(*ast.SelectorExpr)
 
 		translation, valid, err := f.processMethod(selectorExpr.Sel.Name, callExpr)
 		if err != nil {
@@ -105,11 +104,45 @@ func (f *File) ParseTranslations() (errs []error) {
 			)
 		}
 		if valid && err == nil {
-			f.Translations = append(f.Translations, translation)
+			translations = append(translations, translation)
 		}
-		return true
-	})
+	}
 
-	f.Translations = cleanDuplicates(f.Translations)
+	translations = cleanDuplicates(translations)
 	return
+}
+
+func (f *File) processString(n ast.Node) (translations []Translation, errs []error) {
+	if basicLit, ok := n.(*ast.BasicLit); ok {
+		if basicLit.Kind == token.STRING {
+			line := findLine(f.content, basicLit.Pos())
+			content, err := strconv.Unquote(basicLit.Value)
+			if err != nil {
+				errs = append(
+					errs,
+					fmt.Errorf(
+						"error extracting string in %s line %d: %w",
+						f.path,
+						line,
+						err,
+					),
+				)
+				return
+			}
+			translations = append(translations,
+				Translation{
+					ID: content,
+					Locations: []Location{
+						{line, f.path},
+					},
+				},
+			)
+		}
+	}
+
+	return
+}
+
+func (f *File) ParseTranslations() (translations []Translation, errs []error) {
+	return f.extract()
 }

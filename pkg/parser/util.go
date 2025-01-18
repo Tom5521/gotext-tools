@@ -1,9 +1,16 @@
 package parser
 
 import (
+	"go/ast"
 	"go/token"
 	"strings"
 )
+
+func InspectNode(root ast.Node) func(func(ast.Node) bool) {
+	return func(f func(ast.Node) bool) {
+		ast.Inspect(root, f)
+	}
+}
 
 // findLine returns the line number for a given index in the string.
 // Returns -1 if the index is out of bounds.

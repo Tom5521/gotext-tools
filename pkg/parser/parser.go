@@ -15,8 +15,9 @@ var PotHeader string
 type Parser struct {
 	Config Config
 
-	files []*File
-	seen  map[string]bool
+	translations []Translation
+	files        []*File
+	seen         map[string]bool
 }
 
 func NewParser(cfg Config) (p *Parser, err error) {
@@ -52,7 +53,9 @@ func NewParser(cfg Config) (p *Parser, err error) {
 
 func (p *Parser) Parse() (errs []error) {
 	for _, f := range p.files {
-		errs = append(errs, f.ParseTranslations()...)
+		t, e := f.ParseTranslations()
+		errs = append(errs, e...)
+		p.translations = append(p.translations, t...)
 	}
 
 	return
@@ -62,18 +65,15 @@ func (p Parser) Files() []*File {
 	return p.files
 }
 
-func (p Parser) Compile(version, lang string, plurals uint) []byte {
+func (p Parser) Compile() []byte {
 	var b strings.Builder
-	fmt.Fprintf(&b, PotHeader, version, lang, plurals)
-
+	fmt.Fprintf(&b, PotHeader, p.Config.PackageVersion, p.Config.Language, p.Config.Nplurals)
 	var translations []Translation
+	copy(translations, p.translations)
 
-	for _, f := range p.files {
-		translations = append(translations, f.Translations...)
-	}
 	translations = cleanDuplicates(translations)
 	for _, t := range translations {
-		fmt.Fprintln(&b, t.Format(plurals))
+		fmt.Fprintln(&b, t.Format(p.Config.Nplurals))
 	}
 	return []byte(b.String())
 }
