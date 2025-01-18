@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"fmt"
+	"errors"
 )
 
 type Config struct {
@@ -38,26 +38,26 @@ func DefaultConfig() Config {
 
 func (c Config) Validate() (errs []error) {
 	if len(c.Files) == 0 {
-		errs = append(errs, fmt.Errorf("there are no input files"))
+		errs = append(errs, errors.New("there are no input files"))
 	}
 	if c.Output == "" {
-		errs = append(errs, fmt.Errorf("there must be an output"))
+		errs = append(errs, errors.New("there must be an output"))
 	}
 
 	if c.Output != "" && c.OutputDir != "" {
-		errs = append(errs, fmt.Errorf("Output and OutputDir options are mutually exclusive"))
+		errs = append(errs, errors.New("output and OutputDir options are mutually exclusive"))
 	}
 
 	if c.Output == "" && c.OutputDir == "" {
-		errs = append(errs, fmt.Errorf("there are no outputs"))
+		errs = append(errs, errors.New("there are no outputs"))
 	}
 
 	if c.NoLocation && c.AddLocation != "never" {
-		errs = append(errs, fmt.Errorf("NoLocation and AddLocation are in conflict"))
+		errs = append(errs, errors.New("NoLocation and AddLocation are in conflict"))
 	}
 
 	if c.Nplurals == 0 {
-		errs = append(errs, fmt.Errorf("Npluras is equal to 0"))
+		errs = append(errs, errors.New("nplurals is equal to 0"))
 	}
 
 	return
