@@ -7,10 +7,14 @@ import (
 	"go/token"
 	"os"
 	"strconv"
+
+	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/xgotext/pkg/poconfig"
+	"github.com/Tom5521/xgotext/pkg/poentry"
 )
 
 type File struct {
-	config    Config
+	config    poconfig.Config
 	file      *ast.File
 	content   string
 	path      string
@@ -20,7 +24,7 @@ type File struct {
 
 const WantedImport = `"github.com/leonelquinteros/gotext"`
 
-func NewFile(path string, cfg Config) (*File, error) {
+func NewFile(path string, cfg poconfig.Config) (*File, error) {
 	cfgErrs := cfg.Validate()
 	if len(cfgErrs) > 0 {
 		return nil, fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
@@ -28,7 +32,7 @@ func NewFile(path string, cfg Config) (*File, error) {
 	return unsafeNewFile(path, cfg)
 }
 
-func unsafeNewFile(path string, cfg Config) (*File, error) {
+func unsafeNewFile(path string, cfg poconfig.Config) (*File, error) {
 	file := &File{
 		path:   path,
 		config: cfg,
@@ -82,12 +86,14 @@ func (f *File) shouldSkip(n ast.Node) bool {
 	return true
 }
 
-func (f *File) extract() (translations []Translation, errs []error) {
+func (f *File) extract() (ts []poentry.Translation, errs []error) {
 	for node := range InspectNode(f.file) {
 		if f.shouldSkip(node) {
+			// This is probably broken.
+			// TODO: Fix this.
 			if f.config.ExtractAll {
 				t, e := f.processString(node)
-				translations = append(translations, t...)
+				ts = append(ts, t...)
 				errs = append(errs, e...)
 			}
 			continue
@@ -100,22 +106,22 @@ func (f *File) extract() (translations []Translation, errs []error) {
 		if err != nil {
 			errs = append(
 				errs,
-				fmt.Errorf("[%s:%d] %w", f.path, findLine(f.content, selectorExpr.Pos()), err),
+				fmt.Errorf("[%s:%d] %w", f.path, util.FindLine(f.content, selectorExpr.Pos()), err),
 			)
 		}
 		if valid && err == nil {
-			translations = append(translations, translation)
+			ts = append(ts, translation)
 		}
 	}
 
-	translations = cleanDuplicates(translations)
+	ts = util.CleanDuplicates(ts)
 	return
 }
 
-func (f *File) processString(n ast.Node) (translations []Translation, errs []error) {
+func (f *File) processString(n ast.Node) (ts []poentry.Translation, errs []error) {
 	if basicLit, ok := n.(*ast.BasicLit); ok {
 		if basicLit.Kind == token.STRING {
-			line := findLine(f.content, basicLit.Pos())
+			line := util.FindLine(f.content, basicLit.Pos())
 			content, err := strconv.Unquote(basicLit.Value)
 			if err != nil {
 				errs = append(
@@ -129,10 +135,10 @@ func (f *File) processString(n ast.Node) (translations []Translation, errs []err
 				)
 				return
 			}
-			translations = append(translations,
-				Translation{
+			ts = append(ts,
+				poentry.Translation{
 					ID: content,
-					Locations: []Location{
+					Locations: []poentry.Location{
 						{line, f.path},
 					},
 				},
@@ -143,6 +149,6 @@ func (f *File) processString(n ast.Node) (translations []Translation, errs []err
 	return
 }
 
-func (f *File) ParseTranslations() (translations []Translation, errs []error) {
+func (f *File) ParseTranslations() (translations []poentry.Translation, errs []error) {
 	return f.extract()
 }

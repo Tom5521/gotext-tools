@@ -3,59 +3,46 @@ package parser
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"io/fs"
 	"path/filepath"
 	"slices"
-	"strings"
+
+	"github.com/Tom5521/xgotext/pkg/poconfig"
+	"github.com/Tom5521/xgotext/pkg/poentry"
 )
 
-//go:embed template.pot
-var PotHeader string
-
 type Parser struct {
-	Config Config
+	Config poconfig.Config
 
-	translations []Translation
-	files        []*File
-	seen         map[string]bool
+	files []*File
+	seen  map[string]bool
 }
 
-func NewParser(cfg Config) (p *Parser, err error) {
+func NewParser(cfg poconfig.Config) (p *Parser, err error) {
+	return
+}
+
+func newBaseParser(cfg poconfig.Config) (*Parser, error) {
 	cfgErrs := cfg.Validate()
 	if len(cfgErrs) > 0 {
 		return nil, fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
 	}
-	p = &Parser{
+	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
-	}
-	for _, path := range cfg.Files {
-		err = filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
-			if p.shouldSkipFile(path, info, err) {
-				return nil
-			}
-
-			file, err := unsafeNewFile(path, cfg)
-			if err != nil {
-				return err
-			}
-			p.files = append(p.files, file)
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return
+	}, nil
 }
 
-func (p *Parser) Parse() (errs []error) {
+func NewParserFromReader(r io.Reader, cfg poconfig.Config) (*Parser, error)
+func NewParserFromBytes(b []byte, cfg poconfig.Config) (*Parser, error)
+func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error)
+
+func (p *Parser) Parse() (translations []poentry.Translation, errs []error) {
 	for _, f := range p.files {
 		t, e := f.ParseTranslations()
 		errs = append(errs, e...)
-		p.translations = append(p.translations, t...)
+		translations = append(translations, t...)
 	}
 
 	return
@@ -63,19 +50,6 @@ func (p *Parser) Parse() (errs []error) {
 
 func (p Parser) Files() []*File {
 	return p.files
-}
-
-func (p Parser) Compile() []byte {
-	var b strings.Builder
-	fmt.Fprintf(&b, PotHeader, p.Config.PackageVersion, p.Config.Language, p.Config.Nplurals)
-	var translations []Translation
-	copy(translations, p.translations)
-
-	translations = cleanDuplicates(translations)
-	for _, t := range translations {
-		fmt.Fprintln(&b, t.Format(p.Config.Nplurals))
-	}
-	return []byte(b.String())
 }
 
 // shouldSkipFile determines if a file should be skipped during processing.
