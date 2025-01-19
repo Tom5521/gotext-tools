@@ -1,3 +1,4 @@
+// Package goparse provides tools to parse and process Go source files, extracting translations and handling various configurations.
 package goparse
 
 import (
@@ -13,13 +14,14 @@ import (
 	"github.com/Tom5521/xgotext/pkg/poentry"
 )
 
+// Parser represents a parser that processes Go files according to a given configuration.
 type Parser struct {
-	Config poconfig.Config
-
-	files []*File
-	seen  map[string]bool
+	Config poconfig.Config // Configuration settings for parsing.
+	files  []*File         // List of parsed files.
+	seen   map[string]bool // Tracks already processed files to avoid duplication.
 }
 
+// NewParser initializes a new Parser for a given directory path and configuration.
 func NewParser(path string, cfg poconfig.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -42,6 +44,7 @@ func NewParser(path string, cfg poconfig.Config) (*Parser, error) {
 	return p, nil
 }
 
+// baseParser creates a base Parser instance with the provided configuration.
 func baseParser(cfg poconfig.Config) *Parser {
 	return &Parser{
 		Config: cfg,
@@ -49,6 +52,7 @@ func baseParser(cfg poconfig.Config) *Parser {
 	}
 }
 
+// NewParserFromReader creates a Parser from an io.Reader, such as a file or memory buffer.
 func NewParserFromReader(r io.Reader, name string, cfg poconfig.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -62,6 +66,7 @@ func NewParserFromReader(r io.Reader, name string, cfg poconfig.Config) (*Parser
 	return unsafeNewParserFromBytes(data, name, cfg)
 }
 
+// unsafeNewParserFromBytes creates a Parser from raw byte data without validating the configuration.
 func unsafeNewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, error) {
 	p := baseParser(cfg)
 	f, err := unsafeNewFile(b, name, &cfg)
@@ -73,6 +78,7 @@ func unsafeNewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Pars
 	return p, nil
 }
 
+// NewParserFromBytes creates a Parser from raw byte data after validating the configuration.
 func NewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -81,6 +87,7 @@ func NewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, er
 	return unsafeNewParserFromBytes(b, name, cfg)
 }
 
+// NewParserFromFile creates a Parser from an os.File instance.
 func NewParserFromFile(file *os.File, cfg poconfig.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -97,6 +104,7 @@ func NewParserFromFile(file *os.File, cfg poconfig.Config) (*Parser, error) {
 	return p, nil
 }
 
+// NewParserFromFiles initializes a Parser from a list of file paths.
 func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -122,6 +130,7 @@ func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error) {
 	return p, nil
 }
 
+// Parse processes all files associated with the Parser and extracts translations.
 func (p *Parser) Parse() (translations []poentry.Translation, errs []error) {
 	for _, f := range p.files {
 		t, e := f.ParseTranslations()
@@ -132,6 +141,7 @@ func (p *Parser) Parse() (translations []poentry.Translation, errs []error) {
 	return
 }
 
+// Files returns the list of files associated with the Parser.
 func (p Parser) Files() []*File {
 	return p.files
 }
@@ -160,7 +170,7 @@ func (p Parser) shouldSkipFile(path string, info fs.FileInfo, err error) bool {
 	return p.isExcludedPath(path)
 }
 
-// isExcludedPath checks if a path is in the exclude list.
+// isExcludedPath checks if a path is in the exclude list defined in the configuration.
 func (p Parser) isExcludedPath(path string) bool {
 	return slices.ContainsFunc(p.Config.Exclude, func(s string) bool {
 		abs1, err1 := filepath.Abs(s)

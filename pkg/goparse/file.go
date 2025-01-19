@@ -14,23 +14,28 @@ import (
 	"github.com/Tom5521/xgotext/pkg/poentry"
 )
 
+// File represents a Go source file that is being processed by the parser.
+// This struct contains information about the file's content, path, package,
+// and whether it imports the desired package for translation processing.
 type File struct {
-	// It is a pointer because in larger code bases,
-	// where there are thousands of files, copying over and over again this struct
-	// would be very unacceptable in terms of ram.
-	//
-	// Also, it is useful if for example if you modify the base
-	// configuration in the parser, it will also affect how each file behaves.
-	config    *poconfig.Config
-	file      *ast.File
-	content   []byte
-	path      string
-	pkgName   string
-	hasGotext bool
+	// Config is a pointer to the configuration used for parsing.
+	// Using a pointer avoids excessive memory usage when working with many files
+	// and allows changes to the parser configuration to propagate to each file.
+	config *poconfig.Config
+
+	file      *ast.File // The parsed abstract syntax tree (AST) of the file.
+	content   []byte    // The raw content of the file as a byte slice.
+	path      string    // The path to the file.
+	pkgName   string    // The name of the package declared in the file.
+	hasGotext bool      // Indicates if the file imports the desired "gotext" package.
 }
 
+// WantedImport specifies the import path of the "gotext" library
+// that the parser is looking for in the Go files.
 const WantedImport = `"github.com/leonelquinteros/gotext"`
 
+// NewFileFromReader creates a new File instance by reading content from an io.Reader.
+// The content is read into memory and processed according to the provided configuration.
 func NewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
@@ -39,6 +44,8 @@ func NewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, e
 	return unsafeNewFileFromReader(r, name, cfg)
 }
 
+// unsafeNewFileFromReader is an internal method that creates a File instance
+// from an io.Reader without validating the configuration.
 func unsafeNewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
@@ -48,6 +55,7 @@ func unsafeNewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*F
 	return unsafeNewFile(content, name, cfg)
 }
 
+// NewFileFromPath creates a new File instance by reading content from a file on disk.
 func NewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
@@ -57,6 +65,8 @@ func NewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 	return unsafeNewFileFromPath(path, cfg)
 }
 
+// unsafeNewFileFromPath is an internal method that creates a File instance
+// from a file on disk without validating the configuration.
 func unsafeNewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
@@ -67,6 +77,7 @@ func unsafeNewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 	return unsafeNewFileFromReader(file, path, cfg)
 }
 
+// NewFileFromBytes creates a new File instance from raw byte data.
 func NewFileFromBytes(b []byte, name string, cfg *poconfig.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
@@ -76,6 +87,8 @@ func NewFileFromBytes(b []byte, name string, cfg *poconfig.Config) (*File, error
 	return unsafeNewFile(b, name, cfg)
 }
 
+// unsafeNewFile is an internal method that creates a File instance from raw byte data
+// and the provided configuration without validating the configuration.
 func unsafeNewFile(content []byte, name string, cfg *poconfig.Config) (*File, error) {
 	file := &File{
 		content: content,
@@ -92,11 +105,14 @@ func unsafeNewFile(content []byte, name string, cfg *poconfig.Config) (*File, er
 	return file, nil
 }
 
+// determinePackageInfo analyzes the file's AST to extract package-related information.
+// It determines the package name and checks if the desired "gotext" package is imported.
 func (f *File) determinePackageInfo() {
-	f.pkgName = "gotext"
+	f.pkgName = "gotext" // Default package name.
 	for _, imprt := range f.file.Imports {
 		f.hasGotext = imprt.Path.Value == WantedImport
 		if f.hasGotext {
+			// If the import is aliased, use the alias as the package name.
 			if imprt.Name != nil {
 				f.pkgName = imprt.Name.String()
 			}
