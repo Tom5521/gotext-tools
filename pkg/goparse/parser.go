@@ -2,7 +2,6 @@ package goparse
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"io/fs"
 	"path/filepath"
@@ -19,23 +18,48 @@ type Parser struct {
 	seen  map[string]bool
 }
 
-func NewParser(cfg poconfig.Config) (p *Parser, err error) {
-	return
-}
-
-func newBaseParser(cfg poconfig.Config) (*Parser, error) {
-	cfgErrs := cfg.Validate()
-	if len(cfgErrs) > 0 {
-		return nil, fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
-	}
+func baseParser(cfg poconfig.Config) *Parser {
 	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
-	}, nil
+	}
 }
 
-func NewParserFromReader(r io.Reader, cfg poconfig.Config) (*Parser, error)
-func NewParserFromBytes(b []byte, cfg poconfig.Config) (*Parser, error)
+func NewParserFromReader(r io.Reader, name string, cfg poconfig.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	return unsafeNewParserFromBytes(data, name, cfg)
+}
+
+func unsafeNewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, error) {
+	p := baseParser(cfg)
+	f, err := unsafeNewFile(b, name, cfg)
+	if err != nil {
+		return nil, err
+	}
+	p.files = append(p.files, f)
+
+	return p, nil
+}
+
+func NewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return unsafeNewParserFromBytes(b, name, cfg)
+}
+
+// TODO: Finish this.
+func NewParserFromDir(dir string, cfg poconfig.Config) (*Parser, error)
+func NewParserFromDirFS(dir fs.FS, cfg poconfig.Config) (*Parser, error)
 func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error)
 
 func (p *Parser) Parse() (translations []poentry.Translation, errs []error) {

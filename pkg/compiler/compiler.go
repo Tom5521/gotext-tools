@@ -37,7 +37,7 @@ func (c Compiler) CompileToWriter(w io.Writer) error {
 
 	translations := util.CleanDuplicates(c.Translations)
 	for _, t := range translations {
-		_, err = fmt.Fprintln(w, t.Format(c.Config.Nplurals))
+		_, err = fmt.Fprintln(w, t.Format(c.Config))
 		if err != nil {
 			return err
 		}

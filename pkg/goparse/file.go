@@ -66,14 +66,6 @@ func NewFileFromBytes(b []byte, name string, cfg poconfig.Config) (*File, error)
 	return unsafeNewFile(b, name, cfg)
 }
 
-func validateConfig(cfg poconfig.Config) error {
-	cfgErrs := cfg.Validate()
-	if len(cfgErrs) > 0 {
-		return fmt.Errorf("configuration is invalid: %w", cfgErrs[0])
-	}
-	return nil
-}
-
 func unsafeNewFile(content []byte, name string, cfg poconfig.Config) (*File, error) {
 	file := &File{
 		content: content,

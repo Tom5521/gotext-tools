@@ -3,6 +3,8 @@ package poentry
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Tom5521/xgotext/pkg/poconfig"
 )
 
 type Location struct {
@@ -17,7 +19,7 @@ type Translation struct {
 	Locations []Location
 }
 
-func (t Translation) Format(nplurals uint) string {
+func (t Translation) Format(cfg poconfig.Config) string {
 	var builder strings.Builder
 
 	fprintfln := func(format string, args ...any) {
@@ -28,8 +30,10 @@ func (t Translation) Format(nplurals uint) string {
 	context := formatString(t.Context)
 	plural := formatString(t.Plural)
 
-	for _, location := range t.Locations {
-		fprintfln("#: %s:%d", location.File, location.Line)
+	if !cfg.NoLocation {
+		for _, location := range t.Locations {
+			fprintfln("#: %s:%d", location.File, location.Line)
+		}
 	}
 
 	if t.Context != "" {
@@ -40,7 +44,7 @@ func (t Translation) Format(nplurals uint) string {
 
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		for i := range nplurals {
+		for i := range cfg.Nplurals {
 			fprintfln(`msgstr[%d] ""`, i)
 		}
 	} else {
