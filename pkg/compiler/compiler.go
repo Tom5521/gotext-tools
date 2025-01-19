@@ -23,22 +23,6 @@ type Compiler struct {
 	Config       poconfig.Config
 }
 
-func (c Compiler) CompileToString() string {
-	var b strings.Builder
-
-	c.CompileToWriter(&b)
-
-	return b.String()
-}
-
-func (c Compiler) CompileToBytes() []byte {
-	var b bytes.Buffer
-
-	c.CompileToWriter(&b)
-
-	return b.Bytes()
-}
-
 func (c Compiler) CompileToWriter(w io.Writer) error {
 	_, err := fmt.Fprintf(
 		w,
@@ -80,6 +64,22 @@ func (c Compiler) CompileToFile(f string) error {
 	}
 
 	return c.CompileToWriter(file)
+}
+
+func (c Compiler) CompileToString() string {
+	var b strings.Builder
+
+	c.CompileToWriter(&b)
+
+	return b.String()
+}
+
+func (c Compiler) CompileToBytes() []byte {
+	var b bytes.Buffer
+
+	c.CompileToWriter(&b)
+
+	return b.Bytes()
 }
 
 var ErrNotImplementedYet = errors.New("not implemented yet (sorry)")
