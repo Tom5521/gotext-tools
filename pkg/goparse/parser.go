@@ -1,11 +1,13 @@
 package goparse
 
 import (
-	_ "embed"
 	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"slices"
+
+	krfs "github.com/kr/fs"
 
 	"github.com/Tom5521/xgotext/pkg/poconfig"
 	"github.com/Tom5521/xgotext/pkg/poentry"
@@ -16,6 +18,28 @@ type Parser struct {
 
 	files []*File
 	seen  map[string]bool
+}
+
+func NewParser(path string, cfg poconfig.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	p := baseParser(cfg)
+	walker := krfs.Walk(path)
+	for walker.Step() {
+		if p.shouldSkipFile(walker.Path(), walker.Stat(), walker.Err()) {
+			continue
+		}
+
+		f, err := unsafeNewFileFromPath(walker.Path(), &cfg)
+		if err != nil {
+			return nil, err
+		}
+		p.files = append(p.files, f)
+	}
+
+	return p, nil
 }
 
 func baseParser(cfg poconfig.Config) *Parser {
@@ -40,7 +64,7 @@ func NewParserFromReader(r io.Reader, name string, cfg poconfig.Config) (*Parser
 
 func unsafeNewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, error) {
 	p := baseParser(cfg)
-	f, err := unsafeNewFile(b, name, cfg)
+	f, err := unsafeNewFile(b, name, &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,10 +81,46 @@ func NewParserFromBytes(b []byte, name string, cfg poconfig.Config) (*Parser, er
 	return unsafeNewParserFromBytes(b, name, cfg)
 }
 
-// TODO: Finish this.
-func NewParserFromDir(dir string, cfg poconfig.Config) (*Parser, error)
-func NewParserFromDirFS(dir fs.FS, cfg poconfig.Config) (*Parser, error)
-func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error)
+func NewParserFromFile(file *os.File, cfg poconfig.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	p := baseParser(cfg)
+	f, err := unsafeNewFileFromReader(file, file.Name(), &cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	p.files = append(p.files, f)
+
+	return p, nil
+}
+
+func NewParserFromFiles(files []string, cfg poconfig.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	p := baseParser(cfg)
+	for _, file := range files {
+		walker := krfs.Walk(file)
+		for walker.Step() {
+			if p.shouldSkipFile(walker.Path(), walker.Stat(), walker.Err()) {
+				continue
+			}
+
+			f, err := unsafeNewFileFromPath(walker.Path(), &cfg)
+			if err != nil {
+				return nil, err
+			}
+
+			p.files = append(p.files, f)
+		}
+	}
+
+	return p, nil
+}
 
 func (p *Parser) Parse() (translations []poentry.Translation, errs []error) {
 	for _, f := range p.files {

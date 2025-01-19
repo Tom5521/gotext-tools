@@ -15,7 +15,13 @@ import (
 )
 
 type File struct {
-	config    poconfig.Config
+	// It is a pointer because in larger code bases,
+	// where there are thousands of files, copying over and over again this struct
+	// would be very unacceptable in terms of ram.
+	//
+	// Also, it is useful if for example if you modify the base
+	// configuration in the parser, it will also affect how each file behaves.
+	config    *poconfig.Config
 	file      *ast.File
 	content   []byte
 	path      string
@@ -25,15 +31,15 @@ type File struct {
 
 const WantedImport = `"github.com/leonelquinteros/gotext"`
 
-func NewFileFromReader(r io.Reader, name string, cfg poconfig.Config) (*File, error) {
-	err := validateConfig(cfg)
+func NewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
+	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
 	}
 	return unsafeNewFileFromReader(r, name, cfg)
 }
 
-func unsafeNewFileFromReader(r io.Reader, name string, cfg poconfig.Config) (*File, error) {
+func unsafeNewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -42,12 +48,16 @@ func unsafeNewFileFromReader(r io.Reader, name string, cfg poconfig.Config) (*Fi
 	return unsafeNewFile(content, name, cfg)
 }
 
-func NewFileFromPath(path string, cfg poconfig.Config) (*File, error) {
-	err := validateConfig(cfg)
+func NewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
+	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
 	}
 
+	return unsafeNewFileFromPath(path, cfg)
+}
+
+func unsafeNewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -57,8 +67,8 @@ func NewFileFromPath(path string, cfg poconfig.Config) (*File, error) {
 	return unsafeNewFileFromReader(file, path, cfg)
 }
 
-func NewFileFromBytes(b []byte, name string, cfg poconfig.Config) (*File, error) {
-	err := validateConfig(cfg)
+func NewFileFromBytes(b []byte, name string, cfg *poconfig.Config) (*File, error) {
+	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +76,7 @@ func NewFileFromBytes(b []byte, name string, cfg poconfig.Config) (*File, error)
 	return unsafeNewFile(b, name, cfg)
 }
 
-func unsafeNewFile(content []byte, name string, cfg poconfig.Config) (*File, error) {
+func unsafeNewFile(content []byte, name string, cfg *poconfig.Config) (*File, error) {
 	file := &File{
 		content: content,
 		path:    name,
