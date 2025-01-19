@@ -1,19 +1,19 @@
 package util
 
 import (
-	"strings"
+	"bytes"
 
 	"github.com/Tom5521/xgotext/pkg/poentry"
 )
 
-// findLine returns the line number for a given index in the string.
+// FindLine returns the line number for a given index in the slice of bytes.
 // Returns -1 if the index is out of bounds.
-func FindLine[T ~int](str string, index T) int {
-	if index < 0 || int(index) >= len(str) {
+func FindLine[T ~int](content []byte, index T) int {
+	if index < 0 || int(index) >= len(content) {
 		return -1
 	}
 
-	return 1 + strings.Count(str[:index], "\n")
+	return 1 + bytes.Count(content[:index], []byte{'\n'})
 }
 
 func CleanDuplicates(translations []poentry.Translation) (cleaned []poentry.Translation) {
