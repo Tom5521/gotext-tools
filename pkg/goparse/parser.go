@@ -3,7 +3,6 @@ package goparse
 
 import (
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -21,6 +20,24 @@ type Parser struct {
 	seen   map[string]bool // Tracks already processed files to avoid duplication.
 }
 
+func (p *Parser) appendFiles(files ...string) error {
+	for _, file := range files {
+		walker := krfs.Walk(file)
+		for walker.Step() {
+			if p.shouldSkipFile(walker) {
+				continue
+			}
+			f, err := NewFileFromPath(file, &p.Config)
+			if err != nil {
+				return err
+			}
+			p.files = append(p.files, f)
+		}
+	}
+
+	return nil
+}
+
 // NewParser initializes a new Parser for a given directory path and configuration.
 func NewParser(path string, cfg config.Config) (*Parser, error) {
 	err := validateConfig(cfg)
@@ -28,17 +45,9 @@ func NewParser(path string, cfg config.Config) (*Parser, error) {
 		return nil, err
 	}
 	p := baseParser(cfg)
-	walker := krfs.Walk(path)
-	for walker.Step() {
-		if p.shouldSkipFile(walker.Path(), walker.Stat(), walker.Err()) {
-			continue
-		}
-
-		f, err := unsafeNewFileFromPath(walker.Path(), &cfg)
-		if err != nil {
-			return nil, err
-		}
-		p.files = append(p.files, f)
+	err = p.appendFiles(path)
+	if err != nil {
+		return nil, err
 	}
 
 	return p, nil
@@ -78,6 +87,14 @@ func unsafeNewParserFromBytes(b []byte, name string, cfg config.Config) (*Parser
 	return p, nil
 }
 
+func NewParserFromString(s string, name string, cfg config.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return unsafeNewParserFromBytes([]byte(s), name, cfg)
+}
+
 // NewParserFromBytes creates a Parser from raw byte data after validating the configuration.
 func NewParserFromBytes(b []byte, name string, cfg config.Config) (*Parser, error) {
 	err := validateConfig(cfg)
@@ -111,20 +128,9 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 		return nil, err
 	}
 	p := baseParser(cfg)
-	for _, file := range files {
-		walker := krfs.Walk(file)
-		for walker.Step() {
-			if p.shouldSkipFile(walker.Path(), walker.Stat(), walker.Err()) {
-				continue
-			}
-
-			f, err := unsafeNewFileFromPath(walker.Path(), &cfg)
-			if err != nil {
-				return nil, err
-			}
-
-			p.files = append(p.files, f)
-		}
+	err = p.appendFiles(files...)
+	if err != nil {
+		return nil, err
 	}
 
 	return p, nil
@@ -147,16 +153,16 @@ func (p Parser) Files() []*File {
 }
 
 // shouldSkipFile determines if a file should be skipped during processing.
-func (p Parser) shouldSkipFile(path string, info fs.FileInfo, err error) bool {
-	if err != nil || info.IsDir() {
+func (p Parser) shouldSkipFile(w *krfs.Walker) bool {
+	if w.Err() != nil || w.Stat().IsDir() {
 		return true
 	}
 
-	if filepath.Ext(path) != ".go" {
+	if filepath.Ext(w.Path()) != ".go" {
 		return true
 	}
 
-	abs, err := filepath.Abs(path)
+	abs, err := filepath.Abs(w.Path())
 	if err != nil {
 		return true
 	}
@@ -167,7 +173,7 @@ func (p Parser) shouldSkipFile(path string, info fs.FileInfo, err error) bool {
 	}
 	p.seen[abs] = true
 
-	return p.isExcludedPath(path)
+	return p.isExcludedPath(w.Path())
 }
 
 // isExcludedPath checks if a path is in the exclude list defined in the configuration.

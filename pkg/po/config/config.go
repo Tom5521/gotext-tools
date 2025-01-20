@@ -25,12 +25,12 @@ type Config struct {
 	}
 }
 
-// DefaultConfig returns a default configuration for PO file processing.
+// Default returns a default configuration for PO file processing.
 // The default configuration sets the following values:
 //   - DefaultDomain: "default"
 //   - Language: "en"
 //   - Nplurals: 2
-func DefaultConfig() Config {
+func Default() Config {
 	return Config{
 		DefaultDomain: "default",
 		Language:      "en",

@@ -1,7 +1,6 @@
 package goparse_test
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/Tom5521/xgotext/pkg/goparse"
@@ -14,13 +13,12 @@ func TestParse(t *testing.T) {
 import "github.com/leonelquinteros/gotext"
 
 func main(){
-	_ = "Hello Translatable string!"
 	gotext.Get("Hello World!")
 }`
 
 	expected := []entry.Translation{
 		{
-			ID: "Hello Translatable string!",
+			ID: "Hello World!",
 			Locations: []entry.Location{
 				{
 					Line: 5,
@@ -28,47 +26,92 @@ func main(){
 				},
 			},
 		},
-		{
-			ID: "Hello World!",
-			Locations: []entry.Location{
-				{
-					Line: 6,
-					File: "test.go",
-				},
-			},
-		},
 	}
-	cfg := config.DefaultConfig()
-	cfg.ExtractAll = true
+	cfg := config.Default()
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		t.Error(err)
 	}
 
 	translations, errs := parser.Parse()
 	if len(errs) > 0 {
-		t.Log(errs[0])
-		t.FailNow()
+		t.Error(errs[0])
 	}
 
-	if !slices.EqualFunc(
-		translations,
-		expected,
-		func(e1 entry.Translation, e2 entry.Translation) bool {
-			return (e1.ID == e2.ID && e1.Context == e2.Context && e1.Plural == e2.Plural) &&
-				slices.EqualFunc(
-					e1.Locations,
-					e2.Locations,
-					func(e1 entry.Location, e2 entry.Location) bool {
-						return e1.File == e2.File && e1.Line == e2.Line
-					},
-				)
-		},
-	) {
+	if !entry.CompareTranslations(translations, expected) {
 		t.Log("Unexpected translations slice")
-		t.Log(translations)
-		t.Log("expected: ", expected)
+		t.Log("got:", translations)
+		t.Log("expected:", expected)
 		t.FailNow()
+	}
+}
+
+func TestExtractAll(t *testing.T) {
+	const input = `package main
+
+import "github.com/leonelquinteros/gotext"
+
+func main(){
+	_ = "Hello World"
+	a := "Hi world"
+	b := "I love onions!"
+	
+	var eggs string = "sugar"
+}`
+	cfg := config.Default()
+	cfg.ExtractAll = true
+	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	translations, errs := parser.Parse()
+	if len(errs) > 0 {
+		t.Error(errs[0])
+	}
+
+	expected := []entry.Translation{
+		{
+			ID: "Hello World",
+			Locations: []entry.Location{
+				{
+					File: "test.go",
+					Line: 6,
+				},
+			},
+		},
+		{
+			ID: "Hi world",
+			Locations: []entry.Location{
+				{
+					File: "test.go",
+					Line: 7,
+				},
+			},
+		},
+		{
+			ID: "I love onions!",
+			Locations: []entry.Location{
+				{
+					File: "test.go",
+					Line: 8,
+				},
+			},
+		},
+		{
+			ID: "sugar",
+			Locations: []entry.Location{
+				{
+					File: "test.go",
+					Line: 10,
+				},
+			},
+		},
+	}
+
+	if !entry.CompareTranslations(translations, expected) {
+		t.Error("Unexpected translation")
+		t.Log("got:", translations)
+		t.Log("expected:", expected)
 	}
 }
