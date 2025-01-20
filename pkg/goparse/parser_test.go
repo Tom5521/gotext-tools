@@ -14,12 +14,13 @@ func TestParse(t *testing.T) {
 import "github.com/leonelquinteros/gotext"
 
 func main(){
+	_ = "Hello Translatable string!"
 	gotext.Get("Hello World!")
 }`
 
 	expected := []entry.Translation{
 		{
-			ID: "Hello World!",
+			ID: "Hello Translatable string!",
 			Locations: []entry.Location{
 				{
 					Line: 5,
@@ -27,8 +28,18 @@ func main(){
 				},
 			},
 		},
+		{
+			ID: "Hello World!",
+			Locations: []entry.Location{
+				{
+					Line: 6,
+					File: "test.go",
+				},
+			},
+		},
 	}
 	cfg := config.DefaultConfig()
+	cfg.ExtractAll = true
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Log(err)

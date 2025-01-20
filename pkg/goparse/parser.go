@@ -133,7 +133,7 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 // Parse processes all files associated with the Parser and extracts translations.
 func (p *Parser) Parse() (translations []entry.Translation, errs []error) {
 	for _, f := range p.files {
-		t, e := f.ParseTranslations()
+		t, e := f.Translations()
 		errs = append(errs, e...)
 		translations = append(translations, t...)
 	}

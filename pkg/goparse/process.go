@@ -10,13 +10,15 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
-type getterDef struct {
-	ID      int
-	Plural  int
-	Context int
+// translationMethod defines the structure for different getter methods.
+type translationMethod struct {
+	IDIndex      int // Position of message ID argument
+	PluralIndex  int // Position of plural form argument (-1 if not applicable)
+	ContextIndex int // Position of context argument (-1 if not applicable)
 }
 
-var gotextGetter = map[string]getterDef{
+// Define supported translation methods.
+var translationMethods = map[string]translationMethod{
 	"Get":    {0, -1, -1},
 	"GetN":   {0, 1, -1},
 	"GetD":   {1, -1, -1},
@@ -27,71 +29,89 @@ var gotextGetter = map[string]getterDef{
 	"GetNDC": {1, 2, 4},
 }
 
-func (f *File) processMethod(
-	method string,
-	callExpr *ast.CallExpr,
-) (translation entry.Translation, valid bool, err error) {
-	def := gotextGetter[method]
+// translationArgument represents a parsed translation argument.
+type translationArgument struct {
+	Value    string
+	IsValid  bool
+	Position token.Pos
+}
 
-	id, err := extractArgument(callExpr, def.ID)
-	valid = id.valid && err == nil
-	if err != nil {
-		err = fmt.Errorf("error extracting msgid: %w", err)
-		return
-	}
-	if id.valid {
-		translation.ID = id.str
-		translation.Locations = append(
-			translation.Locations,
-			entry.Location{util.FindLine(f.content, id.pos), f.path},
+// ProcessMethod processes a translation method call and returns the corresponding Translation.
+func (f *File) processMethod(
+	methodName string,
+	callExpr *ast.CallExpr,
+) (entry.Translation, bool, error) {
+	method, exists := translationMethods[methodName]
+	if !exists {
+		return entry.Translation{}, false, fmt.Errorf(
+			"unsupported translation method: %s",
+			methodName,
 		)
 	}
-	context, err := extractArgument(callExpr, def.Context)
+
+	translation := entry.Translation{}
+
+	// Extract message ID
+	msgID, err := f.extractArgument(callExpr, method.IDIndex)
 	if err != nil {
-		err = fmt.Errorf("error extracting context: %w", err)
-		return
-	}
-	if context.valid {
-		translation.Context = context.str
-	}
-	plural, err := extractArgument(callExpr, def.Plural)
-	if err != nil {
-		err = fmt.Errorf("error extracting plural: %w", err)
-		return
-	}
-	if plural.valid {
-		translation.Plural = plural.str
+		return translation, false, fmt.Errorf("failed to extract message ID: %w", err)
 	}
 
-	return
+	if !msgID.IsValid {
+		return translation, false, nil
+	}
+
+	// Set message ID and location
+	translation.ID = msgID.Value
+	translation.Locations = []entry.Location{{
+		Line: util.FindLine(f.content, msgID.Position),
+		File: f.path,
+	}}
+
+	// Extract and set context if applicable
+	if method.ContextIndex >= 0 {
+		if context, err := f.extractArgument(callExpr, method.ContextIndex); err == nil &&
+			context.IsValid {
+			translation.Context = context.Value
+		} else if err != nil {
+			return translation, false, fmt.Errorf("failed to extract context: %w", err)
+		}
+	}
+
+	// Extract and set plural form if applicable
+	if method.PluralIndex >= 0 {
+		if plural, err := f.extractArgument(callExpr, method.PluralIndex); err == nil &&
+			plural.IsValid {
+			translation.Plural = plural.Value
+		} else if err != nil {
+			return translation, false, fmt.Errorf("failed to extract plural form: %w", err)
+		}
+	}
+
+	return translation, true, nil
 }
 
-type arg struct {
-	str   string
-	valid bool
-	pos   token.Pos
-}
-
-func extractArgument(callExpr *ast.CallExpr, index int) (arg, error) {
-	if index == -1 {
-		return arg{}, nil
-	}
-	basicLit, ok := callExpr.Args[index].(*ast.BasicLit)
-	if !ok {
-		return arg{}, nil
-	}
-	if basicLit.Kind != token.STRING {
-		return arg{}, fmt.Errorf("unexpected type: %v, expected: %v", token.STRING, basicLit.Kind)
+// extractArgument extracts and validates a string argument from the call expression.
+func (f *File) extractArgument(callExpr *ast.CallExpr, index int) (translationArgument, error) {
+	if index < 0 || index >= len(callExpr.Args) {
+		return translationArgument{IsValid: false}, nil
 	}
 
-	content, err := strconv.Unquote(basicLit.Value)
+	arg, ok := callExpr.Args[index].(*ast.BasicLit)
+	if !ok || arg.Kind != token.STRING {
+		return translationArgument{IsValid: false}, nil
+	}
+
+	f.seenTokens[arg] = true
+
+	value, err := strconv.Unquote(arg.Value)
 	if err != nil {
-		return arg{}, fmt.Errorf("error unquoting the argument value: %w", err)
+		return translationArgument{}, fmt.Errorf("failed to unquote argument value: %w", err)
 	}
 
-	return arg{
-		str:   content,
-		valid: true,
-		pos:   basicLit.Pos(),
+	return translationArgument{
+		Value:    value,
+		IsValid:  true,
+		Position: arg.Pos(),
 	}, nil
 }

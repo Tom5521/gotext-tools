@@ -7,6 +7,8 @@ import po "github.com/leonelquinteros/gotext"
 
 // This should cover almost all get methods.
 func main() {
+	_ = "Hello translatable string!"
+
 	po.Get("Hi %s!\n", "stranger")
 	po.Get("Hi %s!", "stranger")
 	po.Get("Hi %s!", "stranger")
