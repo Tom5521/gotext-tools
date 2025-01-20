@@ -10,8 +10,8 @@ import (
 	"strconv"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/poconfig"
-	"github.com/Tom5521/xgotext/pkg/poentry"
+	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 // File represents a Go source file that is being processed by the parser.
@@ -21,7 +21,7 @@ type File struct {
 	// Config is a pointer to the configuration used for parsing.
 	// Using a pointer avoids excessive memory usage when working with many files
 	// and allows changes to the parser configuration to propagate to each file.
-	config *poconfig.Config
+	config *config.Config
 
 	file      *ast.File // The parsed abstract syntax tree (AST) of the file.
 	content   []byte    // The raw content of the file as a byte slice.
@@ -36,7 +36,7 @@ const WantedImport = `"github.com/leonelquinteros/gotext"`
 
 // NewFileFromReader creates a new File instance by reading content from an io.Reader.
 // The content is read into memory and processed according to the provided configuration.
-func NewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
+func NewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func NewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, e
 
 // unsafeNewFileFromReader is an internal method that creates a File instance
 // from an io.Reader without validating the configuration.
-func unsafeNewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*File, error) {
+func unsafeNewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func unsafeNewFileFromReader(r io.Reader, name string, cfg *poconfig.Config) (*F
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
-func NewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
+func NewFileFromPath(path string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 
 // unsafeNewFileFromPath is an internal method that creates a File instance
 // from a file on disk without validating the configuration.
-func unsafeNewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
+func unsafeNewFileFromPath(path string, cfg *config.Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func unsafeNewFileFromPath(path string, cfg *poconfig.Config) (*File, error) {
 }
 
 // NewFileFromBytes creates a new File instance from raw byte data.
-func NewFileFromBytes(b []byte, name string, cfg *poconfig.Config) (*File, error) {
+func NewFileFromBytes(b []byte, name string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func NewFileFromBytes(b []byte, name string, cfg *poconfig.Config) (*File, error
 
 // unsafeNewFile is an internal method that creates a File instance from raw byte data
 // and the provided configuration without validating the configuration.
-func unsafeNewFile(content []byte, name string, cfg *poconfig.Config) (*File, error) {
+func unsafeNewFile(content []byte, name string, cfg *config.Config) (*File, error) {
 	file := &File{
 		content: content,
 		path:    name,
@@ -138,7 +138,7 @@ func (f *File) shouldSkip(n ast.Node) bool {
 	return true
 }
 
-func (f *File) extract() (ts []poentry.Translation, errs []error) {
+func (f *File) extract() (ts []entry.Translation, errs []error) {
 	for node := range InspectNode(f.file) {
 		if f.shouldSkip(node) {
 			// This is probably broken.
@@ -170,7 +170,7 @@ func (f *File) extract() (ts []poentry.Translation, errs []error) {
 	return
 }
 
-func (f *File) processString(n ast.Node) (ts []poentry.Translation, errs []error) {
+func (f *File) processString(n ast.Node) (ts []entry.Translation, errs []error) {
 	if basicLit, ok := n.(*ast.BasicLit); ok {
 		if basicLit.Kind == token.STRING {
 			line := util.FindLine(f.content, basicLit.Pos())
@@ -188,9 +188,9 @@ func (f *File) processString(n ast.Node) (ts []poentry.Translation, errs []error
 				return
 			}
 			ts = append(ts,
-				poentry.Translation{
+				entry.Translation{
 					ID: content,
-					Locations: []poentry.Location{
+					Locations: []entry.Location{
 						{line, f.path},
 					},
 				},
@@ -201,6 +201,6 @@ func (f *File) processString(n ast.Node) (ts []poentry.Translation, errs []error
 	return
 }
 
-func (f *File) ParseTranslations() (translations []poentry.Translation, errs []error) {
+func (f *File) ParseTranslations() (translations []entry.Translation, errs []error) {
 	return f.extract()
 }

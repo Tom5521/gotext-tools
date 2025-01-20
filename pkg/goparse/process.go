@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/poentry"
+	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 type getterDef struct {
@@ -30,7 +30,7 @@ var gotextGetter = map[string]getterDef{
 func (f *File) processMethod(
 	method string,
 	callExpr *ast.CallExpr,
-) (translation poentry.Translation, valid bool, err error) {
+) (translation entry.Translation, valid bool, err error) {
 	def := gotextGetter[method]
 
 	id, err := extractArgument(callExpr, def.ID)
@@ -43,7 +43,7 @@ func (f *File) processMethod(
 		translation.ID = id.str
 		translation.Locations = append(
 			translation.Locations,
-			poentry.Location{util.FindLine(f.content, id.pos), f.path},
+			entry.Location{util.FindLine(f.content, id.pos), f.path},
 		)
 	}
 	context, err := extractArgument(callExpr, def.Context)

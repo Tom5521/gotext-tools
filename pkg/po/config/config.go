@@ -1,4 +1,4 @@
-package poconfig
+package config
 
 import (
 	"errors"
@@ -67,4 +67,3 @@ func (c Config) Validate() (errs []error) {
 
 	return
 }
-

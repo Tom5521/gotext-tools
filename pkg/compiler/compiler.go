@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/poconfig"
-	"github.com/Tom5521/xgotext/pkg/poentry"
+	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 //go:embed header.pot
@@ -21,8 +21,8 @@ var baseHeader string
 // Compiler is responsible for compiling a list of translations into various formats
 // (e.g., string, file, or bytes) based on the given configuration.
 type Compiler struct {
-	Translations []poentry.Translation // List of translations to compile.
-	Config       poconfig.Config       // Configuration for the compilation process.
+	Translations []entry.Translation // List of translations to compile.
+	Config       config.Config       // Configuration for the compilation process.
 }
 
 // CompileToWriter writes the compiled translations to an `io.Writer` in the PO file format.

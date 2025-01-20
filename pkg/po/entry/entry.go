@@ -1,10 +1,10 @@
-package poentry
+package entry
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/poconfig"
+	"github.com/Tom5521/xgotext/pkg/po/config"
 )
 
 // Location represents the location of a translation string in the source code.
@@ -44,7 +44,7 @@ type Translation struct {
 //	config := poconfig.DefaultConfig()
 //	formatted := translation.Format(config)
 //	fmt.Println(formatted)
-func (t Translation) Format(cfg poconfig.Config) string {
+func (t Translation) Format(cfg config.Config) string {
 	var builder strings.Builder
 
 	// Helper function to append formatted lines to the builder.
@@ -145,4 +145,3 @@ func fixSpecialChars(str string) string {
 
 	return builder.String()
 }
-

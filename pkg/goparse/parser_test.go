@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Tom5521/xgotext/pkg/goparse"
-	"github.com/Tom5521/xgotext/pkg/poconfig"
-	"github.com/Tom5521/xgotext/pkg/poentry"
+	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 func TestParse(t *testing.T) {
@@ -17,10 +17,10 @@ func main(){
 	gotext.Get("Hello World!")
 }`
 
-	expected := []poentry.Translation{
+	expected := []entry.Translation{
 		{
 			ID: "Hello World!",
-			Locations: []poentry.Location{
+			Locations: []entry.Location{
 				{
 					Line: 5,
 					File: "test.go",
@@ -28,7 +28,7 @@ func main(){
 			},
 		},
 	}
-	cfg := poconfig.DefaultConfig()
+	cfg := config.DefaultConfig()
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Log(err)
@@ -44,12 +44,12 @@ func main(){
 	if !slices.EqualFunc(
 		translations,
 		expected,
-		func(e1 poentry.Translation, e2 poentry.Translation) bool {
+		func(e1 entry.Translation, e2 entry.Translation) bool {
 			return (e1.ID == e2.ID && e1.Context == e2.Context && e1.Plural == e2.Plural) &&
 				slices.EqualFunc(
 					e1.Locations,
 					e2.Locations,
-					func(e1 poentry.Location, e2 poentry.Location) bool {
+					func(e1 entry.Location, e2 entry.Location) bool {
 						return e1.File == e2.File && e1.Line == e2.Line
 					},
 				)

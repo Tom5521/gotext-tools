@@ -3,7 +3,7 @@ package util
 import (
 	"bytes"
 
-	"github.com/Tom5521/xgotext/pkg/poentry"
+	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 // FindLine returns the line number for a given index in the slice of bytes.
@@ -16,7 +16,7 @@ func FindLine[T ~int](content []byte, index T) int {
 	return 1 + bytes.Count(content[:index], []byte{'\n'})
 }
 
-func CleanDuplicates(translations []poentry.Translation) (cleaned []poentry.Translation) {
+func CleanDuplicates(translations []entry.Translation) (cleaned []entry.Translation) {
 	seenID := make(map[string]int)
 
 	for _, translation := range translations {
