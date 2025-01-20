@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/config"
@@ -27,16 +27,24 @@ type Compiler struct {
 
 // CompileToWriter writes the compiled translations to an `io.Writer` in the PO file format.
 func (c Compiler) CompileToWriter(w io.Writer) error {
+	var err error
 	// Write the base header, including package version, language, and plural forms.
-	_, err := fmt.Fprintf(
-		w,
-		baseHeader,
-		c.Config.PackageVersion,
-		c.Config.Language,
-		c.Config.Nplurals,
-	)
-	if err != nil {
-		return err
+	if !c.Config.OmitHeader {
+		_, err = fmt.Fprintf(
+			w,
+			baseHeader,
+			c.Config.Title,
+			c.Config.CopyrightHolder,
+			c.Config.PackageName,
+			c.Config.PackageVersion,
+			c.Config.MsgidBugsAddress,
+			time.Now().Format(time.DateTime),
+			c.Config.Language,
+			c.Config.Nplurals,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Clean duplicates in translations and write each to the writer.
@@ -97,6 +105,3 @@ var ErrNotImplementedYet = errors.New("not implemented yet (sorry)")
 
 // CompileToDir compiles the translations to a directory. This function is not implemented yet.
 func (c Compiler) CompileToDir(d string) error { return ErrNotImplementedYet }
-
-// CompileToDirFS compiles the translations to a directory in a filesystem. This function is not implemented yet.
-func (c Compiler) CompileToDirFS(dfs fs.FS) error { return ErrNotImplementedYet }
