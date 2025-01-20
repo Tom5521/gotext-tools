@@ -57,9 +57,16 @@ func (t Translation) Format(cfg config.Config) string {
 	plural := formatString(t.Plural)
 
 	// Add location comments if not suppressed by the configuration.
-	if !cfg.NoLocation {
-		for _, location := range t.Locations {
-			fprintfln("#: %s:%d", location.File, location.Line)
+	if !cfg.NoLocation || cfg.AddLocation == "never" {
+		switch cfg.AddLocation {
+		case "full":
+			for _, location := range t.Locations {
+				fprintfln("#: %s:%d", location.File, location.Line)
+			}
+		case "file":
+			for _, location := range t.Locations {
+				fprintfln("#: %s", location.File)
+			}
 		}
 	}
 
