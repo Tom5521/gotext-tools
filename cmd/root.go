@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ Similarly for optional arguments.`,
 	RunE: func(_ *cobra.Command, inputfiles []string) (err error) {
 		startDir, err := os.Getwd()
 		if err != nil {
-			return
+			return fmt.Errorf("error getting current directory: %w", err)
 		}
 
 		if directory != "" {
@@ -36,7 +37,7 @@ Similarly for optional arguments.`,
 			var files []string
 			files, err = readFilesFrom(filesFrom)
 			if err != nil {
-				return
+				return fmt.Errorf("error reading file %s: %w", filesFrom, err)
 			}
 			inputfiles = append(inputfiles, files...)
 		}
@@ -64,17 +65,17 @@ Similarly for optional arguments.`,
 
 		p, err := goparse.NewParserFromFiles(inputfiles, config)
 		if err != nil {
-			return
-		}
-
-		translations, errs := p.Parse()
-		if len(errs) > 0 {
-			return errs[0]
+			return fmt.Errorf("error parsing files: %w", err)
 		}
 
 		err = os.Chdir(startDir)
 		if err != nil {
 			return
+		}
+
+		translations, errs := p.Parse()
+		if len(errs) > 0 {
+			return fmt.Errorf("errors in translations parsing (%d): %w", len(errs), errs[0])
 		}
 
 		outputFile := filepath.Join(outputDir, defaultDomain+".pot")
@@ -85,13 +86,14 @@ Similarly for optional arguments.`,
 			if output == "-" {
 				out = os.Stdout
 			} else {
-				out, err = os.OpenFile(output, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+				outputFile = output
+				out, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 			}
 		} else {
 			out, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		}
 		if err != nil {
-			return
+			return fmt.Errorf("error oppening file %s: %w", outputFile, err)
 		}
 
 		compiler := compiler.Compiler{
@@ -100,6 +102,9 @@ Similarly for optional arguments.`,
 		}
 
 		err = compiler.CompileToWriter(out)
+		if err != nil {
+			return fmt.Errorf("error compiling translations: %w", err)
+		}
 
 		return
 	},

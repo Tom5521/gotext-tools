@@ -2,6 +2,7 @@
 package goparse
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -27,9 +28,9 @@ func (p *Parser) appendFiles(files ...string) error {
 			if p.shouldSkipFile(walker) {
 				continue
 			}
-			f, err := NewFileFromPath(file, &p.Config)
+			f, err := NewFileFromPath(walker.Path(), &p.Config)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading file %s: %w", walker.Path(), err)
 			}
 			p.files = append(p.files, f)
 		}

@@ -57,7 +57,7 @@ The default value is empty, which means that translators will be clueless!
 Don’t forget to specify this option.
 `,
 	)
-	flag.StringVar(&title, "title", "SOME DESCRIPTIVE TITLE.", "Set the title of the pot file.")
+	flag.StringVar(&title, "title", "SOME DESCRIPTIVE TITLE", "Set the title of the pot file.")
 	flag.StringVar(
 		&copyrightHolder,
 		"copyright-holder",
