@@ -38,18 +38,23 @@ func init() {
 		&msgidBugsAddress,
 		"msgid-bugs-address",
 		"",
-		`    Set the reporting address for msgid bugs. This is the email address or URL to which the translators shall report bugs in the untranslated strings:
+		`Set the reporting address for msgid bugs.
+This is the email address or URL to which the translators shall report bugs
+in the untranslated strings:
+    - Strings which are not entire sentences; see the maintainer guidelines
+    in Preparing Translatable Strings.
+    - Strings which use unclear terms or require additional context to be understood.
+    - Strings which make invalid assumptions about notation of date, time or money.
+    - Pluralisation problems.
+    - Incorrect English spelling.
+    - Incorrect formatting. 
 
-        - Strings which are not entire sentences; see the maintainer guidelines in Preparing Translatable Strings.
-        - Strings which use unclear terms or require additional context to be understood.
-        - Strings which make invalid assumptions about notation of date, time or money.
-        - Pluralisation problems.
-        - Incorrect English spelling.
-        - Incorrect formatting. 
+It can be your email address, or a mailing list address where translators 
+can write to without being subscribed, or the URL of a web page through which
+the translators can contact you.
 
-    It can be your email address, or a mailing list address where translators can write to without being subscribed, or the URL of a web page through which the translators can contact you.
-
-    The default value is empty, which means that translators will be clueless! Don’t forget to specify this option.
+The default value is empty, which means that translators will be clueless!
+Don’t forget to specify this option.
 `,
 	)
 	flag.StringVar(&title, "title", "SOME DESCRIPTIVE TITLE.", "Set the title of the pot file.")
@@ -57,13 +62,25 @@ func init() {
 		&copyrightHolder,
 		"copyright-holder",
 		"YEAR THE PACKAGE'S COPYRIGHT HOLDER",
-		"Set the copyright holder in the output. string should be the copyright holder of the surrounding package. (Note that the msgstr strings, extracted from the package’s sources, belong to the copyright holder of the package.) Translators are expected to transfer or disclaim the copyright for their translations, so that package maintainers can distribute them without legal risk. If string is empty, the output files are marked as being in the public domain; in this case, the translators are expected to disclaim their copyright, again so that package maintainers can distribute them without legal risk.",
+		`Set the copyright holder in the output.
+string should be the copyright holder of the surrounding package.
+(Note that the msgstr strings, extracted from the package’s sources,
+belong to the copyright holder of the package.) Translators are expected to transfer
+or disclaim the copyright for their translations, so that package maintainers
+can distribute them without legal risk. If string is empty, the output files
+are marked as being in the public domain; in this case, the translators are
+expected to disclaim their copyright, again so that package maintainers can
+distribute them without legal risk.
+`,
 	)
 	flag.BoolVar(
 		&foreignUser,
 		"foreign-user",
 		false,
-		"Omit FSF copyright in output. This option is equivalent to ‘--copyright-holder=''’. It can be useful for packages outside the GNU project that want their translations to be in the public domain.",
+		`Omit FSF copyright in output. 
+This option is equivalent to ‘--copyright-holder=''’. It can be useful
+for packages outside the GNU project that want their translations to
+be in the public domain.`,
 	)
 	flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
 	flag.StringSliceVarP(&exclude, "exclude", "X", nil, "Specifies which files will be omitted.")
@@ -95,8 +112,8 @@ func init() {
 		&defaultDomain,
 		"default-domain",
 		"d",
-		"default",
-		"use NAME.pot for output (instead of default.pot)",
+		"messages",
+		"use NAME.pot for output (instead of messages.pot)",
 	)
 	flag.StringVarP(&output, "output", "o", "", "write output to specified file")
 	flag.StringVarP(
@@ -118,7 +135,10 @@ If output file is -, output is written to standard output.`,
 		"no-location",
 		"n",
 		false,
-		"Do not write ‘#: filename:line’ lines. Note that using this option makes it harder for technically skilled translators to understand each message’s context.",
+		`Do not write ‘#: filename:line’ lines.
+Note that using this option makes it harder for technically
+skilled translators to understand each message’s context.
+`,
 	)
 
 	flag.StringVar(
@@ -127,13 +147,20 @@ If output file is -, output is written to standard output.`,
 		"full",
 		`Generate ‘#: filename:line’ lines (default).
 
-The optional type can be either ‘full’, ‘file’, or ‘never’. If it is not given or ‘full’, it generates the lines with both file name and line number. If it is ‘file’, the line number part is omitted. If it is ‘never’, it completely suppresses the lines (same as --no-location). `,
+The optional type can be either ‘full’, ‘file’, or ‘never’. 
+If it is not given or ‘full’, it generates the lines with both file
+name and line number. If it is ‘file’, the line number part is omitted. 
+If it is ‘never’, it completely suppresses the lines (same as --no-location).
+`,
 	)
 	flag.BoolVar(
 		&omitHeader,
 		"omit-header",
 		false,
-		`Don’t write header with ‘msgid ""’ entry. Note: Using this option may lead to an error in subsequent operations if the output contains non-ASCII characters.`,
+		`Don’t write header with ‘msgid ""’ entry. 
+Note: Using this option may lead to an error in subsequent
+operations if the output contains non-ASCII characters.
+`,
 	)
 	flag.StringVar(
 		&packageName,
@@ -145,7 +172,8 @@ The optional type can be either ‘full’, ‘file’, or ‘never’. If it is
 		&packageVersion,
 		"package-version",
 		"PACKAGE VERSION",
-		"Set the package version in the header of the output. This option has an effect only if the ‘--package-name’ option is also used.",
+		`Set the package version in the header of the output. 
+This option has an effect only if the ‘--package-name’ option is also used.`,
 	)
 	flag.StringVarP(
 		&msgstrPrefix,
