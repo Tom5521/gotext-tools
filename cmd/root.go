@@ -95,24 +95,36 @@ Similarly for optional arguments.`,
 
 		var out io.Writer
 
-		if output != "" {
-			if output == "-" {
-				out = os.Stdout
-			} else {
-				outputFile = output
-				out, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
-			}
-		} else {
-			out, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
-		}
-		if err != nil {
-			return fmt.Errorf("error oppening file %s: %w", outputFile, err)
-		}
-		if w, ok := out.(interface{ Truncate(int64) error }); ok && output != "-" {
-			err = w.Truncate(0)
+		switch {
+		case output == "-":
+			out = os.Stdout
+		case output != "":
+			outputFile = output
+			fallthrough
+		default:
+			var file *os.File
+			var stat os.FileInfo
+			stat, err = os.Stat(outputFile)
 			if err != nil {
-				return fmt.Errorf("error truncating file %s: %w", outputFile, err)
+				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
 			}
+			if os.IsExist(err) && !forcePo && output != "" {
+				return fmt.Errorf("file %s already exists", outputFile)
+			}
+
+			file, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+			if err != nil {
+				return fmt.Errorf("error opening file %s: %w", outputFile, err)
+			}
+			defer file.Close()
+
+			if stat.Size() != 0 {
+				err = file.Truncate(0)
+				if err != nil {
+					return fmt.Errorf("error truncating file %s: %w", outputFile, err)
+				}
+			}
+			out = file
 		}
 
 		compiler := compiler.Compiler{

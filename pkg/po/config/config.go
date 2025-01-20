@@ -21,9 +21,10 @@ type Config struct {
 	MsgidBugsAddress string
 	Title            string
 	CopyrightHolder  string
-	JoinExisting     bool // If true, combines new translations with existing ones.
-	ExtractAll       bool // If true, extracts all translatable strings regardless of other settings.
-	Msgstr           struct {
+	// TODO: Finish this.
+	JoinExisting bool // If true, combines new translations with existing ones.
+	ExtractAll   bool // If true, extracts all translatable strings regardless of other settings.
+	Msgstr       struct {
 		Prefix string // A prefix to prepend to all `msgstr` values.
 		Suffix string // A suffix to append to all `msgstr` values.
 	}
