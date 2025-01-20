@@ -79,7 +79,17 @@ func (t Translation) Format(cfg config.Config) string {
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		fprintfln(`msgstr ""`)
+		text := ""
+		if cfg.Msgstr.Prefix != "" || cfg.Msgstr.Suffix != "" {
+			text = id
+		}
+		if cfg.Msgstr.Prefix != "" {
+			text = cfg.Msgstr.Prefix + id
+		}
+		if cfg.Msgstr.Suffix != "" {
+			text = id + cfg.Msgstr.Suffix
+		}
+		fprintfln(`msgstr "%s"`, text)
 	}
 
 	return builder.String()
