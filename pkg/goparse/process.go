@@ -12,9 +12,9 @@ import (
 
 // translationMethod defines the structure for different getter methods.
 type translationMethod struct {
-	IDIndex      int // Position of message ID argument
-	PluralIndex  int // Position of plural form argument (-1 if not applicable)
-	ContextIndex int // Position of context argument (-1 if not applicable)
+	ID      int // Position of message ID argument
+	Plural  int // Position of plural form argument (-1 if not applicable)
+	Context int // Position of context argument (-1 if not applicable)
 }
 
 // Define supported translation methods.
@@ -29,93 +29,211 @@ var translationMethods = map[string]translationMethod{
 	"GetNDC": {1, 2, 4},
 }
 
-// translationArgument represents a parsed translation argument.
-type translationArgument struct {
-	Value    string
-	IsValid  bool
-	Position token.Pos
+// isGotextCall checks if an AST node represents a gotext function call.
+func (f *File) isGotextCall(n ast.Node) bool {
+	callExpr, ok := n.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+
+	selectorExpr, ok := callExpr.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+
+	ident, ok := selectorExpr.X.(*ast.Ident)
+	if !ok || ident.Name != f.pkgName {
+		return false
+	}
+
+	_, ok = translationMethods[selectorExpr.Sel.Name]
+	return ok
 }
 
-// ProcessMethod processes a translation method call and returns the corresponding Translation.
-func (f *File) processMethod(
-	methodName string,
-	callExpr *ast.CallExpr,
-) (entry.Translation, bool, error) {
-	method, exists := translationMethods[methodName]
-	if !exists {
-		return entry.Translation{}, false, fmt.Errorf(
-			"unsupported translation method: %s",
-			methodName,
-		)
-	}
-
-	translation := entry.Translation{}
-
-	// Extract message ID
-	msgID, err := f.extractArgument(callExpr, method.IDIndex)
+func (f *File) basicLitToTranslation(n *ast.BasicLit) (entry.Translation, error) {
+	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return translation, false, fmt.Errorf("failed to extract message ID: %w", err)
+		return entry.Translation{}, err
 	}
 
-	if !msgID.IsValid {
-		return translation, false, nil
-	}
-
-	// Set message ID and location
-	translation.ID = msgID.Value
-	translation.Locations = []entry.Location{{
-		Line: util.FindLine(f.content, msgID.Position),
-		File: f.path,
-	}}
-
-	// Extract and set context if applicable
-	if method.ContextIndex >= 0 {
-		if context, err := f.extractArgument(callExpr, method.ContextIndex); err == nil &&
-			context.IsValid {
-			translation.Context = context.Value
-		} else if err != nil {
-			return translation, false, fmt.Errorf("failed to extract context: %w", err)
-		}
-	}
-
-	// Extract and set plural form if applicable
-	if method.PluralIndex >= 0 {
-		if plural, err := f.extractArgument(callExpr, method.PluralIndex); err == nil &&
-			plural.IsValid {
-			translation.Plural = plural.Value
-		} else if err != nil {
-			return translation, false, fmt.Errorf("failed to extract plural form: %w", err)
-		}
-	}
-
-	return translation, true, nil
-}
-
-// extractArgument extracts and validates a string argument from the call expression.
-func (f *File) extractArgument(callExpr *ast.CallExpr, index int) (translationArgument, error) {
-	if index < 0 || index >= len(callExpr.Args) {
-		return translationArgument{}, nil
-	}
-
-	arg, ok := callExpr.Args[index].(*ast.BasicLit)
-	if !ok || arg.Kind != token.STRING {
-		return translationArgument{}, nil
-	}
-
-	f.seenTokens[arg] = true
-
-	value, err := strconv.Unquote(arg.Value)
-	if err != nil {
-		return translationArgument{}, fmt.Errorf("failed to unquote argument value: %w", err)
-	}
-
-	if value == "" {
-		return translationArgument{}, nil
-	}
-
-	return translationArgument{
-		Value:    value,
-		IsValid:  true,
-		Position: arg.Pos(),
+	return entry.Translation{
+		ID: str,
+		Locations: []entry.Location{{
+			Line: util.FindLine(f.content, n.Pos()),
+			File: f.path,
+		}},
 	}, nil
+}
+
+func (f *File) processGeneric(exprs ...ast.Expr) ([]entry.Translation, []error) {
+	var translations []entry.Translation
+	var errors []error
+
+	for _, expr := range exprs {
+		if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
+			if f.seenTokens[lit] {
+				continue
+			}
+
+			if lit.Value == `""` {
+				continue
+			}
+
+			translation, err := f.basicLitToTranslation(lit)
+			if err != nil {
+				errors = append(errors, err)
+				continue
+			}
+
+			translations = append(translations, translation)
+			f.seenTokens[lit] = true
+		}
+	}
+
+	return translations, errors
+}
+
+type argumentData struct {
+	str   string
+	valid bool
+	err   error
+	pos   token.Pos
+}
+
+func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
+	if index == -1 {
+		return
+	}
+	if index < 0 || index >= len(call.Args) {
+		a.err = fmt.Errorf("index (%d) out of range", index)
+		return
+	}
+	lit, ok := call.Args[index].(*ast.BasicLit)
+	if !ok {
+		return
+	}
+
+	if lit.Kind != token.STRING {
+		a.err = fmt.Errorf("the specified argument (%d) is not a string", index)
+		return
+	}
+
+	if lit.Value == `""` {
+		return
+	}
+
+	pos := lit.Pos()
+
+	f.seenTokens[lit] = true
+
+	str, err := strconv.Unquote(lit.Value)
+	if err != nil {
+		a.err = fmt.Errorf("error unquoting string: %w", err)
+		return
+	}
+
+	return argumentData{str, true, err, pos}
+}
+
+func (f *File) processPoCall(
+	call *ast.CallExpr,
+) (translation entry.Translation, valid bool, err error) {
+	selector := call.Fun.(*ast.SelectorExpr)
+	method := translationMethods[selector.Sel.Name]
+
+	args := []argumentData{
+		f.extractArg(method.ID, call),
+		f.extractArg(method.Context, call),
+		f.extractArg(method.Plural, call),
+	}
+
+	for i, arg := range args {
+		if arg.err != nil {
+			err = arg.err
+			return
+		}
+		switch i {
+		case 0:
+			valid = arg.valid
+			translation.ID = arg.str
+			translation.Locations = append(translation.Locations,
+				entry.Location{
+					File: f.path,
+					Line: util.FindLine(f.content, arg.pos),
+				},
+			)
+			fallthrough
+		case 1:
+			translation.Context = arg.str
+			fallthrough
+		case 2:
+			translation.Plural = arg.str
+		}
+	}
+
+	return
+}
+
+func (f *File) processNode(n ast.Node) ([]entry.Translation, []error) {
+	if n == nil {
+		return nil, nil
+	}
+	var translations []entry.Translation
+	var errors []error
+
+	processGeneric := func(exprs ...ast.Expr) {
+		t, e := f.processGeneric(exprs...)
+		translations = append(translations, t...)
+		errors = append(errors, e...)
+	}
+
+	processPoCall := func(call *ast.CallExpr) {
+		t, valid, err := f.processPoCall(call)
+		if !valid {
+			return
+		}
+		translations = append(translations, t)
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if !f.config.ExtractAll {
+		if f.isGotextCall(n) {
+			call := n.(*ast.CallExpr)
+			processPoCall(call)
+		}
+
+		return translations, errors
+	}
+
+	switch t := n.(type) {
+	case *ast.CallExpr:
+		if f.isGotextCall(t) {
+			processPoCall(t)
+		} else {
+			processGeneric(t.Args...)
+		}
+	case *ast.AssignStmt:
+		processGeneric(t.Rhs...)
+	case *ast.ValueSpec:
+		processGeneric(t.Values...)
+	case *ast.ReturnStmt:
+		processGeneric(t.Results...)
+	case *ast.KeyValueExpr:
+		processGeneric(t.Value)
+	case *ast.SendStmt:
+		processGeneric(t.Value)
+	case *ast.CompositeLit:
+		processGeneric(t.Elts...)
+	case *ast.BinaryExpr:
+		processGeneric(t.X, t.Y)
+	// Switch expressions.
+	case *ast.SwitchStmt:
+		processGeneric(t.Tag)
+	case *ast.CaseClause:
+		processGeneric(t.List...)
+	}
+
+	return translations, errors
 }

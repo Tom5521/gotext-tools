@@ -7,7 +7,6 @@ import (
 	"go/token"
 	"io"
 	"os"
-	"strconv"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/config"
@@ -134,81 +133,6 @@ func (f *File) determinePackageInfo() {
 	}
 }
 
-// isGotextCall checks if an AST node represents a gotext function call.
-func (f *File) isGotextCall(n ast.Node) bool {
-	callExpr, ok := n.(*ast.CallExpr)
-	if !ok {
-		return false
-	}
-
-	selectorExpr, ok := callExpr.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return false
-	}
-
-	ident, ok := selectorExpr.X.(*ast.Ident)
-	if !ok || ident.Name != f.pkgName {
-		return false
-	}
-
-	_, ok = translationMethods[selectorExpr.Sel.Name]
-	return ok
-}
-
-func (f *File) basicLitToTranslation(n *ast.BasicLit) (entry.Translation, error) {
-	str, err := strconv.Unquote(n.Value)
-	if err != nil {
-		return entry.Translation{}, err
-	}
-
-	return entry.Translation{
-		ID: str,
-		Locations: []entry.Location{{
-			Line: util.FindLine(f.content, n.Pos()),
-			File: f.path,
-		}},
-	}, nil
-}
-
-func (f *File) extractCommonString(n ast.Node) ([]entry.Translation, []error) {
-	var translations []entry.Translation
-	var errors []error
-
-	processExpressions := func(exprs []ast.Expr) {
-		for _, expr := range exprs {
-			if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
-				if f.seenTokens[lit] {
-					continue
-				}
-
-				if lit.Value == `""` {
-					continue
-				}
-
-				translation, err := f.basicLitToTranslation(lit)
-				if err != nil {
-					errors = append(errors, err)
-					continue
-				}
-
-				translations = append(translations, translation)
-				f.seenTokens[lit] = true
-			}
-		}
-	}
-
-	switch t := n.(type) {
-	case *ast.CallExpr:
-		processExpressions(t.Args)
-	case *ast.AssignStmt:
-		processExpressions(t.Rhs)
-	case *ast.ValueSpec:
-		processExpressions(t.Values)
-	}
-
-	return translations, errors
-}
-
 // Translations returns all translations found in the file.
 func (f *File) Translations() ([]entry.Translation, []error) {
 	if f.config.Logger != nil && f.config.Verbose {
@@ -219,32 +143,9 @@ func (f *File) Translations() ([]entry.Translation, []error) {
 	var errors []error
 
 	for n := range InspectNode(f.file) {
-		if n == nil {
-			continue
-		}
-
-		if !f.isGotextCall(n) {
-			if f.config.ExtractAll {
-				ts, errs := f.extractCommonString(n)
-				translations = append(translations, ts...)
-				errors = append(errors, errs...)
-			}
-			continue
-		}
-
-		callExpr := n.(*ast.CallExpr)
-		selectorExpr := callExpr.Fun.(*ast.SelectorExpr)
-
-		translation, valid, err := f.processMethod(selectorExpr.Sel.Name, callExpr)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("[%s:%d] %w",
-				f.path,
-				util.FindLine(f.content, selectorExpr.Pos()),
-				err))
-		}
-		if valid && err == nil {
-			translations = append(translations, translation)
-		}
+		t, e := f.processNode(n)
+		translations = append(translations, t...)
+		errors = append(errors, e...)
 	}
 
 	return util.CleanDuplicates(translations), errors
