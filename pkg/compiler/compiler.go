@@ -18,6 +18,12 @@ import (
 //go:embed header.pot
 var baseHeader string
 
+const (
+	copyrightFormat = `# Copyright (C) %s
+# This file is distributed under the same license as the %s package.`
+	foreignCopyrightFormat = `# This file is put in the public domain.`
+)
+
 // Compiler is responsible for compiling a list of translations into various formats
 // (e.g., string, file, or bytes) based on the given configuration.
 type Compiler struct {
@@ -30,11 +36,15 @@ func (c Compiler) CompileToWriter(w io.Writer) error {
 	var err error
 	// Write the base header, including package version, language, and plural forms.
 	if !c.Config.OmitHeader {
+		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
+		if c.Config.ForeignUser {
+			copyright = foreignCopyrightFormat
+		}
 		_, err = fmt.Fprintf(
 			w,
 			baseHeader,
 			c.Config.Title,
-			c.Config.CopyrightHolder,
+			copyright,
 			c.Config.PackageName,
 			c.Config.PackageVersion,
 			c.Config.MsgidBugsAddress,

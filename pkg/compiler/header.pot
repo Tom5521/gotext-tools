@@ -1,6 +1,5 @@
 # %s.
-# Copyright (C) %s
-# This file is distributed under the same license as the %s package.
+%s
 #
 #, fuzzy
 msgid ""
