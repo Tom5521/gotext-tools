@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -41,6 +42,14 @@ Similarly for optional arguments.`,
 			}
 			inputfiles = append(inputfiles, files...)
 		}
+		if excludeFile != "" {
+			var files []string
+			files, err = readFilesFrom(excludeFile)
+			if err != nil {
+				return fmt.Errorf("error reading file %s: %w", excludeFile, err)
+			}
+			exclude = append(exclude, files...)
+		}
 
 		config := config.Config{
 			DefaultDomain:    defaultDomain,
@@ -63,7 +72,11 @@ Similarly for optional arguments.`,
 		config.Msgstr.Prefix = msgstrPrefix
 		config.Msgstr.Suffix = msgstrSuffix
 
-		p, err := goparse.NewParserFromFiles(inputfiles, config)
+		p, err := goparse.NewParserFromFiles(
+			inputfiles,
+			config,
+			log.New(os.Stdout, "INFO: ", log.Ltime),
+		)
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
 		}
@@ -95,7 +108,7 @@ Similarly for optional arguments.`,
 		if err != nil {
 			return fmt.Errorf("error oppening file %s: %w", outputFile, err)
 		}
-		if w, ok := out.(interface{ Truncate(int64) error }); ok {
+		if w, ok := out.(interface{ Truncate(int64) error }); ok && output != "-" {
 			err = w.Truncate(0)
 			if err != nil {
 				return fmt.Errorf("error truncating file %s: %w", outputFile, err)
