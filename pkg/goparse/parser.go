@@ -47,8 +47,7 @@ func NewParser(path string, cfg config.Config, logger *log.Logger) (*Parser, err
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg)
-	p.Logger = logger
+	p := baseParser(cfg, logger)
 	err = p.appendFiles(path)
 	if err != nil {
 		return nil, err
@@ -58,10 +57,11 @@ func NewParser(path string, cfg config.Config, logger *log.Logger) (*Parser, err
 }
 
 // baseParser creates a base Parser instance with the provided configuration.
-func baseParser(cfg config.Config) *Parser {
+func baseParser(cfg config.Config, logger *log.Logger) *Parser {
 	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
+		Logger: logger,
 	}
 }
 
@@ -91,8 +91,7 @@ func unsafeNewParserFromBytes(
 	cfg config.Config,
 	logger *log.Logger,
 ) (*Parser, error) {
-	p := baseParser(cfg)
-	p.Logger = logger
+	p := baseParser(cfg, logger)
 	f, err := unsafeNewFile(b, name, &cfg)
 	if err != nil {
 		return nil, err
@@ -135,8 +134,7 @@ func NewParserFromFile(file *os.File, cfg config.Config, logger *log.Logger) (*P
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg)
-	p.Logger = logger
+	p := baseParser(cfg, logger)
 	f, err := unsafeNewFileFromReader(file, file.Name(), &cfg)
 	if err != nil {
 		return nil, err
@@ -153,8 +151,7 @@ func NewParserFromFiles(files []string, cfg config.Config, logger *log.Logger) (
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg)
-	p.Logger = logger
+	p := baseParser(cfg, logger)
 	err = p.appendFiles(files...)
 	if err != nil {
 		return nil, err
