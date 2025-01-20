@@ -28,7 +28,7 @@ func main(){
 		},
 	}
 	cfg := config.Default()
-	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg, nil)
+	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,7 +60,7 @@ func main(){
 }`
 	cfg := config.Default()
 	cfg.ExtractAll = true
-	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg, nil)
+	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Error(err)
 	}

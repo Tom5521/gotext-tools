@@ -110,7 +110,7 @@ func unsafeNewFile(content []byte, name string, cfg *config.Config) (*File, erro
 	return file, nil
 }
 
-// parse parses the file content into an AST
+// parse parses the file content into an AST.
 func (f *File) parse() error {
 	parsedFile, err := parser.ParseFile(token.NewFileSet(), f.path, f.content, 0)
 	if err != nil {
@@ -134,7 +134,7 @@ func (f *File) determinePackageInfo() {
 	}
 }
 
-// isGotextCall checks if an AST node represents a gotext function call
+// isGotextCall checks if an AST node represents a gotext function call.
 func (f *File) isGotextCall(n ast.Node) bool {
 	callExpr, ok := n.(*ast.CallExpr)
 	if !ok {
@@ -209,8 +209,12 @@ func (f *File) extractCommonString(n ast.Node) ([]entry.Translation, []error) {
 	return translations, errors
 }
 
-// Translations returns all translations found in the file
+// Translations returns all translations found in the file.
 func (f *File) Translations() ([]entry.Translation, []error) {
+	if f.config.Logger != nil && f.config.Verbose {
+		f.config.Logger.Printf("Parsing %s...", f.path)
+	}
+
 	var translations []entry.Translation
 	var errors []error
 

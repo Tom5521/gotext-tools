@@ -22,18 +22,6 @@ var root = &cobra.Command{
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.`,
 	RunE: func(_ *cobra.Command, inputfiles []string) (err error) {
-		startDir, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("error getting current directory: %w", err)
-		}
-
-		if directory != "" {
-			err = os.Chdir(directory)
-			if err != nil {
-				return
-			}
-		}
-
 		if filesFrom != "" {
 			var files []string
 			files, err = readFilesFrom(filesFrom)
@@ -51,7 +39,17 @@ Similarly for optional arguments.`,
 			exclude = append(exclude, files...)
 		}
 
+		if directory != "" {
+			for i, file := range inputfiles {
+				inputfiles[i] = filepath.Join(directory, file)
+			}
+			for i, file := range exclude {
+				exclude[i] = filepath.Join(directory, file)
+			}
+		}
+
 		config := config.Config{
+			Logger:           log.New(os.Stdout, "INFO: ", log.Ltime),
 			DefaultDomain:    defaultDomain,
 			ForcePo:          forcePo,
 			NoLocation:       noLocation,
@@ -68,6 +66,7 @@ Similarly for optional arguments.`,
 			CopyrightHolder:  copyrightHolder,
 			JoinExisting:     joinExisting,
 			ExtractAll:       extractAll,
+			Verbose:          verbose,
 		}
 		config.Msgstr.Prefix = msgstrPrefix
 		config.Msgstr.Suffix = msgstrSuffix
@@ -75,15 +74,9 @@ Similarly for optional arguments.`,
 		p, err := goparse.NewParserFromFiles(
 			inputfiles,
 			config,
-			log.New(os.Stdout, "INFO: ", log.Ltime),
 		)
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
-		}
-
-		err = os.Chdir(startDir)
-		if err != nil {
-			return
 		}
 
 		translations, errs := p.Parse()
@@ -99,6 +92,9 @@ Similarly for optional arguments.`,
 		case output == "-":
 			out = os.Stdout
 		case output != "":
+			if outputDir != "" {
+				output = filepath.Join(outputDir, output)
+			}
 			outputFile = output
 			fallthrough
 		default:

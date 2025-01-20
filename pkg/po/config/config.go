@@ -2,11 +2,13 @@ package config
 
 import (
 	"errors"
+	"log"
 )
 
 // Config represents the configuration options for PO (Portable Object) file processing.
 // This struct contains various settings that influence the parsing and generation of PO files.
 type Config struct {
+	Logger           *log.Logger
 	DefaultDomain    string   // The default domain name for translations.
 	ForcePo          bool     // If true, forces the output to always be in PO format.
 	NoLocation       bool     // If true, omits location comments from the output.
@@ -21,6 +23,7 @@ type Config struct {
 	MsgidBugsAddress string
 	Title            string
 	CopyrightHolder  string
+	Verbose          bool
 	// TODO: Finish this.
 	JoinExisting bool // If true, combines new translations with existing ones.
 	ExtractAll   bool // If true, extracts all translatable strings regardless of other settings.

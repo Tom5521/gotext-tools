@@ -1,10 +1,10 @@
-// Package goparse provides tools to parse and process Go source files, extracting translations and handling various configurations.
+// Package goparse provides tools to parse and process Go source files,
+// extracting translations and handling various configurations.
 package goparse
 
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -20,7 +20,6 @@ type Parser struct {
 	Config config.Config   // Configuration settings for parsing.
 	files  []*File         // List of parsed files.
 	seen   map[string]bool // Tracks already processed files to avoid duplication.
-	Logger *log.Logger
 }
 
 func (p *Parser) appendFiles(files ...string) error {
@@ -29,6 +28,9 @@ func (p *Parser) appendFiles(files ...string) error {
 		for walker.Step() {
 			if p.shouldSkipFile(walker) {
 				continue
+			}
+			if p.Config.Verbose && p.Config.Logger != nil {
+				p.Config.Logger.Printf("Reading %s...", walker.Path())
 			}
 			f, err := NewFileFromPath(walker.Path(), &p.Config)
 			if err != nil {
@@ -42,12 +44,12 @@ func (p *Parser) appendFiles(files ...string) error {
 }
 
 // NewParser initializes a new Parser for a given directory path and configuration.
-func NewParser(path string, cfg config.Config, logger *log.Logger) (*Parser, error) {
+func NewParser(path string, cfg config.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg, logger)
+	p := baseParser(cfg)
 	err = p.appendFiles(path)
 	if err != nil {
 		return nil, err
@@ -57,11 +59,10 @@ func NewParser(path string, cfg config.Config, logger *log.Logger) (*Parser, err
 }
 
 // baseParser creates a base Parser instance with the provided configuration.
-func baseParser(cfg config.Config, logger *log.Logger) *Parser {
+func baseParser(cfg config.Config) *Parser {
 	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
-		Logger: logger,
 	}
 }
 
@@ -70,7 +71,6 @@ func NewParserFromReader(
 	r io.Reader,
 	name string,
 	cfg config.Config,
-	logger *log.Logger,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -81,7 +81,7 @@ func NewParserFromReader(
 	if err != nil {
 		return nil, err
 	}
-	return unsafeNewParserFromBytes(data, name, cfg, logger)
+	return unsafeNewParserFromBytes(data, name, cfg)
 }
 
 // unsafeNewParserFromBytes creates a Parser from raw byte data without validating the configuration.
@@ -89,9 +89,8 @@ func unsafeNewParserFromBytes(
 	b []byte,
 	name string,
 	cfg config.Config,
-	logger *log.Logger,
 ) (*Parser, error) {
-	p := baseParser(cfg, logger)
+	p := baseParser(cfg)
 	f, err := unsafeNewFile(b, name, &cfg)
 	if err != nil {
 		return nil, err
@@ -105,13 +104,12 @@ func NewParserFromString(
 	s string,
 	name string,
 	cfg config.Config,
-	logger *log.Logger,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	return unsafeNewParserFromBytes([]byte(s), name, cfg, logger)
+	return unsafeNewParserFromBytes([]byte(s), name, cfg)
 }
 
 // NewParserFromBytes creates a Parser from raw byte data after validating the configuration.
@@ -119,22 +117,21 @@ func NewParserFromBytes(
 	b []byte,
 	name string,
 	cfg config.Config,
-	logger *log.Logger,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	return unsafeNewParserFromBytes(b, name, cfg, logger)
+	return unsafeNewParserFromBytes(b, name, cfg)
 }
 
 // NewParserFromFile creates a Parser from an os.File instance.
-func NewParserFromFile(file *os.File, cfg config.Config, logger *log.Logger) (*Parser, error) {
+func NewParserFromFile(file *os.File, cfg config.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg, logger)
+	p := baseParser(cfg)
 	f, err := unsafeNewFileFromReader(file, file.Name(), &cfg)
 	if err != nil {
 		return nil, err
@@ -146,12 +143,12 @@ func NewParserFromFile(file *os.File, cfg config.Config, logger *log.Logger) (*P
 }
 
 // NewParserFromFiles initializes a Parser from a list of file paths.
-func NewParserFromFiles(files []string, cfg config.Config, logger *log.Logger) (*Parser, error) {
+func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	p := baseParser(cfg, logger)
+	p := baseParser(cfg)
 	err = p.appendFiles(files...)
 	if err != nil {
 		return nil, err
@@ -164,9 +161,9 @@ func NewParserFromFiles(files []string, cfg config.Config, logger *log.Logger) (
 func (p *Parser) Parse() (translations []entry.Translation, errs []error) {
 	for _, f := range p.files {
 		t, e := f.Translations()
-		if p.Logger != nil {
+		if p.Config.Logger != nil {
 			for _, err := range e {
-				p.Logger.Println(err)
+				p.Config.Logger.Println(err)
 			}
 		}
 		errs = append(errs, e...)
@@ -198,8 +195,8 @@ func (p *Parser) shouldSkipFile(w *krfs.Walker) bool {
 
 	_, seen := p.seen[abs]
 	if seen {
-		if p.Logger != nil {
-			p.Logger.Printf("warning: skipping duplicated file: %s", w.Path())
+		if p.Config.Logger != nil {
+			p.Config.Logger.Printf("warning: skipping duplicated file: %s", w.Path())
 		}
 		return true
 	}
