@@ -189,13 +189,13 @@ func (f *File) processNode(n ast.Node) ([]entry.Translation, []error) {
 
 	processPoCall := func(call *ast.CallExpr) {
 		t, valid, err := f.processPoCall(call)
+		if err != nil {
+			errors = append(errors, err)
+		}
 		if !valid {
 			return
 		}
 		translations = append(translations, t)
-		if err != nil {
-			errors = append(errors, err)
-		}
 	}
 
 	if !f.config.ExtractAll {
