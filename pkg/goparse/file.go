@@ -14,7 +14,7 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
-// Constants
+// Constants.
 const (
 	DefaultPackageName = "gotext"
 	// WantedImport specifies the import path of the "gotext" library
@@ -43,7 +43,7 @@ type File struct {
 func NewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+		return nil, err
 	}
 	return unsafeNewFileFromReader(r, name, cfg)
 }
@@ -63,7 +63,7 @@ func unsafeNewFileFromReader(r io.Reader, name string, cfg *config.Config) (*Fil
 func NewFileFromPath(path string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+		return nil, err
 	}
 
 	return unsafeNewFileFromPath(path, cfg)
@@ -85,7 +85,7 @@ func unsafeNewFileFromPath(path string, cfg *config.Config) (*File, error) {
 func NewFileFromBytes(b []byte, name string, cfg *config.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+		return nil, err
 	}
 
 	return unsafeNewFile(b, name, cfg)
