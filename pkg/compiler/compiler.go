@@ -45,7 +45,6 @@ func (c Compiler) CompileToWriter(w io.Writer) error {
 			baseHeader,
 			c.Config.Title,
 			copyright,
-			c.Config.PackageName,
 			c.Config.PackageVersion,
 			c.Config.MsgidBugsAddress,
 			time.Now().Format(time.DateTime),

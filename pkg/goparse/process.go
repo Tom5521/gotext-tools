@@ -94,12 +94,12 @@ func (f *File) processMethod(
 // extractArgument extracts and validates a string argument from the call expression.
 func (f *File) extractArgument(callExpr *ast.CallExpr, index int) (translationArgument, error) {
 	if index < 0 || index >= len(callExpr.Args) {
-		return translationArgument{IsValid: false}, nil
+		return translationArgument{}, nil
 	}
 
 	arg, ok := callExpr.Args[index].(*ast.BasicLit)
 	if !ok || arg.Kind != token.STRING {
-		return translationArgument{IsValid: false}, nil
+		return translationArgument{}, nil
 	}
 
 	f.seenTokens[arg] = true
@@ -107,6 +107,10 @@ func (f *File) extractArgument(callExpr *ast.CallExpr, index int) (translationAr
 	value, err := strconv.Unquote(arg.Value)
 	if err != nil {
 		return translationArgument{}, fmt.Errorf("failed to unquote argument value: %w", err)
+	}
+
+	if value == "" {
+		return translationArgument{}, nil
 	}
 
 	return translationArgument{

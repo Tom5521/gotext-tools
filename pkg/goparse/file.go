@@ -181,6 +181,10 @@ func (f *File) extractCommonString(n ast.Node) ([]entry.Translation, []error) {
 					continue
 				}
 
+				if lit.Value == `""` {
+					continue
+				}
+
 				translation, err := f.basicLitToTranslation(lit)
 				if err != nil {
 					errors = append(errors, err)

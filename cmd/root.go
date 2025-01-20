@@ -95,6 +95,12 @@ Similarly for optional arguments.`,
 		if err != nil {
 			return fmt.Errorf("error oppening file %s: %w", outputFile, err)
 		}
+		if w, ok := out.(interface{ Truncate(int64) error }); ok {
+			err = w.Truncate(0)
+			if err != nil {
+				return fmt.Errorf("error truncating file %s: %w", outputFile, err)
+			}
+		}
 
 		compiler := compiler.Compiler{
 			Translations: translations,
