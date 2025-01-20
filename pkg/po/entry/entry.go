@@ -82,21 +82,31 @@ func (t Translation) Format(cfg config.Config) string {
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
 		for i := range cfg.Nplurals {
-			fprintfln(`msgstr[%d] ""`, i)
+			if i == 1 {
+				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, cfg))
+				continue
+			}
+			fprintfln(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, cfg))
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		text := `""`
-		if cfg.Msgstr.Prefix != "" {
-			text = formatString(cfg.Msgstr.Prefix + t.ID)
-		}
-		if cfg.Msgstr.Suffix != "" {
-			text = formatString(t.ID + cfg.Msgstr.Suffix)
-		}
-		fprintfln(`msgstr %s`, text)
+		fprintfln(`msgstr %s`, formatPrefixAndSuffix(t.ID, cfg))
 	}
 
 	return builder.String()
+}
+
+func formatPrefixAndSuffix(id string, cfg config.Config) string {
+	text := `""`
+
+	if cfg.Msgstr.Prefix != "" {
+		text = formatString(cfg.Msgstr.Prefix + id)
+	}
+	if cfg.Msgstr.Suffix != "" {
+		text = formatString(id + cfg.Msgstr.Suffix)
+	}
+
+	return text
 }
 
 // formatString applies formatting rules to a string to make it compatible
