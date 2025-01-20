@@ -142,6 +142,10 @@ func (f *File) Translations() ([]entry.Translation, []error) {
 	var translations []entry.Translation
 	var errors []error
 
+	if !f.hasGotext {
+		return translations, errors
+	}
+
 	for n := range InspectNode(f.file) {
 		t, e := f.processNode(n)
 		translations = append(translations, t...)
