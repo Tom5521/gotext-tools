@@ -17,7 +17,7 @@ type (
 		pos     int
 		literal string
 		File    string
-		Line    string
+		Line    int
 	}
 	GeneralComment struct {
 		pos     int
