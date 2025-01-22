@@ -20,6 +20,10 @@ func NewLexer(input []rune) *Lexer {
 	return l
 }
 
+func NewLexerFromString(input string) *Lexer {
+	return NewLexer([]rune(input))
+}
+
 func (l *Lexer) readChar() {
 	l.prev = l.char
 	if l.read >= len(l.input) {
@@ -47,16 +51,14 @@ func (l *Lexer) NextToken() Token {
 		tok.Type = EOF
 		tok.Literal = ""
 	default:
-		if unicode.IsLetter(l.char) {
+		switch {
+		case unicode.IsDigit(l.char):
+			tok.Literal = l.readDigit()
+			tok.Type = DIGIT
+		case unicode.IsLetter(l.char):
 			tok.Literal = l.readKeyword()
-			t, ok := keywords[tok.Literal]
-			if ok {
-				tok.Type = t
-			} else {
-				tok.Type = ILLEGAL
-			}
-			return tok
-		} else {
+			tok.Type = LookupIdent(tok.Literal)
+		default:
 			tok = Token{
 				Type:    ILLEGAL,
 				Literal: string(l.char),
@@ -68,11 +70,32 @@ func (l *Lexer) NextToken() Token {
 	return tok
 }
 
+func (l *Lexer) readPlural() string {
+	pos := l.pos
+
+	for (l.char != ']' || unicode.IsDigit(l.char)) && l.char != 0 {
+		l.readChar()
+	}
+	l.readChar()
+
+	return string(l.input[pos:l.pos])
+}
+
+func (l *Lexer) readDigit() string {
+	pos := l.pos
+
+	for unicode.IsDigit(l.char) {
+		l.readChar()
+	}
+
+	return string(l.input[pos:l.pos])
+}
+
 func (l *Lexer) readString() string {
 	l.readChar() // skip opening quote
 	pos := l.pos
 
-	for l.char != '"' && l.char != 0 {
+	for l.char != '"' && l.char != '0' {
 		l.readChar()
 	}
 
@@ -92,7 +115,11 @@ func (l *Lexer) readComment() string {
 
 func (l *Lexer) readKeyword() string {
 	pos := l.pos
-	for unicode.IsLetter(l.char) || unicode.IsDigit(l.char) {
+	for unicode.IsLetter(l.char) || l.char == '[' || l.char == '_' {
+		if l.char == '[' {
+			str := string(l.input[pos:l.pos])
+			return str + l.readPlural()
+		}
 		l.readChar()
 	}
 	return string(l.input[pos:l.pos])

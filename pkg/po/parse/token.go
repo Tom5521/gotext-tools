@@ -1,5 +1,7 @@
 package parse
 
+import "regexp"
+
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
@@ -8,10 +10,16 @@ const (
 	MSGID   = "MSGID"
 	MSGSTR  = "MSGSTR"
 	MSGCTXT = "MSGCTXT"
+	DIGIT   = "DIGIT"
+
+	LeftBracket  = "["
+	RightBracket = "]"
 
 	PluralMsgid  = "PluralMsgid"
 	PluralMsgstr = "PluralMsgstr"
 )
+
+var pluralRegex = regexp.MustCompile(`msgstr\[*\d*\]`)
 
 type Type string
 
@@ -20,7 +28,6 @@ var keywords = map[string]Type{
 	"msgstr":       MSGSTR,
 	"msgctxt":      MSGCTXT,
 	"msgid_plural": PluralMsgid,
-	"msgstr[%d]":   PluralMsgstr,
 	"#":            COMMENT,
 }
 
@@ -30,9 +37,13 @@ type Token struct {
 }
 
 func LookupIdent(ident string) Type {
+	if pluralRegex.MatchString(ident) {
+		return PluralMsgstr
+	}
+
 	if token, ok := keywords[ident]; ok {
 		return token
 	}
 
-	return Type(ident)
+	return ILLEGAL
 }
