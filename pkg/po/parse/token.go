@@ -34,6 +34,7 @@ var keywords = map[string]Type{
 type Token struct {
 	Type    Type
 	Literal string
+	Pos     int
 }
 
 func LookupIdent(ident string) Type {

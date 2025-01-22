@@ -36,8 +36,10 @@ func (l *Lexer) readChar() {
 }
 
 func (l *Lexer) NextToken() Token {
-	var tok Token
 	l.skipWhitespace()
+	tok := Token{
+		Pos: l.pos,
+	}
 
 	switch l.char {
 	case '#':
@@ -46,7 +48,6 @@ func (l *Lexer) NextToken() Token {
 	case '"':
 		tok.Type = STRING
 		tok.Literal = l.readString()
-		l.readChar() // consume closing quote
 	case 0:
 		tok.Type = EOF
 		tok.Literal = ""
@@ -92,18 +93,20 @@ func (l *Lexer) readDigit() string {
 }
 
 func (l *Lexer) readString() string {
-	l.readChar() // skip opening quote
 	pos := l.pos
+
+	l.readChar() // Consume 1st quote.
 
 	for l.char != '"' && l.char != '0' {
 		l.readChar()
 	}
 
+	l.readChar() // Consume last quote.
+
 	return string(l.input[pos:l.pos])
 }
 
 func (l *Lexer) readComment() string {
-	l.readChar() // skip #
 	pos := l.pos
 
 	for l.char != '\n' && l.char != 0 {
