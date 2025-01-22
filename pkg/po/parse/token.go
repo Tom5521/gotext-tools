@@ -12,9 +12,6 @@ const (
 	MSGCTXT = "MSGCTXT"
 	DIGIT   = "DIGIT"
 
-	LeftBracket  = "["
-	RightBracket = "]"
-
 	PluralMsgid  = "PluralMsgid"
 	PluralMsgstr = "PluralMsgstr"
 )
