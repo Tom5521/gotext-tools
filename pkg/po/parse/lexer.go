@@ -35,14 +35,6 @@ func (l *Lexer) readChar() {
 	l.read++
 }
 
-func (l Lexer) peek() rune {
-	if l.read > 0 || l.read >= len(l.input) {
-		return 0
-	}
-
-	return l.input[l.read]
-}
-
 func (l *Lexer) NextToken() Token {
 	l.skipWhitespace()
 	tok := Token{
