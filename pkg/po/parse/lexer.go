@@ -35,93 +35,82 @@ func (l *Lexer) readChar() {
 	l.read++
 }
 
+func (l Lexer) peek() rune {
+	if l.read > 0 || l.read >= len(l.input) {
+		return 0
+	}
+
+	return l.input[l.read]
+}
+
 func (l *Lexer) NextToken() Token {
 	l.skipWhitespace()
 	tok := Token{
 		Pos: l.pos,
 	}
 
-	switch l.char {
-	case '#':
+	switch {
+	case l.char == '#':
 		tok.Type = COMMENT
 		tok.Literal = l.readComment()
-	case '"':
+	case l.char == '"':
 		tok.Type = STRING
 		tok.Literal = l.readString()
-	case 0:
+	case l.isKeyword():
+		tok.Literal = l.readKeyword()
+		tok.Type = LookupIdent(tok.Literal)
+	case l.char == 0:
 		tok.Type = EOF
 		tok.Literal = ""
 	default:
-		switch {
-		case unicode.IsLetter(l.char):
-			tok.Literal = l.readKeyword()
-			tok.Type = LookupIdent(tok.Literal)
-		default:
-			tok = Token{
-				Type:    ILLEGAL,
-				Literal: string(l.char),
-			}
-			l.readChar()
+		tok = Token{
+			Type:    ILLEGAL,
+			Literal: string(l.char),
 		}
+		l.readChar()
 	}
 
 	return tok
 }
 
-func (l *Lexer) readPlural() string {
-	pos := l.pos
-
-	for (l.char != ']' || unicode.IsDigit(l.char)) && l.char != 0 {
-		l.readChar()
-	}
-	l.readChar()
-
-	return string(l.input[pos:l.pos])
+func (l *Lexer) isKeyword() bool {
+	return unicode.IsLetter(l.char)
 }
 
-func (l *Lexer) readDigit() string {
+func (l *Lexer) readKeyword() string {
 	pos := l.pos
 
-	for unicode.IsDigit(l.char) {
+	for l.char != 0 && (unicode.IsLetter(l.char) || l.char == '_' || l.char == '[' || l.char == ']' || unicode.IsDigit(l.char)) {
 		l.readChar()
 	}
-
 	return string(l.input[pos:l.pos])
 }
 
 func (l *Lexer) readString() string {
 	pos := l.pos
+	l.readChar() // Consume opening quote
 
-	l.readChar() // Consume 1st quote.
-
-	for l.char != '"' && l.char != '0' {
+	for l.char != '"' && l.char != 0 {
+		if l.char == '\\' {
+			l.readChar() // Skip escape character
+			l.readChar() // Skip escaped character
+			continue
+		}
 		l.readChar()
 	}
 
-	l.readChar() // Consume last quote.
-
+	l.readChar() // Consume closing quote
 	return string(l.input[pos:l.pos])
 }
 
 func (l *Lexer) readComment() string {
 	pos := l.pos
 
+	// Handle different comment types: translator, extracted, reference, flags, previous
 	for l.char != '\n' && l.char != 0 {
 		l.readChar()
 	}
 
-	return string(l.input[pos:l.pos])
-}
-
-func (l *Lexer) readKeyword() string {
-	pos := l.pos
-	for unicode.IsLetter(l.char) || l.char == '[' || l.char == '_' {
-		if l.char == '[' {
-			str := string(l.input[pos:l.pos])
-			return str + l.readPlural()
-		}
-		l.readChar()
-	}
 	return string(l.input[pos:l.pos])
 }
 
