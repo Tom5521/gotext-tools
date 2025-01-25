@@ -8,17 +8,29 @@ import (
 )
 
 type Parser struct {
-	lexer *Lexer
-	file  *File
-	name  string
+	input    []rune
+	tokens   []Token
+	position int
+	file     *File
+	name     string
+}
+
+func (p *Parser) collectTokens(l *Lexer) {
+	tok := l.NextToken()
+	for tok.Type != EOF {
+		p.tokens = append(p.tokens, tok)
+		tok = l.NextToken()
+	}
 }
 
 func NewParser(input []rune, filename string) *Parser {
 	p := &Parser{
-		lexer: NewLexer(input),
+		input: input,
 		name:  filename,
 		file:  new(File),
 	}
+
+	p.collectTokens(NewLexer(input))
 
 	return p
 }
@@ -27,46 +39,59 @@ func NewParserFromString(input, filename string) *Parser {
 	return NewParser([]rune(input), filename)
 }
 
-func (p *Parser) genParseMap() map[Type]func(Token) (Node, error) {
-	return map[Type]func(Token) (Node, error){
-		COMMENT: p.Comment,
-		MSGID:   p.Msgid,
-		MSGSTR:  p.Msgstr,
-		MSGCTXT: p.Msgctxt,
-		// PluralMsgid:  p.PluralMsgid,
-		// PluralMsgstr: p.PluralMsgstr,
+func (p *Parser) genParseMap() map[Type]func() (Node, error) {
+	return map[Type]func() (Node, error){
+		COMMENT:      p.comment,
+		MSGID:        p.msgid,
+		MSGSTR:       p.msgstr,
+		MSGCTXT:      p.msgctxt,
+		PluralMsgid:  p.pluralMsgid,
+		PluralMsgstr: p.pluralMsgstr,
 	}
+}
+
+func (p *Parser) token(i int) Token {
+	if i < 0 || i >= len(p.tokens) {
+		return Token{Type: EOF}
+	}
+
+	return p.tokens[i]
 }
 
 func (p *Parser) Parse() []error {
 	var errs []error
 
-	addErr := func(format string, a ...any) {
-		errs = append(errs, fmt.Errorf(format, a...))
-	}
-
 	parseMap := p.genParseMap()
 
-	for tok := p.lexer.NextToken(); tok.Type != EOF; tok = p.lexer.NextToken() {
-		if tok.Type == ILLEGAL {
-			addErr(
-				"token at %s:%d is ILLEGAL",
+	for i, tok := range p.tokens {
+		p.position = i
+		var node Node
+		var err error
+		switch tok.Type {
+		case ILLEGAL:
+			err = fmt.Errorf(
+				"token at %s:%d is illegal",
 				p.name,
-				util.FindLine(p.lexer.input, tok.Pos),
+				util.FindLine(p.input, tok.Pos),
 			)
+		case MSGID, MSGSTR, MSGCTXT, PluralMsgid, PluralMsgstr, COMMENT:
+			parser := parseMap[tok.Type]
+			node, err = parser()
+		case STRING:
 			continue
-		}
-		parse, ok := parseMap[tok.Type]
-		if !ok {
-			addErr("unknown token type at %s:%d", p.name, util.FindLine(p.lexer.input, tok.Pos))
-			continue
+		default:
+			err = fmt.Errorf(
+				"unknown token type at %s:%d",
+				p.name,
+				util.FindLine(p.input, tok.Pos),
+			)
 		}
 
-		node, err := parse(tok)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
+
 		p.file.Nodes = append(p.file.Nodes, node)
 	}
 

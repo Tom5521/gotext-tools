@@ -53,9 +53,6 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = ""
 	default:
 		switch {
-		case unicode.IsDigit(l.char):
-			tok.Literal = l.readDigit()
-			tok.Type = DIGIT
 		case unicode.IsLetter(l.char):
 			tok.Literal = l.readKeyword()
 			tok.Type = LookupIdent(tok.Literal)

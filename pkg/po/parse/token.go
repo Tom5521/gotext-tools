@@ -10,7 +10,6 @@ const (
 	MSGID   = "MSGID"
 	MSGSTR  = "MSGSTR"
 	MSGCTXT = "MSGCTXT"
-	DIGIT   = "DIGIT"
 
 	PluralMsgid  = "PluralMsgid"
 	PluralMsgstr = "PluralMsgstr"

@@ -7,7 +7,7 @@ import (
 	. "github.com/Tom5521/xgotext/pkg/po/parse"
 )
 
-func TestParse(t *testing.T) {
+func TestLexer(t *testing.T) {
 	input := `#: file:32
 msgid "MEOW!"
 msgstr "LOL"

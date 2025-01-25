@@ -8,27 +8,29 @@ import (
 	"github.com/Tom5521/xgotext/internal/util"
 )
 
-func (p *Parser) readStringIdent(tok Token) (string, error) {
+func (p *Parser) readStringIdent() (string, error) {
 	var b strings.Builder
 
-	nextTok := p.lexer.NextToken()
-	if nextTok.Type != STRING {
+	tok := p.tokens[p.position]
+
+	next := p.token(p.position + 1)
+	if next.Type != STRING {
 		return "", fmt.Errorf(
 			"expected STRING after %s declaration [%s:%d]",
 			tok.Type,
 			p.name,
-			util.FindLine(p.lexer.input, tok.Pos),
+			util.FindLine(p.input, tok.Pos),
 		)
 	}
 
-	str, err := strconv.Unquote(nextTok.Literal)
+	str, err := strconv.Unquote(next.Literal)
 	if err != nil {
 		return "", err
 	}
 
 	b.WriteString(str)
 
-	multiline, err := p.readMultilineStrings()
+	multiline, err := p.readMultilineStrings(2)
 	if err != nil {
 		return "", err
 	}
@@ -37,11 +39,14 @@ func (p *Parser) readStringIdent(tok Token) (string, error) {
 	return b.String(), nil
 }
 
-func (p *Parser) readMultilineStrings() (string, error) {
+func (p *Parser) readMultilineStrings(off int) (string, error) {
 	var b strings.Builder
 
-	for t := p.lexer.NextToken(); t.Type == STRING; t = p.lexer.NextToken() {
-		id, err := strconv.Unquote(t.Literal)
+	for _, tok := range p.tokens[p.position+off:] {
+		if tok.Type != STRING {
+			break
+		}
+		id, err := strconv.Unquote(tok.Literal)
 		if err != nil {
 			return "", err
 		}
@@ -52,7 +57,8 @@ func (p *Parser) readMultilineStrings() (string, error) {
 	return b.String(), nil
 }
 
-func (p *Parser) Comment(tok Token) (Node, error) {
+func (p *Parser) comment() (Node, error) {
+	tok := p.tokens[p.position]
 	if len(tok.Literal) == 1 {
 		return GeneralComment{
 			pos:     tok.Pos,
@@ -91,13 +97,14 @@ func (p *Parser) Comment(tok Token) (Node, error) {
 	}
 }
 
-func (p *Parser) Msgid(tok Token) (Node, error) {
+func (p *Parser) msgid() (Node, error) {
+	tok := p.tokens[p.position]
 	msgid := Msgid{
 		pos:     tok.Pos,
 		literal: tok.Literal,
 	}
 
-	id, err := p.readStringIdent(tok)
+	id, err := p.readStringIdent()
 	if err != nil {
 		return nil, err
 	}
@@ -107,13 +114,14 @@ func (p *Parser) Msgid(tok Token) (Node, error) {
 	return msgid, nil
 }
 
-func (p *Parser) Msgstr(tok Token) (Node, error) {
+func (p *Parser) msgstr() (Node, error) {
+	tok := p.tokens[p.position]
 	msgstr := Msgstr{
 		pos:     tok.Pos,
 		literal: tok.Literal,
 	}
 
-	str, err := p.readStringIdent(tok)
+	str, err := p.readStringIdent()
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +130,14 @@ func (p *Parser) Msgstr(tok Token) (Node, error) {
 	return msgstr, nil
 }
 
-func (p *Parser) Msgctxt(tok Token) (Node, error) {
-	msgctxt := &Msgctxt{
+func (p *Parser) msgctxt() (Node, error) {
+	tok := p.tokens[p.position]
+	msgctxt := Msgctxt{
 		pos:     tok.Pos,
 		literal: tok.Literal,
 	}
 
-	ctx, err := p.readStringIdent(tok)
+	ctx, err := p.readStringIdent()
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +147,49 @@ func (p *Parser) Msgctxt(tok Token) (Node, error) {
 	return msgctxt, nil
 }
 
-// TODO: Finish this.
-// func p.PluralMsgid(tok Token) (Node, error)
-// func p.PluralMsgstr(tok Token) (Node, error)
+func (p *Parser) pluralMsgid() (Node, error) {
+	tok := p.tokens[p.position]
+	pmsgid := MsgidPlural{
+		pos:     tok.Pos,
+		literal: tok.Literal,
+	}
+
+	id, err := p.readStringIdent()
+	if err != nil {
+		return nil, err
+	}
+
+	pmsgid.Plural = id
+
+	return pmsgid, nil
+}
+
+func (p *Parser) pluralMsgstr() (Node, error) {
+	tok := p.tokens[p.position]
+	pmsgstr := MsgstrPlural{
+		pos:     tok.Pos,
+		literal: tok.Literal,
+	}
+
+	var npluralID []rune
+	for _, char := range tok.Literal[strings.Index(tok.Literal, "[")+1:] {
+		if char == ']' {
+			break
+		}
+
+		npluralID = append(npluralID, char)
+	}
+
+	id, err := strconv.Atoi(string(npluralID))
+	if err != nil {
+		return nil, err
+	}
+	pmsgstr.PluralID = id
+
+	pmsgstr.Str, err = p.readStringIdent()
+	if err != nil {
+		return nil, err
+	}
+
+	return pmsgstr, nil
+}
