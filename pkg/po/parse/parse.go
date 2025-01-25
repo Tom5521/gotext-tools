@@ -18,7 +18,7 @@ func (p *Parser) readStringIdent() (string, error) {
 		return "", fmt.Errorf(
 			"expected STRING after %s declaration [%s:%d]",
 			tok.Type,
-			p.name,
+			p.File.Name,
 			util.FindLine(p.input, tok.Pos),
 		)
 	}

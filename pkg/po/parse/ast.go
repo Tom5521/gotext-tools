@@ -58,16 +58,6 @@ type (
 	}
 )
 
-type File struct {
-	pos     int
-	literal string
-	Nodes   []Node
-	Header  []Node
-}
-
-func (n File) Pos() int        { return n.pos }
-func (n File) Literal() string { return n.literal }
-
 func (n FlagComment) Pos() int     { return n.pos }
 func (n LocationComment) Pos() int { return n.pos }
 func (n GeneralComment) Pos() int  { return n.pos }

@@ -23,6 +23,7 @@ type Config struct {
 	MsgidBugsAddress string
 	Title            string
 	CopyrightHolder  string
+	PotCreationDate  string
 	Verbose          bool
 	// TODO: Finish this.
 	JoinExisting bool // If true, combines new translations with existing ones.

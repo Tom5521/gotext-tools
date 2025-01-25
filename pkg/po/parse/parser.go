@@ -1,18 +1,17 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po/entry"
 )
 
 type Parser struct {
 	input    []rune
 	tokens   []Token
 	position int
-	file     *File
-	name     string
+	File     *File
 }
 
 func (p *Parser) collectTokens(l *Lexer) {
@@ -26,8 +25,7 @@ func (p *Parser) collectTokens(l *Lexer) {
 func NewParser(input []rune, filename string) *Parser {
 	p := &Parser{
 		input: input,
-		name:  filename,
-		file:  new(File),
+		File:  &File{Name: filename},
 	}
 
 	p.collectTokens(NewLexer(input))
@@ -64,6 +62,10 @@ func (p *Parser) Parse() []error {
 	parseMap := p.genParseMap()
 
 	for i, tok := range p.tokens {
+		if len(errs) > 3 {
+			errs = append(errs, errors.New("too many errors"))
+			break
+		}
 		p.position = i
 		var node Node
 		var err error
@@ -71,7 +73,7 @@ func (p *Parser) Parse() []error {
 		case ILLEGAL:
 			err = fmt.Errorf(
 				"token at %s:%d is illegal",
-				p.name,
+				p.File.Name,
 				util.FindLine(p.input, tok.Pos),
 			)
 		case MSGID, MSGSTR, MSGCTXT, PluralMsgid, PluralMsgstr, COMMENT:
@@ -82,7 +84,7 @@ func (p *Parser) Parse() []error {
 		default:
 			err = fmt.Errorf(
 				"unknown token type at %s:%d",
-				p.name,
+				p.File.Name,
 				util.FindLine(p.input, tok.Pos),
 			)
 		}
@@ -92,14 +94,12 @@ func (p *Parser) Parse() []error {
 			continue
 		}
 
-		p.file.Nodes = append(p.file.Nodes, node)
+		p.File.Nodes = append(p.File.Nodes, node)
 	}
 
 	return errs
 }
 
 func (p *Parser) Nodes() []Node {
-	return p.file.Nodes
+	return p.File.Nodes
 }
-
-func (p *Parser) Translations() []entry.Translation { return nil }

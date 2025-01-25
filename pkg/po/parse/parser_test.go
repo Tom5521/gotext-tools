@@ -2,7 +2,6 @@
 package parse_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Tom5521/xgotext/pkg/po/parse"
@@ -27,7 +26,6 @@ msgstr[1] "Quiero unas manzanas"`
 		t.Errorf("Unexpected error: %v\n", errs[0])
 		return
 	}
-	fmt.Println(parse.FormatNode(p.Nodes()...))
 
 	expected := []parse.Node{
 		parse.GeneralComment{
