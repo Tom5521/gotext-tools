@@ -108,7 +108,7 @@ func FindLine[T ~int, B []rune | []byte | string](content B, index T) int {
 	}
 }
 
-func CleanDuplicates(translations []types.Translation) (cleaned []types.Translation) {
+func CleanDuplicates(translations []types.Entry) (cleaned []types.Entry) {
 	seenID := make(map[string]int)
 
 	for _, translation := range translations {

@@ -27,8 +27,8 @@ const (
 // Compiler is responsible for compiling a list of translations into various formats
 // (e.g., string, file, or bytes) based on the given configuration.
 type Compiler struct {
-	Translations []types.Translation // List of translations to compile.
-	Config       config.Config       // Configuration for the compilation process.
+	Translations []types.Entry // List of translations to compile.
+	Config       config.Config // Configuration for the compilation process.
 }
 
 // CompileToWriter writes the compiled translations to an `io.Writer` in the PO file format.

@@ -16,7 +16,7 @@ func main(){
 	gotext.Get("Hello World!")
 }`
 
-	expected := []types.Translation{
+	expected := []types.Entry{
 		{
 			ID: "Hello World!",
 			Locations: []types.Location{
@@ -70,7 +70,7 @@ func main(){
 		t.Error(errs[0])
 	}
 
-	expected := []types.Translation{
+	expected := []types.Entry{
 		{
 			ID: "Hello World",
 			Locations: []types.Location{

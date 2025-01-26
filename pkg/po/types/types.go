@@ -10,9 +10,9 @@ type Header struct {
 }
 
 type File struct {
-	Name         string
-	Header       Header
-	Translations []Translation
+	Name    string
+	Header  Header
+	Entries []Entry
 }
 
 // Location represents the location of a translation string in the source code.
@@ -21,9 +21,9 @@ type Location struct {
 	File string // The file name where the translation is located.
 }
 
-// Translation represents a translatable string, including its context, plural forms,
+// Entry represents a translatable string, including its context, plural forms,
 // and source code locations.
-type Translation struct {
+type Entry struct {
 	ID        string     // The original string to be translated.
 	Context   string     // The context in which the string is used (optional).
 	Plural    string     // The plural form of the string (optional).

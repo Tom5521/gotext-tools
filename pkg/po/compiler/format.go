@@ -30,7 +30,7 @@ import (
 //	config := poconfig.DefaultConfig()
 //	formatted := translation.Format(config)
 //	fmt.Println(formatted)
-func FormatTranslation(t types.Translation, cfg config.Config) string {
+func FormatTranslation(t types.Entry, cfg config.Config) string {
 	var builder strings.Builder
 
 	// Helper function to append formatted lines to the builder.

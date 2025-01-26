@@ -50,13 +50,13 @@ func (f *File) isGotextCall(n ast.Node) bool {
 	return ok
 }
 
-func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Translation, error) {
+func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return types.Translation{}, err
+		return types.Entry{}, err
 	}
 
-	return types.Translation{
+	return types.Entry{
 		ID: str,
 		Locations: []types.Location{{
 			Line: util.FindLine(f.content, n.Pos()),
@@ -65,8 +65,8 @@ func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Translation, error)
 	}, nil
 }
 
-func (f *File) processGeneric(exprs ...ast.Expr) ([]types.Translation, []error) {
-	var translations []types.Translation
+func (f *File) processGeneric(exprs ...ast.Expr) ([]types.Entry, []error) {
+	var translations []types.Entry
 	var errors []error
 
 	for _, expr := range exprs {
@@ -137,7 +137,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 func (f *File) processPoCall(
 	call *ast.CallExpr,
-) (translation types.Translation, valid bool, err error) {
+) (translation types.Entry, valid bool, err error) {
 	selector := call.Fun.(*ast.SelectorExpr)
 	method := translationMethods[selector.Sel.Name]
 
@@ -174,11 +174,11 @@ func (f *File) processPoCall(
 	return
 }
 
-func (f *File) processNode(n ast.Node) ([]types.Translation, []error) {
+func (f *File) processNode(n ast.Node) ([]types.Entry, []error) {
 	if n == nil {
 		return nil, nil
 	}
-	var translations []types.Translation
+	var translations []types.Entry
 	var errors []error
 
 	processGeneric := func(exprs ...ast.Expr) {

@@ -134,12 +134,12 @@ func (f *File) determinePackageInfo() {
 }
 
 // Translations returns all translations found in the file.
-func (f *File) Translations() ([]types.Translation, []error) {
+func (f *File) Translations() ([]types.Entry, []error) {
 	if f.config.Logger != nil && f.config.Verbose {
 		f.config.Logger.Printf("Parsing %s...", f.path)
 	}
 
-	var translations []types.Translation
+	var translations []types.Entry
 	var errors []error
 
 	if !f.hasGotext {
