@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tom5521/xgotext/pkg/compiler"
 	"github.com/Tom5521/xgotext/pkg/goparse"
+	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/spf13/cobra"
 )

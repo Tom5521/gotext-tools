@@ -1,10 +1,12 @@
-package parse
+package ast
 
 import (
 	"fmt"
 	"reflect"
 	"slices"
 	"strings"
+
+	"github.com/Tom5521/xgotext/internal/util"
 )
 
 func EqualNodeSlice(x, y []Node) bool {
@@ -12,30 +14,7 @@ func EqualNodeSlice(x, y []Node) bool {
 }
 
 func EqualNodes(x, y Node) bool {
-	if x == y {
-		return true
-	}
-
-	type1, type2 := reflect.TypeOf(x), reflect.TypeOf(y)
-	value1, value2 := reflect.ValueOf(x), reflect.ValueOf(y)
-
-	if type1.Kind() != type2.Kind() {
-		return false
-	}
-
-	var equal bool
-	for _, field := range reflect.VisibleFields(type1) {
-		if !field.IsExported() {
-			continue
-		}
-		equal = value1.FieldByIndex(field.Index).Interface() ==
-			value2.FieldByIndex(field.Index).Interface()
-		if !equal {
-			break
-		}
-	}
-
-	return equal
+	return util.EqualFields(x, y)
 }
 
 func FormatNode(nodes ...Node) string {

@@ -2,10 +2,52 @@ package util
 
 import (
 	"bytes"
+	"reflect"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/entry"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
+
+func EqualFields(x, y any) bool {
+	if x == y {
+		return true
+	}
+
+	typeX, typeY := reflect.TypeOf(x), reflect.TypeOf(y)
+	valueX, valueY := reflect.ValueOf(x), reflect.ValueOf(y)
+
+	if typeX.Kind() == reflect.Pointer {
+		typeX = typeX.Elem()
+		valueX = valueX.Elem()
+	}
+	if typeY.Kind() == reflect.Pointer {
+		typeY = typeY.Elem()
+		valueY = valueY.Elem()
+	}
+
+	if typeX.Kind() != typeY.Kind() {
+		return false
+	}
+
+	var equal bool
+	for _, field := range reflect.VisibleFields(typeX) {
+		if !field.IsExported() {
+			continue
+		}
+		v1, v2 := valueX.FieldByIndex(field.Index), valueY.FieldByIndex(field.Index)
+		if field.Type.Kind() == reflect.Struct {
+			equal = EqualFields(v1.Interface(), v2.Interface())
+		} else {
+			equal = v1.Interface() == v2.Interface()
+		}
+
+		if !equal {
+			break
+		}
+	}
+
+	return equal
+}
 
 func CountRunes(slice []rune, target rune) int {
 	count := 0
@@ -66,7 +108,7 @@ func FindLine[T ~int, B []rune | []byte | string](content B, index T) int {
 	}
 }
 
-func CleanDuplicates(translations []entry.Translation) (cleaned []entry.Translation) {
+func CleanDuplicates(translations []types.Translation) (cleaned []types.Translation) {
 	seenID := make(map[string]int)
 
 	for _, translation := range translations {

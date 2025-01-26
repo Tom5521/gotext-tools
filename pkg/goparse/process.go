@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po/entry"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 // translationMethod defines the structure for different getter methods.
@@ -50,23 +50,23 @@ func (f *File) isGotextCall(n ast.Node) bool {
 	return ok
 }
 
-func (f *File) basicLitToTranslation(n *ast.BasicLit) (entry.Translation, error) {
+func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Translation, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return entry.Translation{}, err
+		return types.Translation{}, err
 	}
 
-	return entry.Translation{
+	return types.Translation{
 		ID: str,
-		Locations: []entry.Location{{
+		Locations: []types.Location{{
 			Line: util.FindLine(f.content, n.Pos()),
 			File: f.path,
 		}},
 	}, nil
 }
 
-func (f *File) processGeneric(exprs ...ast.Expr) ([]entry.Translation, []error) {
-	var translations []entry.Translation
+func (f *File) processGeneric(exprs ...ast.Expr) ([]types.Translation, []error) {
+	var translations []types.Translation
 	var errors []error
 
 	for _, expr := range exprs {
@@ -137,7 +137,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 func (f *File) processPoCall(
 	call *ast.CallExpr,
-) (translation entry.Translation, valid bool, err error) {
+) (translation types.Translation, valid bool, err error) {
 	selector := call.Fun.(*ast.SelectorExpr)
 	method := translationMethods[selector.Sel.Name]
 
@@ -157,7 +157,7 @@ func (f *File) processPoCall(
 			valid = arg.valid
 			translation.ID = arg.str
 			translation.Locations = append(translation.Locations,
-				entry.Location{
+				types.Location{
 					File: f.path,
 					Line: util.FindLine(f.content, arg.pos),
 				},
@@ -174,11 +174,11 @@ func (f *File) processPoCall(
 	return
 }
 
-func (f *File) processNode(n ast.Node) ([]entry.Translation, []error) {
+func (f *File) processNode(n ast.Node) ([]types.Translation, []error) {
 	if n == nil {
 		return nil, nil
 	}
-	var translations []entry.Translation
+	var translations []types.Translation
 	var errors []error
 
 	processGeneric := func(exprs ...ast.Expr) {

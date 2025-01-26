@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tom5521/xgotext/pkg/goparse"
 	"github.com/Tom5521/xgotext/pkg/po/config"
-	"github.com/Tom5521/xgotext/pkg/po/entry"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 func TestParse(t *testing.T) {
@@ -16,10 +16,10 @@ func main(){
 	gotext.Get("Hello World!")
 }`
 
-	expected := []entry.Translation{
+	expected := []types.Translation{
 		{
 			ID: "Hello World!",
-			Locations: []entry.Location{
+			Locations: []types.Location{
 				{
 					Line: 5,
 					File: "test.go",
@@ -38,7 +38,7 @@ func main(){
 		t.Error(errs[0])
 	}
 
-	if !entry.CompareTranslations(translations, expected) {
+	if !types.EqualTranslations(translations, expected) {
 		t.Log("Unexpected translations slice")
 		t.Log("got:", translations)
 		t.Log("expected:", expected)
@@ -70,10 +70,10 @@ func main(){
 		t.Error(errs[0])
 	}
 
-	expected := []entry.Translation{
+	expected := []types.Translation{
 		{
 			ID: "Hello World",
-			Locations: []entry.Location{
+			Locations: []types.Location{
 				{
 					File: "test.go",
 					Line: 6,
@@ -82,7 +82,7 @@ func main(){
 		},
 		{
 			ID: "Hi world",
-			Locations: []entry.Location{
+			Locations: []types.Location{
 				{
 					File: "test.go",
 					Line: 7,
@@ -91,7 +91,7 @@ func main(){
 		},
 		{
 			ID: "I love onions!",
-			Locations: []entry.Location{
+			Locations: []types.Location{
 				{
 					File: "test.go",
 					Line: 8,
@@ -100,7 +100,7 @@ func main(){
 		},
 		{
 			ID: "sugar",
-			Locations: []entry.Location{
+			Locations: []types.Location{
 				{
 					File: "test.go",
 					Line: 10,
@@ -109,7 +109,7 @@ func main(){
 		},
 	}
 
-	if !entry.CompareTranslations(translations, expected) {
+	if !types.EqualTranslations(translations, expected) {
 		t.Error("Unexpected translation")
 		t.Log("got:", translations)
 		t.Log("expected:", expected)

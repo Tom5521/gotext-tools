@@ -1,4 +1,4 @@
-package parse
+package ast
 
 type Node interface {
 	Pos() int
@@ -56,7 +56,17 @@ type (
 		literal string
 		Plural  string
 	}
+
+	File struct {
+		pos     int
+		literal string
+		Name    string
+		Nodes   []Node
+	}
 )
+
+func (n File) Pos() int        { return n.pos }
+func (n File) Literal() string { return n.literal }
 
 func (n FlagComment) Pos() int     { return n.pos }
 func (n LocationComment) Pos() int { return n.pos }

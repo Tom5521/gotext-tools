@@ -1,10 +1,10 @@
 // TODO: Remove repetitive code.
-package parse_test
+package ast_test
 
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/pkg/po/parse"
+	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 )
 
 func TestParse(t *testing.T) {
@@ -20,44 +20,44 @@ msgid_plural "I want some apples"
 msgstr[0] "Quiero una manzana"
 msgstr[1] "Quiero unas manzanas"`
 
-	p := parse.NewParserFromString(input, "test.go")
+	p := ast.NewParserFromString(input, "test.go")
 	errs := p.Parse()
 	if len(errs) > 0 {
 		t.Errorf("Unexpected error: %v\n", errs[0])
 		return
 	}
 
-	expected := []parse.Node{
-		parse.GeneralComment{
+	expected := []ast.Node{
+		ast.GeneralComment{
 			Text: "General Comment",
 		},
-		parse.FlagComment{
+		ast.FlagComment{
 			Flag: "flag comment",
 		},
-		parse.LocationComment{
+		ast.LocationComment{
 			File: "location_comment",
 			Line: 123,
 		},
-		parse.Msgctxt{
+		ast.Msgctxt{
 			Context: "testing!",
 		},
-		parse.Msgid{
+		ast.Msgid{
 			ID: "1st msgid!",
 		},
-		parse.Msgstr{
+		ast.Msgstr{
 			Str: "1er msgid!",
 		},
-		parse.Msgid{
+		ast.Msgid{
 			ID: "I want an apple",
 		},
-		parse.MsgidPlural{
+		ast.MsgidPlural{
 			Plural: "I want some apples",
 		},
-		parse.MsgstrPlural{
+		ast.MsgstrPlural{
 			PluralID: 0,
 			Str:      "Quiero una manzana",
 		},
-		parse.MsgstrPlural{
+		ast.MsgstrPlural{
 			PluralID: 1,
 			Str:      "Quiero unas manzanas",
 		},
@@ -65,9 +65,9 @@ msgstr[1] "Quiero unas manzanas"`
 
 	nodes := p.Nodes()
 
-	if !parse.EqualNodeSlice(expected, nodes) {
+	if !ast.EqualNodeSlice(expected, nodes) {
 		t.Error("Unexpected node slice...")
-		t.Error("Expected:", expected)
-		t.Error("Got:", nodes)
+		t.Error("Expected:", ast.FormatNode(expected...))
+		t.Error("Got:", ast.FormatNode(nodes...))
 	}
 }

@@ -1,26 +1,12 @@
-package entry
+package compiler
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
-
-// Location represents the location of a translation string in the source code.
-type Location struct {
-	Line int    // The line number of the translation.
-	File string // The file name where the translation is located.
-}
-
-// Translation represents a translatable string, including its context, plural forms,
-// and source code locations.
-type Translation struct {
-	ID        string     // The original string to be translated.
-	Context   string     // The context in which the string is used (optional).
-	Plural    string     // The plural form of the string (optional).
-	Locations []Location // A list of source code locations for the string.
-}
 
 // Format generates the PO file representation of the Translation.
 // The output is influenced by the provided configuration.
@@ -44,7 +30,7 @@ type Translation struct {
 //	config := poconfig.DefaultConfig()
 //	formatted := translation.Format(config)
 //	fmt.Println(formatted)
-func (t Translation) Format(cfg config.Config) string {
+func FormatTranslation(t types.Translation, cfg config.Config) string {
 	var builder strings.Builder
 
 	// Helper function to append formatted lines to the builder.

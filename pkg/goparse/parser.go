@@ -12,7 +12,7 @@ import (
 	krfs "github.com/kr/fs"
 
 	"github.com/Tom5521/xgotext/pkg/po/config"
-	"github.com/Tom5521/xgotext/pkg/po/entry"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 // Parser represents a parser that processes Go files according to a given configuration.
@@ -158,7 +158,7 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 }
 
 // Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse() (translations []entry.Translation, errs []error) {
+func (p *Parser) Parse() (translations []types.Translation, errs []error) {
 	for _, f := range p.files {
 		t, e := f.Translations()
 		if p.Config.Logger != nil {

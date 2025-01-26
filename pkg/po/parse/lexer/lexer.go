@@ -1,7 +1,9 @@
-package parse
+package lexer
 
 import (
 	"unicode"
+
+	"github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
 type Lexer struct {
@@ -12,7 +14,7 @@ type Lexer struct {
 	prev  rune
 }
 
-func NewLexer(input []rune) *Lexer {
+func New(input []rune) *Lexer {
 	l := &Lexer{
 		input: input,
 	}
@@ -20,8 +22,8 @@ func NewLexer(input []rune) *Lexer {
 	return l
 }
 
-func NewLexerFromString(input string) *Lexer {
-	return NewLexer([]rune(input))
+func NewFromString(input string) *Lexer {
+	return New([]rune(input))
 }
 
 func (l *Lexer) readChar() {
@@ -35,28 +37,28 @@ func (l *Lexer) readChar() {
 	l.read++
 }
 
-func (l *Lexer) NextToken() Token {
+func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
-	tok := Token{
+	tok := token.Token{
 		Pos: l.pos,
 	}
 
 	switch {
 	case l.char == '#':
-		tok.Type = COMMENT
+		tok.Type = token.COMMENT
 		tok.Literal = l.readComment()
 	case l.char == '"':
-		tok.Type = STRING
+		tok.Type = token.STRING
 		tok.Literal = l.readString()
 	case l.isKeyword():
 		tok.Literal = l.readKeyword()
-		tok.Type = LookupIdent(tok.Literal)
+		tok.Type = token.LookupIdent(tok.Literal)
 	case l.char == 0:
-		tok.Type = EOF
+		tok.Type = token.EOF
 		tok.Literal = ""
 	default:
-		tok = Token{
-			Type:    ILLEGAL,
+		tok = token.Token{
+			Type:    token.ILLEGAL,
 			Literal: string(l.char),
 		}
 		l.readChar()

@@ -10,7 +10,7 @@ import (
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/config"
-	"github.com/Tom5521/xgotext/pkg/po/entry"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 // Constants.
@@ -134,12 +134,12 @@ func (f *File) determinePackageInfo() {
 }
 
 // Translations returns all translations found in the file.
-func (f *File) Translations() ([]entry.Translation, []error) {
+func (f *File) Translations() ([]types.Translation, []error) {
 	if f.config.Logger != nil && f.config.Verbose {
 		f.config.Logger.Printf("Parsing %s...", f.path)
 	}
 
-	var translations []entry.Translation
+	var translations []types.Translation
 	var errors []error
 
 	if !f.hasGotext {

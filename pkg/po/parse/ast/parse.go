@@ -1,4 +1,4 @@
-package parse
+package ast
 
 import (
 	"fmt"
@@ -6,52 +6,37 @@ import (
 	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
 func (p *Parser) readStringIdent() (string, error) {
 	var b strings.Builder
 
-	tok := p.tokens[p.position]
+	current := p.tokens[p.position]
 
-	next := p.token(p.position + 1)
-	if next.Type != STRING {
-		return "", fmt.Errorf(
-			"expected STRING after %s declaration [%s:%d]",
-			tok.Type,
-			p.File.Name,
-			util.FindLine(p.input, tok.Pos),
-		)
-	}
-
-	str, err := strconv.Unquote(next.Literal)
-	if err != nil {
-		return "", err
-	}
-
-	b.WriteString(str)
-
-	multiline, err := p.readMultilineStrings(2)
-	if err != nil {
-		return "", err
-	}
-	b.WriteString(multiline)
-
-	return b.String(), nil
-}
-
-func (p *Parser) readMultilineStrings(off int) (string, error) {
-	var b strings.Builder
-
-	for _, tok := range p.tokens[p.position+off:] {
-		if tok.Type != STRING {
+	var lines []string
+	for _, tok := range p.tokens[p.position+1:] {
+		if tok.Type != token.STRING {
 			break
 		}
 		id, err := strconv.Unquote(tok.Literal)
 		if err != nil {
 			return "", err
 		}
-		b.WriteByte('\n')
-		b.WriteString(id)
+		lines = append(lines, id)
+	}
+
+	if len(lines) == 0 {
+		return "", fmt.Errorf(
+			"expected STRING after %s declaration [%s:%d]",
+			current.Type,
+			p.File.Name,
+			util.FindLine(p.input, current.Pos),
+		)
+	}
+
+	for _, line := range lines {
+		fmt.Fprint(&b, line)
 	}
 
 	return b.String(), nil

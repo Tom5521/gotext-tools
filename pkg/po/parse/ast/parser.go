@@ -1,22 +1,24 @@
-package parse
+package ast
 
 import (
 	"errors"
 	"fmt"
 
 	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/xgotext/pkg/po/parse/lexer"
+	"github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
 type Parser struct {
 	input    []rune
-	tokens   []Token
+	tokens   []token.Token
 	position int
 	File     *File
 }
 
-func (p *Parser) collectTokens(l *Lexer) {
+func (p *Parser) collectTokens(l *lexer.Lexer) {
 	tok := l.NextToken()
-	for tok.Type != EOF {
+	for tok.Type != token.EOF {
 		p.tokens = append(p.tokens, tok)
 		tok = l.NextToken()
 	}
@@ -28,7 +30,7 @@ func NewParser(input []rune, filename string) *Parser {
 		File:  &File{Name: filename},
 	}
 
-	p.collectTokens(NewLexer(input))
+	p.collectTokens(lexer.New(input))
 
 	return p
 }
@@ -37,20 +39,20 @@ func NewParserFromString(input, filename string) *Parser {
 	return NewParser([]rune(input), filename)
 }
 
-func (p *Parser) genParseMap() map[Type]func() (Node, error) {
-	return map[Type]func() (Node, error){
-		COMMENT:      p.comment,
-		MSGID:        p.msgid,
-		MSGSTR:       p.msgstr,
-		MSGCTXT:      p.msgctxt,
-		PluralMsgid:  p.pluralMsgid,
-		PluralMsgstr: p.pluralMsgstr,
+func (p *Parser) genParseMap() map[token.Type]func() (Node, error) {
+	return map[token.Type]func() (Node, error){
+		token.COMMENT:      p.comment,
+		token.MSGID:        p.msgid,
+		token.MSGSTR:       p.msgstr,
+		token.MSGCTXT:      p.msgctxt,
+		token.PluralMsgid:  p.pluralMsgid,
+		token.PluralMsgstr: p.pluralMsgstr,
 	}
 }
 
-func (p *Parser) token(i int) Token {
+func (p *Parser) token(i int) token.Token {
 	if i < 0 || i >= len(p.tokens) {
-		return Token{Type: EOF}
+		return token.Token{Type: token.EOF}
 	}
 
 	return p.tokens[i]
@@ -70,16 +72,21 @@ func (p *Parser) Parse() []error {
 		var node Node
 		var err error
 		switch tok.Type {
-		case ILLEGAL:
+		case token.ILLEGAL:
 			err = fmt.Errorf(
 				"token at %s:%d is illegal",
 				p.File.Name,
 				util.FindLine(p.input, tok.Pos),
 			)
-		case MSGID, MSGSTR, MSGCTXT, PluralMsgid, PluralMsgstr, COMMENT:
+		case token.MSGID,
+			token.MSGSTR,
+			token.MSGCTXT,
+			token.PluralMsgid,
+			token.PluralMsgstr,
+			token.COMMENT:
 			parser := parseMap[tok.Type]
 			node, err = parser()
-		case STRING:
+		case token.STRING:
 			continue
 		default:
 			err = fmt.Errorf(

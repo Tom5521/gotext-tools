@@ -1,10 +1,11 @@
-package parse_test
+package lexer_test
 
 import (
 	"fmt"
 	"testing"
 
-	. "github.com/Tom5521/xgotext/pkg/po/parse"
+	. "github.com/Tom5521/xgotext/pkg/po/parse/lexer"
+	. "github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
 func TestLexer(t *testing.T) {
@@ -18,7 +19,7 @@ msgstr[1234] "apples"
 "1234"
 msgid_plural "a"`
 
-	l := NewLexerFromString(input)
+	l := NewFromString(input)
 
 	expectedTokens := []Token{
 		{COMMENT, "#: file:32", 0},
