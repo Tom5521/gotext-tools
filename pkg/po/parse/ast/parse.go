@@ -23,6 +23,7 @@ func (p *Parser) readStringIdent() (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		lines = append(lines, id)
 	}
 
@@ -35,8 +36,12 @@ func (p *Parser) readStringIdent() (string, error) {
 		)
 	}
 
-	for _, line := range lines {
-		fmt.Fprint(&b, line)
+	for i, line := range lines {
+		if i == len(lines)-1 {
+			fmt.Fprint(&b, line)
+			continue
+		}
+		fmt.Fprintln(&b, line)
 	}
 
 	return b.String(), nil

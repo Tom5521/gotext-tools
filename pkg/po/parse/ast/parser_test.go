@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
+	"github.com/kr/pretty"
 )
 
 func TestParse(t *testing.T) {
@@ -18,7 +19,16 @@ msgstr "1er msgid!"
 msgid "I want an apple"
 msgid_plural "I want some apples"
 msgstr[0] "Quiero una manzana"
-msgstr[1] "Quiero unas manzanas"`
+msgstr[1] "Quiero unas manzanas"
+
+msgid ""
+"hello"
+"world"
+""
+msgstr ""
+"hola"
+"mundo"
+""`
 
 	p := ast.NewParserFromString(input, "test.go")
 	errs := p.Parse()
@@ -61,13 +71,19 @@ msgstr[1] "Quiero unas manzanas"`
 			PluralID: 1,
 			Str:      "Quiero unas manzanas",
 		},
+		ast.Msgid{
+			ID: "\nhello\nworld\n",
+		},
+		ast.Msgstr{
+			Str: "\nhola\nmundo\n",
+		},
 	}
 
 	nodes := p.Nodes()
 
 	if !ast.EqualNodeSlice(expected, nodes) {
 		t.Error("Unexpected node slice...")
-		t.Error("Expected:", ast.FormatNode(expected...))
-		t.Error("Got:", ast.FormatNode(nodes...))
+		t.Error("Expected:", pretty.Sprint(expected))
+		t.Error("Got:", pretty.Sprint(nodes))
 	}
 }
