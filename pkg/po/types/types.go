@@ -12,9 +12,10 @@ type Header struct {
 }
 
 type File struct {
-	Name    string
-	Header  Header
-	Entries []Entry
+	Name     string
+	Header   Header
+	Nplurals int
+	Entries  []Entry
 }
 
 func (f File) LoadID(id string) string {

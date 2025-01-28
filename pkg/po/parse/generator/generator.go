@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
@@ -14,8 +17,6 @@ import (
 type Generator struct {
 	content []rune
 	file    *ast.File
-
-	header types.Header
 
 	curEntry types.Entry
 	foundStr bool
@@ -49,19 +50,55 @@ func (g Generator) Warnings() []string {
 }
 
 func (g *Generator) Generate() (f *types.File) {
-	f = &types.File{
-		Name: g.file.Name,
-	}
 	g.genEntries()
-	g.genHeader(f.LoadID(""))
-
-	f.Entries = g.entries
-	f.Header = g.header
+	f = &types.File{
+		Name:    g.file.Name,
+		Entries: g.entries,
+	}
+	g.genHeader(f)
+	g.genNplurals(f)
 
 	return
 }
 
-func (g *Generator) genHeader(str string) {
+var (
+	npluralsRegex = regexp.MustCompile(`nplurals=(\d*)`)
+	headerRegex   = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
+)
+
+func (g *Generator) genHeader(f *types.File) {
+	header := f.LoadID("")
+	lines := strings.Split(header, "\n")
+	for _, line := range lines {
+		if !headerRegex.MatchString(line) {
+			continue
+		}
+		matches := headerRegex.FindStringSubmatch(line)
+		f.Header.Values = append(f.Header.Values,
+			types.HeaderField{
+				Key:   matches[1],
+				Value: matches[2],
+			},
+		)
+	}
+}
+
+func (g *Generator) genNplurals(f *types.File) {
+	for _, field := range f.Header.Values {
+		if field.Key == "Plural-Forms" {
+			if !npluralsRegex.MatchString(field.Value) {
+				break
+			}
+			matches := npluralsRegex.FindStringSubmatch(field.Value)
+			nplurals, err := strconv.Atoi(matches[1])
+			if err != nil {
+				g.errs = append(g.errs, err)
+				break
+			}
+			f.Nplurals = nplurals
+			break
+		}
+	}
 }
 
 func tfor[T any]() reflect.Type {
