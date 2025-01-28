@@ -39,8 +39,10 @@ func NewParserFromString(input, filename string) *Parser {
 	return NewParser([]rune(input), filename)
 }
 
-func (p *Parser) genParseMap() map[token.Type]func() (Node, error) {
-	return map[token.Type]func() (Node, error){
+type parserFunc = func() (Node, error)
+
+func (p *Parser) genParseMap() map[token.Type]parserFunc {
+	return map[token.Type]parserFunc{
 		token.COMMENT:      p.comment,
 		token.MSGID:        p.msgid,
 		token.MSGSTR:       p.msgstr,

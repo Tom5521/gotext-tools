@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
@@ -152,5 +151,5 @@ func (f *File) Translations() ([]types.Entry, []error) {
 		errors = append(errors, e...)
 	}
 
-	return util.CleanDuplicates(translations), errors
+	return types.CleanDuplicates(translations), errors
 }

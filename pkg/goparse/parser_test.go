@@ -38,7 +38,7 @@ func main(){
 		t.Error(errs[0])
 	}
 
-	if !types.EqualTranslations(translations, expected) {
+	if !types.EqualEntries(translations, expected) {
 		t.Log("Unexpected translations slice")
 		t.Log("got:", translations)
 		t.Log("expected:", expected)
@@ -109,7 +109,7 @@ func main(){
 		},
 	}
 
-	if !types.EqualTranslations(translations, expected) {
+	if !types.EqualEntries(translations, expected) {
 		t.Error("Unexpected translation")
 		t.Log("got:", translations)
 		t.Log("expected:", expected)

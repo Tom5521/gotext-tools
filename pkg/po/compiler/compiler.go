@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
@@ -57,7 +56,7 @@ func (c Compiler) CompileToWriter(w io.Writer) error {
 	}
 
 	// Clean duplicates in translations and write each to the writer.
-	translations := util.CleanDuplicates(c.Translations)
+	translations := types.CleanDuplicates(c.Translations)
 	for _, t := range translations {
 		_, err = fmt.Fprintln(w, FormatTranslation(t, c.Config))
 		if err != nil {

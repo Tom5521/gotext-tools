@@ -1,8 +1,11 @@
 package ast
 
+import "fmt"
+
 type Node interface {
 	Pos() int
 	Literal() string
+	String() string
 }
 
 type (
@@ -67,6 +70,7 @@ type (
 
 func (n File) Pos() int        { return n.pos }
 func (n File) Literal() string { return n.literal }
+func (n File) String() string  { return fmt.Sprintf("%#v", n) }
 
 func (n FlagComment) Pos() int     { return n.pos }
 func (n LocationComment) Pos() int { return n.pos }
@@ -85,3 +89,12 @@ func (n Msgstr) Literal() string          { return n.literal }
 func (n Msgctxt) Literal() string         { return n.literal }
 func (n MsgstrPlural) Literal() string    { return n.literal }
 func (n MsgidPlural) Literal() string     { return n.literal }
+
+func (n FlagComment) String() string     { return FormatNode(n) }
+func (n LocationComment) String() string { return FormatNode(n) }
+func (n GeneralComment) String() string  { return FormatNode(n) }
+func (n Msgid) String() string           { return FormatNode(n) }
+func (n Msgstr) String() string          { return FormatNode(n) }
+func (n Msgctxt) String() string         { return FormatNode(n) }
+func (n MsgidPlural) String() string     { return FormatNode(n) }
+func (n MsgstrPlural) String() string    { return FormatNode(n) }

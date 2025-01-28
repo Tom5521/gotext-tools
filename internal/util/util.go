@@ -5,8 +5,17 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/kr/pretty"
 )
+
+func Format[T any](args ...T) string {
+	var a []any
+	for _, arg := range args {
+		a = append(a, arg)
+	}
+
+	return pretty.Sprint(a...)
+}
 
 func EqualFields(x, y any) bool {
 	if x == y {
@@ -15,6 +24,10 @@ func EqualFields(x, y any) bool {
 
 	typeX, typeY := reflect.TypeOf(x), reflect.TypeOf(y)
 	valueX, valueY := reflect.ValueOf(x), reflect.ValueOf(y)
+
+	if typeX.Kind() != typeY.Kind() {
+		return false
+	}
 
 	if typeX.Kind() == reflect.Pointer {
 		typeX = typeX.Elem()
@@ -25,7 +38,7 @@ func EqualFields(x, y any) bool {
 		valueY = valueY.Elem()
 	}
 
-	if typeX.Kind() != typeY.Kind() {
+	if typeX != typeY {
 		return false
 	}
 
@@ -106,24 +119,4 @@ func FindLine[T ~int, B []rune | []byte | string](content B, index T) int {
 	default:
 		return bytes.Count(c.([]byte)[:index], []byte{'\n'}) + 1
 	}
-}
-
-func CleanDuplicates(translations []types.Entry) (cleaned []types.Entry) {
-	seenID := make(map[string]int)
-
-	for _, translation := range translations {
-		idIndex, ok := seenID[translation.ID]
-		if ok {
-			if translation.Context == cleaned[idIndex].Context {
-				cleaned[idIndex].Locations = append(
-					cleaned[idIndex].Locations,
-					translation.Locations...)
-				continue
-			}
-		}
-		seenID[translation.ID] = len(cleaned)
-		cleaned = append(cleaned, translation)
-	}
-
-	return
 }
