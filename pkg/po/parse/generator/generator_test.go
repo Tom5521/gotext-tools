@@ -66,13 +66,13 @@ msgstr[1] "Tienes %d manzanas"`
 	p.Parse()
 
 	g := generator.New(p.File, []rune(input))
-	file, warns, errs := g.Generate()
-	if len(errs) > 0 {
+	file := g.Generate()
+	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")
-		t.Error(errs[0])
+		t.Error(g.Errors()[0])
 		return
 	}
-	for _, warn := range warns {
+	for _, warn := range g.Warnings() {
 		t.Log("WARN:", warn)
 	}
 

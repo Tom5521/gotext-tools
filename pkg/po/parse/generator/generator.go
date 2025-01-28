@@ -14,179 +14,218 @@ import (
 type Generator struct {
 	content []rune
 	file    *ast.File
+
+	header types.Header
+
+	curEntry types.Entry
+	foundStr bool
+	foundID  bool
+	entries  []types.Entry
+	warns    []string
+	errs     []error
+
+	toSkip []reflect.Type
 }
 
 func New(input *ast.File, content []rune) *Generator {
-	g := &Generator{file: input, content: content}
+	g := &Generator{
+		file:    input,
+		content: content,
+		toSkip: []reflect.Type{
+			tfor[ast.FlagComment](),
+			tfor[ast.GeneralComment](),
+			tfor[ast.LocationComment](),
+		},
+	}
 	return g
 }
 
-func (g *Generator) Generate() (f *types.File, warns []string, errs []error) {
+func (g Generator) Errors() []error {
+	return g.errs
+}
+
+func (g Generator) Warnings() []string {
+	return g.warns
+}
+
+func (g *Generator) Generate() (f *types.File) {
 	f = &types.File{
 		Name: g.file.Name,
 	}
-	f.Entries, warns, errs = g.genEntries()
-	f.Header = g.genHeader(f.LoadID(""))
+	g.genEntries()
+	g.genHeader(f.LoadID(""))
+
+	f.Entries = g.entries
+	f.Header = g.header
 
 	return
 }
 
-func (g *Generator) genHeader(str string) (header types.Header) {
-	return
+func (g *Generator) genHeader(str string) {
 }
 
 func tfor[T any]() reflect.Type {
 	return reflect.TypeFor[T]()
 }
 
-func (g *Generator) genEntries() (entries []types.Entry, warns []string, errs []error) {
-	var (
-		curEntry types.Entry
-		foundStr bool
-		foundID  bool
-	)
+func (g *Generator) genEntries() {
+	g.resetEntryState()
 
-	reset := func() {
-		curEntry = types.Entry{}
-		foundStr = false
-		foundID = false
-	}
-
-	finish := func(cur ast.Node) {
-		err := validateEntry(curEntry)
-		if err != nil {
-			errs = append(errs, err)
-			return
-		}
-
-		if !foundID {
-			errs = append(errs,
-				fmt.Errorf(
-					"msgid not found at %s:%d",
-					g.file.Name,
-					util.FindLine(g.content, cur.Pos()),
-				),
-			)
-			return
-		}
-		if !foundStr {
-			warns = append(
-				warns,
-				fmt.Sprintf(
-					"msgstr not found at %s:%d",
-					g.file.Name,
-					util.FindLine(g.content, cur.Pos()),
-				),
-			)
-		}
-
-		if !foundStr || !foundID {
-			return
-		}
-
-		entries = append(entries, curEntry)
-		reset()
-	}
-
-	toSkip := []reflect.Type{
-		tfor[ast.FlagComment](),
-		tfor[ast.LocationComment](),
-		tfor[ast.GeneralComment](),
-	}
-
-	for i := 0; i < len(g.file.Nodes); i++ {
-		node := g.file.Nodes[i]
-
+	for i, node := range g.file.Nodes {
 		switch n := node.(type) {
 		case ast.GeneralComment, ast.FlagComment, ast.LocationComment:
-			switch n := n.(type) {
-			case ast.LocationComment:
-				loc := types.Location{
-					File: n.File,
-					Line: n.Line,
-				}
-				curEntry.Locations = append(curEntry.Locations, loc)
-			case ast.FlagComment:
-				curEntry.Flags = append(curEntry.Flags, n.Flag)
-			default:
-				continue
-			}
+			g.handleComment(n)
 		case ast.Msgctxt:
-			if curEntry.Context != "" {
-				warns = append(warns,
-					fmt.Sprintf("duplicated msgctxt at %s:%d",
-						g.file.Name,
-						util.FindLine(g.content, n.Pos()),
-					),
-				)
-			}
-			curEntry.Context = n.Context
-
-			if !g.typeIsComing(i+1,
-				toSkip,
-				tfor[ast.Msgid](),
-			) {
-				finish(n)
-			}
-
+			g.handleMsgctxt(n, i)
 		case ast.Msgid:
-			if foundID {
-				warns = append(warns,
-					fmt.Sprintf("duplicated msgid at %s:%d",
-						g.file.Name,
-						util.FindLine(g.content, n.Pos()),
-					),
-				)
-			}
-			foundID = true
-			curEntry.ID = n.ID
-
-			if !g.typeIsComing(i+1,
-				toSkip,
-				tfor[ast.Msgstr](),
-				tfor[ast.MsgidPlural](),
-				tfor[ast.MsgstrPlural](),
-			) {
-				finish(n)
-			}
+			g.handleMsgid(n, i)
 		case ast.MsgidPlural:
-			if curEntry.Plural != "" {
-				warns = append(warns,
-					fmt.Sprintf("duplicated msgid_plural at %s:%d",
-						g.file.Name,
-						util.FindLine(g.content, n.Pos()),
-					),
-				)
-			}
-			curEntry.Plural = n.Plural
-
-			if !g.typeIsComing(i+1,
-				toSkip,
-				tfor[ast.MsgstrPlural](),
-			) {
-				finish(n)
-			}
+			g.handleMsgidPlural(n, i)
 		case ast.MsgstrPlural:
-			p := types.PluralEntry{
-				ID:  n.PluralID,
-				Str: n.Str,
-			}
-			curEntry.Plurals = append(curEntry.Plurals, p)
-			foundStr = true
-			if !g.typeIsComing(i+1, toSkip, tfor[ast.MsgstrPlural]()) {
-				finish(n)
-			}
+			g.handleMsgstrPlural(n, i)
 		case ast.Msgstr:
-			if curEntry.Plural != "" {
-				continue
-			}
-
-			foundStr = true
-			curEntry.Str = n.Str
-			finish(n)
+			g.handleMsgstr(n)
 		}
 	}
-	return
+}
+
+func (g *Generator) resetEntryState() {
+	g.curEntry = types.Entry{}
+	g.foundStr = false
+	g.foundID = false
+}
+
+func (g *Generator) handleComment(node ast.Node) {
+	switch n := node.(type) {
+	case ast.LocationComment:
+		loc := types.Location{
+			File: n.File,
+			Line: n.Line,
+		}
+		g.curEntry.Locations = append(g.curEntry.Locations, loc)
+	case ast.FlagComment:
+		g.curEntry.Flags = append(g.curEntry.Flags, n.Flag)
+	default:
+		return
+	}
+}
+
+func (g *Generator) handleMsgctxt(n ast.Msgctxt, i int) {
+	if g.curEntry.Context != "" {
+		g.warns = append(g.warns,
+			fmt.Sprintf("duplicated msgctxt at %s:%d",
+				g.file.Name,
+				util.FindLine(g.content, n.Pos()),
+			),
+		)
+	}
+	g.curEntry.Context = n.Context
+
+	if !g.typeIsComing(i+1,
+		g.toSkip,
+		tfor[ast.Msgid](),
+	) {
+		g.finishEntry(n)
+	}
+}
+
+func (g *Generator) handleMsgid(n ast.Msgid, i int) {
+	if g.foundID {
+		g.warns = append(g.warns,
+			fmt.Sprintf("duplicated msgid at %s:%d",
+				g.file.Name,
+				util.FindLine(g.content, n.Pos()),
+			),
+		)
+	}
+	g.foundID = true
+	g.curEntry.ID = n.ID
+
+	if !g.typeIsComing(i+1,
+		g.toSkip,
+		tfor[ast.Msgstr](),
+		tfor[ast.MsgidPlural](),
+		tfor[ast.MsgstrPlural](),
+	) {
+		g.finishEntry(n)
+	}
+}
+
+func (g *Generator) handleMsgidPlural(n ast.MsgidPlural, i int) {
+	if g.curEntry.Plural != "" {
+		g.warns = append(g.warns,
+			fmt.Sprintf("duplicated msgid_plural at %s:%d",
+				g.file.Name,
+				util.FindLine(g.content, n.Pos()),
+			),
+		)
+	}
+	g.curEntry.Plural = n.Plural
+
+	if !g.typeIsComing(i+1,
+		g.toSkip,
+		tfor[ast.MsgstrPlural](),
+	) {
+		g.finishEntry(n)
+	}
+}
+
+func (g *Generator) handleMsgstrPlural(n ast.MsgstrPlural, i int) {
+	p := types.PluralEntry{
+		ID:  n.PluralID,
+		Str: n.Str,
+	}
+	g.curEntry.Plurals = append(g.curEntry.Plurals, p)
+	g.foundStr = true
+	if !g.typeIsComing(i+1, g.toSkip, tfor[ast.MsgstrPlural]()) {
+		g.finishEntry(n)
+	}
+}
+
+func (g *Generator) handleMsgstr(n ast.Msgstr) {
+	if g.curEntry.Plural != "" {
+		return
+	}
+
+	g.foundStr = true
+	g.curEntry.Str = n.Str
+	g.finishEntry(n)
+}
+
+func (g *Generator) finishEntry(cur ast.Node) {
+	err := validateEntry(g.curEntry)
+	if err != nil {
+		g.errs = append(g.errs, err)
+		return
+	}
+
+	if !g.foundID {
+		g.errs = append(g.errs,
+			fmt.Errorf(
+				"msgid not found at %s:%d",
+				g.file.Name,
+				util.FindLine(g.content, cur.Pos()),
+			),
+		)
+		return
+	}
+	if !g.foundStr {
+		g.warns = append(
+			g.warns,
+			fmt.Sprintf(
+				"msgstr not found at %s:%d",
+				g.file.Name,
+				util.FindLine(g.content, cur.Pos()),
+			),
+		)
+	}
+
+	if !g.foundStr || !g.foundID {
+		return
+	}
+
+	g.entries = append(g.entries, g.curEntry)
+	g.resetEntryState()
 }
 
 func (g *Generator) commingType(offset int, ignore []reflect.Type) reflect.Type {
