@@ -8,29 +8,44 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
-// Format generates the PO file representation of the Translation.
-// The output is influenced by the provided configuration.
-//
-// Parameters:
-//   - cfg: The `poconfig.Config` object used to control formatting behavior.
-//
-// Returns:
-//   - A string representing the translation in PO file format.
-//
-// Example:
-//
-//	translation := Translation{
-//	    ID:      "Hello",
-//	    Context: "Greeting",
-//	    Plural:  "Hellos",
-//	    Locations: []Location{
-//	        {Line: 10, File: "example.go"},
-//	    },
-//	}
-//	config := poconfig.DefaultConfig()
-//	formatted := translation.Format(config)
-//	fmt.Println(formatted)
-func FormatTranslation(t types.Entry, cfg config.Config) string {
+const (
+	copyrightFormat = `# Copyright (C) %s
+# This file is distributed under the same license as the %s package.`
+	foreignCopyrightFormat = `# This file is put in the public domain.`
+	headerFormat           = `# %s
+%s
+#
+#, fuzzy
+msgid ""
+msgstr ""
+`
+	headerFieldFormat = `"%s: %s\n"`
+)
+
+func (c Compiler) formatHeader() string {
+	if c.Config.OmitHeader {
+		return ""
+	}
+	var b strings.Builder
+
+	copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
+	if c.Config.ForeignUser {
+		copyright = foreignCopyrightFormat
+	}
+
+	fmt.Fprintf(&b, headerFormat, c.Config.Title, copyright)
+
+	for i, field := range c.File.Header.Values {
+		fmt.Fprintf(&b, headerFieldFormat, field.Key, field.Value)
+		if i != len(c.File.Header.Values) {
+			b.WriteByte('\n')
+		}
+	}
+
+	return b.String()
+}
+
+func (c Compiler) formatEntry(t types.Entry) string {
 	var builder strings.Builder
 
 	// Helper function to append formatted lines to the builder.
@@ -43,8 +58,8 @@ func FormatTranslation(t types.Entry, cfg config.Config) string {
 	plural := formatString(t.Plural)
 
 	// Add location comments if not suppressed by the configuration.
-	if !cfg.NoLocation || cfg.AddLocation == "never" {
-		switch cfg.AddLocation {
+	if !c.Config.NoLocation || c.Config.AddLocation == "never" {
+		switch c.Config.AddLocation {
 		case "full":
 			for _, location := range t.Locations {
 				fprintfln("#: %s:%d", location.File, location.Line)
@@ -67,16 +82,16 @@ func FormatTranslation(t types.Entry, cfg config.Config) string {
 	// Add plural forms if present.
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		for i := range cfg.Nplurals {
+		for i := range c.Config.Nplurals {
 			if i == 1 {
-				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, cfg))
+				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, c.Config))
 				continue
 			}
-			fprintfln(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, cfg))
+			fprintfln(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config))
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		fprintfln(`msgstr %s`, formatPrefixAndSuffix(t.ID, cfg))
+		fprintfln(`msgstr %s`, formatPrefixAndSuffix(t.ID, c.Config))
 	}
 
 	return builder.String()

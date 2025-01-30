@@ -2,63 +2,33 @@ package compiler
 
 import (
 	"bytes"
-	_ "embed"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
-//go:embed header.pot
-var baseHeader string
-
-const (
-	copyrightFormat = `# Copyright (C) %s
-# This file is distributed under the same license as the %s package.`
-	foreignCopyrightFormat = `# This file is put in the public domain.`
-)
-
-// Compiler is responsible for compiling a list of translations into various formats
-// (e.g., string, file, or bytes) based on the given configuration.
 type Compiler struct {
-	Translations []types.Entry // List of translations to compile.
-	Config       config.Config // Configuration for the compilation process.
+	File   *types.File
+	Config config.Config
 }
 
 // CompileToWriter writes the compiled translations to an `io.Writer` in the PO file format.
 func (c Compiler) CompileToWriter(w io.Writer) error {
 	var err error
-	// Write the base header, including package version, language, and plural forms.
-	if !c.Config.OmitHeader {
-		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
-		if c.Config.ForeignUser {
-			copyright = foreignCopyrightFormat
-		}
-		_, err = fmt.Fprintf(
-			w,
-			baseHeader,
-			c.Config.Title,
-			copyright,
-			c.Config.PackageVersion,
-			c.Config.MsgidBugsAddress,
-			time.Now().Format(time.DateTime),
-			c.Config.Language,
-			c.Config.Nplurals,
-		)
-		if err != nil {
-			return err
-		}
-	}
+
+	fmt.Fprintln(w, c.formatHeader())
 
 	// Clean duplicates in translations and write each to the writer.
-	translations := types.CleanDuplicates(c.Translations)
+	translations := types.CleanDuplicates(c.File.Entries)
 	for _, t := range translations {
-		_, err = fmt.Fprintln(w, FormatTranslation(t, c.Config))
+		if t.ID == "" {
+			continue
+		}
+		_, err = fmt.Fprintln(w, c.formatEntry(t))
 		if err != nil {
 			return err
 		}
@@ -107,9 +77,3 @@ func (c Compiler) CompileToBytes() []byte {
 
 	return b.Bytes()
 }
-
-// ErrNotImplementedYet is used as an error for functions that are not yet implemented.
-var ErrNotImplementedYet = errors.New("not implemented yet (sorry)")
-
-// CompileToDir compiles the translations to a directory. This function is not implemented yet.
-func (c Compiler) CompileToDir(d string) error { return ErrNotImplementedYet }

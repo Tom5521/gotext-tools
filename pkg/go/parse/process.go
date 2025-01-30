@@ -1,4 +1,4 @@
-package goparse
+package parse
 
 import (
 	"fmt"

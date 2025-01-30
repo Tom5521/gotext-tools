@@ -1,6 +1,6 @@
 // Package goparse provides tools to parse and process Go source files,
 // extracting translations and handling various configurations.
-package goparse
+package parse
 
 import (
 	"fmt"
@@ -158,7 +158,11 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 }
 
 // Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse() (translations []types.Entry, errs []error) {
+func (p *Parser) Parse() (file *types.File, errs []error) {
+	file = &types.File{
+		Nplurals: int(p.Config.Nplurals),
+	}
+
 	for _, f := range p.files {
 		t, e := f.Translations()
 		if p.Config.Logger != nil {
@@ -167,7 +171,7 @@ func (p *Parser) Parse() (translations []types.Entry, errs []error) {
 			}
 		}
 		errs = append(errs, e...)
-		translations = append(translations, t...)
+		file.Entries = append(file.Entries, t...)
 	}
 
 	return

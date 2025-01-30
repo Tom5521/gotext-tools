@@ -1,15 +1,8 @@
 package types
 
-import "github.com/Tom5521/xgotext/internal/util"
-
-type HeaderField struct {
-	Key   string
-	Value string
-}
-
-type Header struct {
-	Values []HeaderField
-}
+import (
+	"github.com/Tom5521/xgotext/internal/util"
+)
 
 type File struct {
 	Name     string

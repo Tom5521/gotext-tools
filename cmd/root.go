@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tom5521/xgotext/pkg/goparse"
+	"github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/spf13/cobra"
@@ -71,7 +71,7 @@ Similarly for optional arguments.`,
 		config.Msgstr.Prefix = msgstrPrefix
 		config.Msgstr.Suffix = msgstrSuffix
 
-		p, err := goparse.NewParserFromFiles(
+		p, err := parse.NewParserFromFiles(
 			inputfiles,
 			config,
 		)
@@ -79,7 +79,7 @@ Similarly for optional arguments.`,
 			return fmt.Errorf("error parsing files: %w", err)
 		}
 
-		translations, errs := p.Parse()
+		pofile, errs := p.Parse()
 		if len(errs) > 0 {
 			return fmt.Errorf("errors in translations parsing (%d): %w", len(errs), errs[0])
 		}
@@ -124,8 +124,8 @@ Similarly for optional arguments.`,
 		}
 
 		compiler := compiler.Compiler{
-			Translations: translations,
-			Config:       config,
+			File:   pofile,
+			Config: config,
 		}
 
 		err = compiler.CompileToWriter(out)
