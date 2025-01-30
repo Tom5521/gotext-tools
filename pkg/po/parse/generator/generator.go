@@ -15,8 +15,7 @@ import (
 )
 
 type Generator struct {
-	content []rune
-	file    *ast.File
+	file *ast.File
 
 	curEntry types.Entry
 	foundStr bool
@@ -28,10 +27,9 @@ type Generator struct {
 	toSkip []reflect.Type
 }
 
-func New(input *ast.File, content []rune) *Generator {
+func New(input *ast.File) *Generator {
 	g := &Generator{
-		file:    input,
-		content: content,
+		file: input,
 		toSkip: []reflect.Type{
 			tfor[ast.FlagComment](),
 			tfor[ast.GeneralComment](),
@@ -152,7 +150,7 @@ func (g *Generator) handleMsgctxt(n ast.Msgctxt, i int) {
 		g.warns = append(g.warns,
 			fmt.Sprintf("duplicated msgctxt at %s:%d",
 				g.file.Name,
-				util.FindLine(g.content, n.Pos()),
+				util.FindLine(g.file.Content, n.Pos()),
 			),
 		)
 	}
@@ -171,7 +169,7 @@ func (g *Generator) handleMsgid(n ast.Msgid, i int) {
 		g.warns = append(g.warns,
 			fmt.Sprintf("duplicated msgid at %s:%d",
 				g.file.Name,
-				util.FindLine(g.content, n.Pos()),
+				util.FindLine(g.file.Content, n.Pos()),
 			),
 		)
 	}
@@ -193,7 +191,7 @@ func (g *Generator) handleMsgidPlural(n ast.MsgidPlural, i int) {
 		g.warns = append(g.warns,
 			fmt.Sprintf("duplicated msgid_plural at %s:%d",
 				g.file.Name,
-				util.FindLine(g.content, n.Pos()),
+				util.FindLine(g.file.Content, n.Pos()),
 			),
 		)
 	}
@@ -241,7 +239,7 @@ func (g *Generator) finishEntry(cur ast.Node) {
 			fmt.Errorf(
 				"msgid not found at %s:%d",
 				g.file.Name,
-				util.FindLine(g.content, cur.Pos()),
+				util.FindLine(g.file.Content, cur.Pos()),
 			),
 		)
 		return
@@ -252,7 +250,7 @@ func (g *Generator) finishEntry(cur ast.Node) {
 			fmt.Sprintf(
 				"msgstr not found at %s:%d",
 				g.file.Name,
-				util.FindLine(g.content, cur.Pos()),
+				util.FindLine(g.file.Content, cur.Pos()),
 			),
 		)
 	}

@@ -7,14 +7,14 @@ import (
 )
 
 type Lexer struct {
-	input []rune
+	input []byte
 	pos   int
 	read  int
 	char  rune
 	prev  rune
 }
 
-func New(input []rune) *Lexer {
+func New(input []byte) *Lexer {
 	l := &Lexer{
 		input: input,
 	}
@@ -23,7 +23,7 @@ func New(input []rune) *Lexer {
 }
 
 func NewFromString(input string) *Lexer {
-	return New([]rune(input))
+	return New([]byte(input))
 }
 
 func (l *Lexer) readChar() {
@@ -31,7 +31,7 @@ func (l *Lexer) readChar() {
 	if l.read >= len(l.input) {
 		l.char = 0
 	} else {
-		l.char = l.input[l.read]
+		l.char = rune(l.input[l.read])
 	}
 	l.pos = l.read
 	l.read++

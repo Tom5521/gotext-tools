@@ -67,7 +67,7 @@ msgstr[1] "Tienes %d manzanas"`
 	p := ast.NewParserFromString(input, "test.go")
 	p.Parse()
 
-	g := generator.New(p.File, []rune(input))
+	g := generator.New(p.File)
 	file := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")
@@ -108,7 +108,7 @@ msgstr ""
 		return
 	}
 
-	g := generator.New(p.File, []rune(input))
+	g := generator.New(p.File)
 	f := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")

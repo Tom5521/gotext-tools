@@ -64,6 +64,7 @@ type (
 		pos     int
 		literal string
 		Name    string
+		Content []byte
 		Nodes   []Node
 	}
 )

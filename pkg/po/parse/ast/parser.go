@@ -10,7 +10,7 @@ import (
 )
 
 type Parser struct {
-	input    []rune
+	input    []byte
 	tokens   []token.Token
 	position int
 	File     *File
@@ -24,10 +24,10 @@ func (p *Parser) collectTokens(l *lexer.Lexer) {
 	}
 }
 
-func NewParser(input []rune, filename string) *Parser {
+func NewParser(input []byte, filename string) *Parser {
 	p := &Parser{
 		input: input,
-		File:  &File{Name: filename},
+		File:  &File{Name: filename, Content: input},
 	}
 
 	p.collectTokens(lexer.New(input))
@@ -36,7 +36,7 @@ func NewParser(input []rune, filename string) *Parser {
 }
 
 func NewParserFromString(input, filename string) *Parser {
-	return NewParser([]rune(input), filename)
+	return NewParser([]byte(input), filename)
 }
 
 type parserFunc = func() (Node, error)
