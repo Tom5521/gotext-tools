@@ -29,7 +29,7 @@ msgid_plural "You have %d apples"
 msgstr[0] "Tienes %d manzana"
 msgstr[1] "Tienes %d manzanas"`
 
-	expected := []types.Entry{
+	expected := types.Entries{
 		{
 			Flags:     nil,
 			ID:        "Hi",
@@ -137,7 +137,7 @@ msgstr ""
 			},
 		},
 		Nplurals: 2,
-		Entries: []types.Entry{
+		Entries: types.Entries{
 			{
 				Flags:     []string(nil),
 				ID:        "",

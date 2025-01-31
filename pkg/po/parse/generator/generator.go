@@ -20,7 +20,7 @@ type Generator struct {
 	curEntry types.Entry
 	foundStr bool
 	foundID  bool
-	entries  []types.Entry
+	entries  types.Entries
 	warns    []string
 	errs     []error
 

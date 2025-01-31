@@ -65,8 +65,8 @@ func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 	}, nil
 }
 
-func (f *File) processGeneric(exprs ...ast.Expr) ([]types.Entry, []error) {
-	var translations []types.Entry
+func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
+	var translations types.Entries
 	var errors []error
 
 	for _, expr := range exprs {
@@ -174,11 +174,11 @@ func (f *File) processPoCall(
 	return
 }
 
-func (f *File) processNode(n ast.Node) ([]types.Entry, []error) {
+func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 	if n == nil {
 		return nil, nil
 	}
-	var translations []types.Entry
+	var translations types.Entries
 	var errors []error
 
 	processGeneric := func(exprs ...ast.Expr) {

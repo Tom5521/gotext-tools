@@ -133,12 +133,12 @@ func (f *File) determinePackageInfo() {
 }
 
 // Translations returns all translations found in the file.
-func (f *File) Translations() ([]types.Entry, []error) {
+func (f *File) Translations() (types.Entries, []error) {
 	if f.config.Logger != nil && f.config.Verbose {
 		f.config.Logger.Printf("Parsing %s...", f.path)
 	}
 
-	var translations []types.Entry
+	var translations types.Entries
 	var errors []error
 
 	if !f.hasGotext {
@@ -151,5 +151,5 @@ func (f *File) Translations() ([]types.Entry, []error) {
 		errors = append(errors, e...)
 	}
 
-	return types.CleanDuplicates(translations), errors
+	return translations.CleanDuplicates(), errors
 }

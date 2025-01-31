@@ -23,7 +23,7 @@ func (c Compiler) CompileToWriter(w io.Writer) error {
 	fmt.Fprintln(w, c.formatHeader())
 
 	// Clean duplicates in translations and write each to the writer.
-	translations := types.CleanDuplicates(c.File.Entries)
+	translations := c.File.Entries.CleanDuplicates()
 	for _, t := range translations {
 		if t.ID == "" {
 			continue

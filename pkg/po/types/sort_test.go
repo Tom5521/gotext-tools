@@ -7,19 +7,19 @@ import (
 )
 
 func TestSortEntriesByID(t *testing.T) {
-	entries := []types.Entry{
+	entries := types.Entries{
 		{ID: "b"},
 		{ID: "a"},
 		{ID: "c"},
 	}
 
-	expected := []types.Entry{
+	expected := types.Entries{
 		{ID: "a"},
 		{ID: "b"},
 		{ID: "c"},
 	}
 
-	types.SortEntriesByID(entries)
+	entries = entries.SortByID()
 
 	for i, entry := range entries {
 		if entry.ID != expected[i].ID {
@@ -29,19 +29,19 @@ func TestSortEntriesByID(t *testing.T) {
 }
 
 func TestSortEntriesByLine(t *testing.T) {
-	entries := []types.Entry{
+	entries := types.Entries{
 		{Locations: []types.Location{{Line: 3}}},
 		{Locations: []types.Location{{Line: 1}}},
 		{Locations: []types.Location{{Line: 2}}},
 	}
 
-	expected := []types.Entry{
+	expected := types.Entries{
 		{Locations: []types.Location{{Line: 1}}},
 		{Locations: []types.Location{{Line: 2}}},
 		{Locations: []types.Location{{Line: 3}}},
 	}
 
-	types.SortEntriesByLine(entries)
+	entries = entries.SortByLine()
 
 	for i, entry := range entries {
 		if entry.Locations[0].Line != expected[i].Locations[0].Line {
@@ -56,19 +56,19 @@ func TestSortEntriesByLine(t *testing.T) {
 }
 
 func TestSortEntriesByFile(t *testing.T) {
-	entries := []types.Entry{
+	entries := types.Entries{
 		{Locations: []types.Location{{File: "b.txt"}}},
 		{Locations: []types.Location{{File: "a.txt"}}},
 		{Locations: []types.Location{{File: "c.txt"}}},
 	}
 
-	expected := []types.Entry{
+	expected := types.Entries{
 		{Locations: []types.Location{{File: "a.txt"}}},
 		{Locations: []types.Location{{File: "b.txt"}}},
 		{Locations: []types.Location{{File: "c.txt"}}},
 	}
 
-	types.SortEntriesByFile(entries)
+	entries = entries.SortByFile()
 
 	for i, entry := range entries {
 		if entry.Locations[0].File != expected[i].Locations[0].File {
@@ -82,22 +82,22 @@ func TestSortEntriesByFile(t *testing.T) {
 	}
 }
 
-func TestSortEntriesByFileAndLine(t *testing.T) {
-	entries := []types.Entry{
+func TestSortEntries(t *testing.T) {
+	entries := types.Entries{
 		{Locations: []types.Location{{File: "b.txt", Line: 2}}},
 		{Locations: []types.Location{{File: "a.txt", Line: 2}}},
 		{Locations: []types.Location{{File: "a.txt", Line: 1}}},
 		{Locations: []types.Location{{File: "c.txt", Line: 1}}},
 	}
 
-	expected := []types.Entry{
+	expected := types.Entries{
 		{Locations: []types.Location{{File: "a.txt", Line: 1}}},
 		{Locations: []types.Location{{File: "a.txt", Line: 2}}},
 		{Locations: []types.Location{{File: "b.txt", Line: 2}}},
 		{Locations: []types.Location{{File: "c.txt", Line: 1}}},
 	}
 
-	types.SortEntriesByFileAndLine(entries)
+	entries = entries.Sort()
 
 	for i, entry := range entries {
 		if entry.Locations[0].File != expected[i].Locations[0].File ||
