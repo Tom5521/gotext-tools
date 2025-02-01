@@ -85,5 +85,11 @@ func processpath(content []byte, path string) (*ast.File, error) {
 func (p *Parser) Parse() (*types.File, []string, []error) {
 	g := generator.New(p.file)
 
+	if len(g.Warnings()) > 0 && p.Config.Logger != nil {
+		for _, warn := range g.Warnings() {
+			p.Config.Logger.Print("WARN: ", warn)
+		}
+	}
+
 	return g.Generate(), g.Warnings(), g.Errors()
 }

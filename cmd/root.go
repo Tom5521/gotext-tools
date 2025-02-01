@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
-	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +19,7 @@ var root = &cobra.Command{
 
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.`,
-	RunE: func(_ *cobra.Command, inputfiles []string) (err error) {
+	RunE: func(cmd *cobra.Command, inputfiles []string) (err error) {
 		if filesFrom != "" {
 			var files []string
 			files, err = readFilesFrom(filesFrom)
@@ -48,32 +46,9 @@ Similarly for optional arguments.`,
 			}
 		}
 
-		config := config.Config{
-			Logger:           log.New(os.Stdout, "INFO: ", log.Ltime),
-			DefaultDomain:    defaultDomain,
-			ForcePo:          forcePo,
-			NoLocation:       noLocation,
-			AddLocation:      addLocation,
-			OmitHeader:       omitHeader,
-			PackageName:      packageName,
-			PackageVersion:   packageVersion,
-			Language:         lang,
-			Nplurals:         nplurals,
-			Exclude:          exclude,
-			ForeignUser:      foreignUser,
-			MsgidBugsAddress: msgidBugsAddress,
-			Title:            title,
-			CopyrightHolder:  copyrightHolder,
-			JoinExisting:     joinExisting,
-			ExtractAll:       extractAll,
-			Verbose:          verbose,
-		}
-		config.Msgstr.Prefix = msgstrPrefix
-		config.Msgstr.Suffix = msgstrSuffix
-
 		p, err := parse.NewParserFromFiles(
 			inputfiles,
-			config,
+			cfg,
 		)
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
@@ -104,7 +79,7 @@ Similarly for optional arguments.`,
 			if err != nil {
 				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
 			}
-			if os.IsExist(err) && !forcePo && output != "" {
+			if os.IsExist(err) && !forcePo && output != "" && !joinExisting {
 				return fmt.Errorf("file %s already exists", outputFile)
 			}
 
@@ -113,6 +88,10 @@ Similarly for optional arguments.`,
 				return fmt.Errorf("error opening file %s: %w", outputFile, err)
 			}
 			defer file.Close()
+
+			if joinExisting {
+				return join(p, file)
+			}
 
 			if stat.Size() != 0 {
 				err = file.Truncate(0)
@@ -125,7 +104,7 @@ Similarly for optional arguments.`,
 
 		compiler := compiler.Compiler{
 			File:   pofile,
-			Config: config,
+			Config: cfg,
 		}
 
 		err = compiler.CompileToWriter(out)
