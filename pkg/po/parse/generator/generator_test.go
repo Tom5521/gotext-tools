@@ -1,7 +1,6 @@
 package generator_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/Tom5521/xgotext/internal/util"
@@ -10,6 +9,28 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/types"
 	"github.com/kr/pretty"
 )
+
+func makefile(input string, t *testing.T) (file *ast.File, err error) {
+	norm, errs := ast.NewParserFromString(input, "test.po").Normalizer()
+	if len(errs) > 0 {
+		err = errs[0]
+		return
+	}
+
+	norm.Normalize()
+	if len(norm.Errors()) > 0 {
+		err = norm.Errors()[0]
+		return
+	}
+
+	for _, warn := range norm.Warnings() {
+		t.Log(warn)
+	}
+
+	file = norm.File()
+
+	return
+}
 
 func TestGen(t *testing.T) {
 	const input = `# hello.go:123
@@ -31,6 +52,7 @@ msgstr[1] "Tienes %d manzanas"`
 
 	expected := types.Entries{
 		{
+			Comments:  []string{"hello.go:123"},
 			Flags:     nil,
 			ID:        "Hi",
 			Context:   "",
@@ -64,24 +86,25 @@ msgstr[1] "Tienes %d manzanas"`
 		},
 	}
 
-	p := ast.NewParserFromString(input, "test.go")
-	p.Parse()
+	f, err := makefile(input, t)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
-	g := generator.New(p.File)
+	g := generator.New(f)
 	file := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")
 		t.Error(g.Errors()[0])
 		return
 	}
-	for _, warn := range g.Warnings() {
-		t.Log("WARN:", warn)
-	}
 
-	if !types.EqualEntries(expected, file.Entries) {
+	if !util.Equal(expected, file.Entries) {
 		t.Error("The results does not match")
-		t.Error("Expected", util.Format(expected))
-		t.Error("Got:", util.Format(file.Entries))
+		t.Error("expected:", pretty.Sprintf("%+v", expected))
+		t.Error("got:", pretty.Sprintf("%+v\n", file.Entries))
+		t.Error(pretty.Diff(expected, file.Entries))
 	}
 }
 
@@ -100,27 +123,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"`
 
-	p := ast.NewParserFromString(input, "test.go")
-	errs := p.Parse()
-	if errs != nil {
-		t.Error("Unexpected error found:")
-		t.Error(errs[0])
+	file, err := makefile(input, t)
+	if err != nil {
+		t.Error(err)
 		return
 	}
 
-	g := generator.New(p.File)
+	g := generator.New(file)
 	f := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")
 		t.Error(g.Errors()[0])
 		return
 	}
-	for _, warn := range g.Warnings() {
-		t.Log("WARN:", warn)
-	}
 
 	expected := &types.File{
-		Name: "test.go",
+		Name: "test.po",
 		Header: types.Header{
 			Values: []types.HeaderField{
 				{Key: "Project-Id-Version", Value: "PACKAGE VERSION"},
@@ -150,9 +168,8 @@ msgstr ""
 		},
 	}
 
-	if !reflect.DeepEqual(*expected, *f) {
+	if !util.Equal(expected, f) {
 		t.Error("Structures does not match:")
-		t.Error("Expected:", pretty.Sprint(expected))
-		t.Error("Got:", pretty.Sprint(f))
+		t.Error(pretty.Diff(expected, f))
 	}
 }

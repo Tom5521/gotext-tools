@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -31,7 +32,7 @@ func (p *Parser) readStringIdent() (string, error) {
 		return "", fmt.Errorf(
 			"expected STRING after %s declaration [%s:%d]",
 			current.Type,
-			p.File.Name,
+			p.name,
 			util.FindLine(p.input, current.Pos),
 		)
 	}
@@ -47,42 +48,48 @@ func (p *Parser) readStringIdent() (string, error) {
 	return b.String(), nil
 }
 
+var (
+	locationRegex  = regexp.MustCompile(`#:\s?(.*)`)
+	generalRegex   = regexp.MustCompile(`#\s?(.*)`)
+	extractedRegex = regexp.MustCompile(`#\.\s?(.*)`)
+	flagRegex      = regexp.MustCompile(`#,\s?(.*)`)
+)
+
 func (p *Parser) comment() (Node, error) {
 	tok := p.tokens[p.position]
-	if len(tok.Literal) == 1 {
-		return GeneralComment{
-			pos:     tok.Pos,
-			literal: tok.Literal,
-		}, nil
-	}
 
-	parts := strings.Fields(tok.Literal)
-
-	switch parts[0] {
-	case "#:":
-		info := strings.SplitN(strings.Join(parts[1:], ""), ":", 2)
-		line, err := strconv.Atoi(info[1])
-		if err != nil {
-			return nil, err
+	switch {
+	case locationRegex.MatchString(tok.Literal):
+		matches := locationRegex.FindStringSubmatch(tok.Literal)
+		parts := strings.SplitN(matches[1], ":", 2)
+		line := -1
+		var err error
+		if parts[1] != "" {
+			line, err = strconv.Atoi(parts[1])
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		return LocationComment{
-			pos:     tok.Pos,
-			literal: tok.Literal,
-			File:    info[0],
-			Line:    line,
+			pos:  tok.Pos,
+			Line: line,
+			File: parts[0],
 		}, nil
-	case "#,":
+	case extractedRegex.MatchString(tok.Literal):
+		return ExtractedComment{
+			pos:  tok.Pos,
+			Text: extractedRegex.FindStringSubmatch(tok.Literal)[1],
+		}, nil
+	case flagRegex.MatchString(tok.Literal):
 		return FlagComment{
-			pos:     tok.Pos,
-			literal: tok.Literal,
-			Flag:    strings.Join(parts[1:], " "),
+			pos:  tok.Pos,
+			Flag: flagRegex.FindStringSubmatch(tok.Literal)[1],
 		}, nil
 	default:
 		return GeneralComment{
-			pos:     tok.Pos,
-			literal: tok.Literal,
-			Text:    strings.Join(parts[1:], " "),
+			pos:  tok.Pos,
+			Text: generalRegex.FindStringSubmatch(tok.Literal)[1],
 		}, nil
 	}
 }
@@ -90,8 +97,7 @@ func (p *Parser) comment() (Node, error) {
 func (p *Parser) msgid() (Node, error) {
 	tok := p.tokens[p.position]
 	msgid := Msgid{
-		pos:     tok.Pos,
-		literal: tok.Literal,
+		pos: tok.Pos,
 	}
 
 	id, err := p.readStringIdent()
@@ -107,8 +113,7 @@ func (p *Parser) msgid() (Node, error) {
 func (p *Parser) msgstr() (Node, error) {
 	tok := p.tokens[p.position]
 	msgstr := Msgstr{
-		pos:     tok.Pos,
-		literal: tok.Literal,
+		pos: tok.Pos,
 	}
 
 	str, err := p.readStringIdent()
@@ -123,8 +128,7 @@ func (p *Parser) msgstr() (Node, error) {
 func (p *Parser) msgctxt() (Node, error) {
 	tok := p.tokens[p.position]
 	msgctxt := Msgctxt{
-		pos:     tok.Pos,
-		literal: tok.Literal,
+		pos: tok.Pos,
 	}
 
 	ctx, err := p.readStringIdent()
@@ -140,8 +144,7 @@ func (p *Parser) msgctxt() (Node, error) {
 func (p *Parser) pluralMsgid() (Node, error) {
 	tok := p.tokens[p.position]
 	pmsgid := MsgidPlural{
-		pos:     tok.Pos,
-		literal: tok.Literal,
+		pos: tok.Pos,
 	}
 
 	id, err := p.readStringIdent()
@@ -154,23 +157,17 @@ func (p *Parser) pluralMsgid() (Node, error) {
 	return pmsgid, nil
 }
 
+var pluralRegex = regexp.MustCompile(`msgstr\[(\d*)\]`)
+
 func (p *Parser) pluralMsgstr() (Node, error) {
 	tok := p.tokens[p.position]
 	pmsgstr := MsgstrPlural{
-		pos:     tok.Pos,
-		literal: tok.Literal,
+		pos: tok.Pos,
 	}
 
-	var npluralID []rune
-	for _, char := range tok.Literal[strings.Index(tok.Literal, "[")+1:] {
-		if char == ']' {
-			break
-		}
+	npluralID := pluralRegex.FindStringSubmatch(tok.Literal)[1]
 
-		npluralID = append(npluralID, char)
-	}
-
-	id, err := strconv.Atoi(string(npluralID))
+	id, err := strconv.Atoi(npluralID)
 	if err != nil {
 		return nil, err
 	}

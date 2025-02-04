@@ -57,6 +57,10 @@ func (c Compiler) formatEntry(t types.Entry) string {
 	context := formatString(t.Context)
 	plural := formatString(t.Plural)
 
+	for _, comment := range t.Comments {
+		fmt.Fprintf(&builder, "# %s\n", comment)
+	}
+
 	// Add location comments if not suppressed by the configuration.
 	if !c.Config.NoLocation || c.Config.AddLocation == "never" {
 		switch c.Config.AddLocation {

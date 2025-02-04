@@ -13,7 +13,10 @@ type Parser struct {
 	input    []byte
 	tokens   []token.Token
 	position int
-	File     *File
+
+	nodes   []Node
+	content []byte
+	name    string
 }
 
 func (p *Parser) collectTokens(l *lexer.Lexer) {
@@ -26,8 +29,9 @@ func (p *Parser) collectTokens(l *lexer.Lexer) {
 
 func NewParser(input []byte, filename string) *Parser {
 	p := &Parser{
-		input: input,
-		File:  &File{Name: filename, Content: input},
+		input:   input,
+		content: input,
+		name:    filename,
 	}
 
 	p.collectTokens(lexer.New(input))
@@ -60,6 +64,11 @@ func (p *Parser) token(i int) token.Token {
 	return p.tokens[i]
 }
 
+func (p *Parser) Normalizer() (*Normalizer, []error) {
+	errs := p.Parse()
+	return NewNormalizer(p.name, p.content, p.nodes), errs
+}
+
 func (p *Parser) Parse() []error {
 	var errs []error
 
@@ -77,7 +86,7 @@ func (p *Parser) Parse() []error {
 		case token.ILLEGAL:
 			err = fmt.Errorf(
 				"token at %s:%d is illegal",
-				p.File.Name,
+				p.name,
 				util.FindLine(p.input, tok.Pos),
 			)
 		case token.MSGID,
@@ -93,7 +102,7 @@ func (p *Parser) Parse() []error {
 		default:
 			err = fmt.Errorf(
 				"unknown token type at %s:%d",
-				p.File.Name,
+				p.name,
 				util.FindLine(p.input, tok.Pos),
 			)
 		}
@@ -103,12 +112,12 @@ func (p *Parser) Parse() []error {
 			continue
 		}
 
-		p.File.Nodes = append(p.File.Nodes, node)
+		p.nodes = append(p.nodes, node)
 	}
 
 	return errs
 }
 
 func (p *Parser) Nodes() []Node {
-	return p.File.Nodes
+	return p.nodes
 }

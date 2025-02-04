@@ -35,13 +35,15 @@ type PluralEntry struct {
 // Entry represents a translatable string, including its context, plural forms,
 // and source code locations.
 type Entry struct {
-	Flags     []string
-	ID        string // The original string to be translated.
-	Context   string // The context in which the string is used (optional).
-	Plural    string // The plural form of the string (optional).
-	Plurals   []PluralEntry
-	Str       string
-	Locations []Location // A list of source code locations for the string.
+	Flags             []string
+	Comments          []string
+	ExtractedComments []string
+	ID                string // The original string to be translated.
+	Context           string // The context in which the string is used (optional).
+	Plural            string // The plural form of the string (optional).
+	Plurals           []PluralEntry
+	Str               string
+	Locations         []Location // A list of source code locations for the string.
 }
 
 func (e Entry) String() string {

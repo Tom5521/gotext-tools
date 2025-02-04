@@ -14,6 +14,7 @@ type Parser struct {
 	Config config.Config
 	file   *ast.File
 	seen   map[string]bool
+	warns  []string
 }
 
 func baseParser(cfg config.Config) *Parser {
@@ -67,29 +68,36 @@ func NewParserFromBytes(d []byte, name string, cfg config.Config) (*Parser, erro
 
 func unsafeNewParserFromBytes(data []byte, name string, cfg config.Config) (*Parser, error) {
 	var err error
+	var warns []string
 	p := baseParser(cfg)
-	p.file, err = processpath(data, name)
+	p.file, warns, err = p.processpath(data, name)
+	p.warns = append(p.warns, warns...)
 	return p, err
 }
 
-func processpath(content []byte, path string) (*ast.File, error) {
-	parser := ast.NewParser(content, path)
-	errs := parser.Parse()
+func (p *Parser) processpath(content []byte, path string) (*ast.File, []string, error) {
+	norm, errs := ast.NewParser(content, path).Normalizer()
 	if len(errs) > 0 {
-		return nil, errs[0]
+		return nil, nil, errs[0]
 	}
 
-	return parser.File, nil
+	norm.Normalize()
+
+	if len(norm.Errors()) > 0 {
+		return nil, norm.Warnings(), norm.Errors()[0]
+	}
+
+	if p.Config.Logger != nil && p.Config.Verbose {
+		for _, warn := range norm.Warnings() {
+			p.Config.Logger.Println("WARN:", warn)
+		}
+	}
+
+	return norm.File(), norm.Warnings(), nil
 }
 
 func (p *Parser) Parse() (*types.File, []string, []error) {
 	g := generator.New(p.file)
 
-	if len(g.Warnings()) > 0 && p.Config.Logger != nil {
-		for _, warn := range g.Warnings() {
-			p.Config.Logger.Print("WARN: ", warn)
-		}
-	}
-
-	return g.Generate(), g.Warnings(), g.Errors()
+	return g.Generate(), p.warns, g.Errors()
 }

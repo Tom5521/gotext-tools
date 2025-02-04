@@ -1,17 +1,15 @@
 package ast
 
 import (
-	"slices"
-
 	"github.com/Tom5521/xgotext/internal/util"
 )
 
 func EqualNodeSlice(x, y []Node) bool {
-	return slices.EqualFunc(x, y, EqualNodes)
+	return util.Equal(x, y)
 }
 
 func EqualNodes(x, y Node) bool {
-	return util.EqualFields(x, y)
+	return util.Equal(x, y)
 }
 
 func FormatNode(nodes ...Node) string {

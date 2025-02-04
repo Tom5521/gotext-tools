@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	. "github.com/Tom5521/xgotext/pkg/po/parse/lexer"
 	. "github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
@@ -48,7 +49,7 @@ msgid_plural "a"`
 			etok.Literal = `"` + etok.Literal + `"`
 		}
 
-		if etok.Literal != ctok.Literal || etok.Type != ctok.Type || etok.Pos != ctok.Pos {
+		if !util.Equal(etok, ctok) {
 			t.Errorf("unexpected token [%d]:", i)
 			t.Error("got:", ctok)
 			t.Error("expected:", etok)

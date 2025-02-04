@@ -4,6 +4,7 @@ package ast_test
 import (
 	"testing"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/kr/pretty"
 )
@@ -12,6 +13,7 @@ func TestParse(t *testing.T) {
 	const input = `# General Comment
 #, flag comment
 #: location_comment:123
+#. extracted comment
 msgctxt "testing!"
 msgid "1st msgid!"
 msgstr "1er msgid!"
@@ -48,6 +50,9 @@ msgstr ""
 			File: "location_comment",
 			Line: 123,
 		},
+		ast.ExtractedComment{
+			Text: "extracted comment",
+		},
 		ast.Msgctxt{
 			Context: "testing!",
 		},
@@ -81,9 +86,13 @@ msgstr ""
 
 	nodes := p.Nodes()
 
-	if !ast.EqualNodeSlice(expected, nodes) {
+	if !util.Equal(expected, nodes) {
 		t.Error("Unexpected node slice...")
 		t.Error("Expected:", pretty.Sprint(expected))
 		t.Error("Got:", pretty.Sprint(nodes))
+
+		for _, d := range pretty.Diff(nodes, expected) {
+			t.Error(d)
+		}
 	}
 }
