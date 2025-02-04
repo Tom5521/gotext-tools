@@ -58,7 +58,13 @@ func (c Compiler) formatEntry(t types.Entry) string {
 	plural := formatString(t.Plural)
 
 	for _, comment := range t.Comments {
-		fmt.Fprintf(&builder, "# %s\n", comment)
+		fprintfln("# %s", comment)
+	}
+	for _, xcomment := range t.ExtractedComments {
+		fprintfln("#. %s", xcomment)
+	}
+	for _, flag := range t.Flags {
+		fprintfln("#, %s", flag)
 	}
 
 	// Add location comments if not suppressed by the configuration.

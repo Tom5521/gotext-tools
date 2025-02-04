@@ -1,40 +1,46 @@
-package types
+package types_test
 
 import (
 	"testing"
+
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 func TestMergeFiles(t *testing.T) {
-	file1 := &File{
+	file1 := &types.File{
 		Name:     "file1",
-		Header:   Header{},
+		Header:   types.Header{},
 		Nplurals: 2,
-		Entries: Entries{
-			{ID: "id1", Str: "str1", Locations: []Location{{File: "file1.go", Line: 10}}},
-			{ID: "id2", Str: "str2", Locations: []Location{{File: "file1.go", Line: 20}}},
+		Entries: types.Entries{
+			{ID: "id1", Str: "str1", Locations: []types.Location{{File: "file1.go", Line: 10}}},
+			{ID: "id2", Str: "str2", Locations: []types.Location{{File: "file1.go", Line: 20}}},
 		},
 	}
 
-	file2 := &File{
+	file2 := &types.File{
 		Name:     "file2",
-		Header:   Header{},
+		Header:   types.Header{},
 		Nplurals: 3,
-		Entries: Entries{
-			{ID: "id3", Str: "str3", Locations: []Location{{File: "file2.go", Line: 15}}},
-			{ID: "id1", Str: "str1_modified", Locations: []Location{{File: "file2.go", Line: 25}}},
+		Entries: types.Entries{
+			{ID: "id3", Str: "str3", Locations: []types.Location{{File: "file2.go", Line: 15}}},
+			{
+				ID:        "id1",
+				Str:       "str1_modified",
+				Locations: []types.Location{{File: "file2.go", Line: 25}},
+			},
 		},
 	}
 
-	file3 := &File{
+	file3 := &types.File{
 		Name:     "file3",
-		Header:   Header{},
+		Header:   types.Header{},
 		Nplurals: 1,
-		Entries: Entries{
-			{ID: "id4", Str: "str4", Locations: []Location{{File: "file3.go", Line: 30}}},
+		Entries: types.Entries{
+			{ID: "id4", Str: "str4", Locations: []types.Location{{File: "file3.go", Line: 30}}},
 		},
 	}
 
-	mergedFile := MergeFiles(file1, file2, file3)
+	mergedFile := types.MergeFiles(file1, file2, file3)
 
 	expectedName := "file1_file2_file3"
 	if mergedFile.Name != expectedName {
@@ -45,15 +51,15 @@ func TestMergeFiles(t *testing.T) {
 		t.Errorf("Expected Nplurals to be %d, got %d", file1.Nplurals, mergedFile.Nplurals)
 	}
 
-	expectedEntries := Entries{
+	expectedEntries := types.Entries{
 		{
 			ID:        "id1",
 			Str:       "str1",
-			Locations: []Location{{File: "file1.go", Line: 10}, {File: "file2.go", Line: 25}},
+			Locations: []types.Location{{File: "file1.go", Line: 10}, {File: "file2.go", Line: 25}},
 		},
-		{ID: "id2", Str: "str2", Locations: []Location{{File: "file1.go", Line: 20}}},
-		{ID: "id3", Str: "str3", Locations: []Location{{File: "file2.go", Line: 15}}},
-		{ID: "id4", Str: "str4", Locations: []Location{{File: "file3.go", Line: 30}}},
+		{ID: "id2", Str: "str2", Locations: []types.Location{{File: "file1.go", Line: 20}}},
+		{ID: "id3", Str: "str3", Locations: []types.Location{{File: "file2.go", Line: 15}}},
+		{ID: "id4", Str: "str4", Locations: []types.Location{{File: "file3.go", Line: 30}}},
 	}
 
 	if len(mergedFile.Entries) != len(expectedEntries) {
