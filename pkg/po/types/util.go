@@ -1,13 +1,11 @@
 package types
 
 import (
-	"slices"
-
 	"github.com/Tom5521/xgotext/internal/util"
 )
 
 func EqualLocations(l1, l2 []Location) bool {
-	return slices.EqualFunc(l1, l2, util.Equal)
+	return util.Equal(l1, l2)
 }
 
 func EqualLocation(l1, l2 Location) bool {
