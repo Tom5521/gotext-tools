@@ -98,6 +98,39 @@ func (e Entries) CleanDuplicates() Entries {
 	return cleaned
 }
 
+func (e Entries) Solve() Entries {
+	var cleaned Entries
+	seedID := make(map[string][]int)
+
+	for _, translation := range e {
+		key := translation.Msgid.ID
+		if translation.Msgctxt != nil {
+			key += "\x00" + translation.Msgctxt.Context
+		}
+
+		if indices, exists := seedID[key]; exists {
+			hasMsgstr := translation.Msgstr != nil && translation.Msgstr.Str != ""
+			hasPlurals := len(translation.Plurals) > 0 && translation.Plurals[0].Str != ""
+
+			for _, idx := range indices {
+				if (hasMsgstr || hasPlurals) &&
+					(cleaned[idx].Msgstr == nil || cleaned[idx].Msgstr.Str == "") &&
+					len(cleaned[idx].Plurals) == 0 {
+					cleaned[idx] = translation
+				}
+				cleaned[idx].LocationComments = append(
+					cleaned[idx].LocationComments,
+					translation.LocationComments...)
+			}
+		} else {
+			seedID[key] = []int{len(cleaned)}
+			cleaned = append(cleaned, translation)
+		}
+	}
+
+	return cleaned
+}
+
 func MergeFiles(base *File, files ...*File) {
 	for _, file := range files {
 		base.Name += "_" + file.Name

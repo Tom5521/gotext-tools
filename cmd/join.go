@@ -25,10 +25,10 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 		return errs[0]
 	}
 
-	merged := types.MergeFiles(base, parsed)
+	types.MergeFiles(base, parsed)
 
 	compiler := compiler.Compiler{
-		File:   merged,
+		File:   base,
 		Config: cfg,
 	}
 

@@ -96,3 +96,28 @@ func (e Entries) CleanDuplicates() Entries {
 
 	return cleaned
 }
+
+func (e Entries) Solve() Entries {
+	var cleaned Entries
+
+	seenID := make(map[string]int)
+
+	for _, translation := range e {
+		idIndex, ok := seenID[translation.ID]
+		if ok {
+			if translation.Context == cleaned[idIndex].Context {
+				if translation.Str != "" && cleaned[idIndex].Str == "" {
+					cleaned[idIndex] = translation
+				}
+				cleaned[idIndex].Locations = append(
+					cleaned[idIndex].Locations,
+					translation.Locations...)
+				continue
+			}
+		}
+		seenID[translation.ID] = len(cleaned)
+		cleaned = append(cleaned, translation)
+	}
+
+	return cleaned
+}
