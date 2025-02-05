@@ -139,7 +139,6 @@ func MergeFiles(base *File, files ...*File) {
 
 	var entries Entries
 	entries.AppendNodes(base.Nodes...)
-	entries = entries.CleanDuplicates().Sort()
 
-	base.Nodes = entries.ToNodes()
+	base.Nodes = entries.Solve().Solve().ToNodes()
 }

@@ -6,5 +6,5 @@ func MergeFiles(base *File, files ...*File) {
 		base.Entries = append(base.Entries, file.Entries...)
 	}
 
-	base.Entries = base.Entries.CleanDuplicates().Sort()
+	base.Entries = base.Entries.Solve().Sort()
 }
