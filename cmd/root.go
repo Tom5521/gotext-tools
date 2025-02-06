@@ -19,6 +19,9 @@ var root = &cobra.Command{
 
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		initConfig()
+	},
 	RunE: func(cmd *cobra.Command, inputfiles []string) (err error) {
 		if filesFrom != "" {
 			var files []string
@@ -56,7 +59,7 @@ Similarly for optional arguments.`,
 
 		pofile, errs := p.Parse()
 		if len(errs) > 0 {
-			return fmt.Errorf("errors in translations parsing (%d): %w", len(errs), errs[0])
+			return fmt.Errorf("errors in entries parsing (%d): %w", len(errs), errs[0])
 		}
 
 		outputFile := filepath.Join(outputDir, defaultDomain+".pot")
@@ -76,14 +79,18 @@ Similarly for optional arguments.`,
 			var file *os.File
 			var stat os.FileInfo
 			stat, err = os.Stat(outputFile)
-			if err != nil {
-				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
-			}
+
+			flags := os.O_RDWR
+
 			if os.IsExist(err) && !forcePo && output != "" && !joinExisting {
 				return fmt.Errorf("file %s already exists", outputFile)
+			} else if os.IsNotExist(err) {
+				flags |= os.O_CREATE
+			} else if err != nil {
+				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
 			}
 
-			file, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, os.ModePerm)
+			file, err = os.OpenFile(outputFile, flags, os.ModePerm)
 			if err != nil {
 				return fmt.Errorf("error opening file %s: %w", outputFile, err)
 			}

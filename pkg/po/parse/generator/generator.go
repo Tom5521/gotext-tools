@@ -66,12 +66,12 @@ func (g *Generator) genNplurals(f *types.File) {
 				break
 			}
 			matches := npluralsRegex.FindStringSubmatch(field.Value)
-			nplurals, err := strconv.Atoi(matches[1])
+			nplurals, err := strconv.ParseUint(matches[1], 10, 64)
 			if err != nil {
 				g.errs = append(g.errs, err)
 				break
 			}
-			f.Nplurals = nplurals
+			f.Nplurals = uint(nplurals)
 			break
 		}
 	}

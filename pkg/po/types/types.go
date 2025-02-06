@@ -7,7 +7,7 @@ import (
 type File struct {
 	Name     string
 	Header   Header
-	Nplurals int
+	Nplurals uint
 	Entries  Entries
 }
 

@@ -6,10 +6,14 @@ import (
 	"strings"
 )
 
+// Entries represents a collection of Entry objects.
 type Entries []Entry
 
+// Sort organizes the entries by grouping them by file and sorting them by line.
 func (e Entries) Sort() Entries {
 	groupsMap := make(map[string]Entries)
+
+	// Group entries by file.
 	for _, entry := range e {
 		file := ""
 		if len(entry.Locations) > 0 {
@@ -18,16 +22,19 @@ func (e Entries) Sort() Entries {
 		groupsMap[file] = append(groupsMap[file], entry)
 	}
 
+	// Sort each group by line.
 	for k, group := range groupsMap {
 		groupsMap[k] = group.SortByLine()
 	}
 
+	// Get sorted file names.
 	fileKeys := make([]string, 0, len(groupsMap))
 	for file := range groupsMap {
 		fileKeys = append(fileKeys, file)
 	}
 	slices.SortFunc(fileKeys, strings.Compare)
 
+	// Concatenate groups into a single sorted list.
 	var sortedEntries Entries
 	for _, file := range fileKeys {
 		sortedEntries = append(sortedEntries, groupsMap[file]...)
@@ -36,6 +43,7 @@ func (e Entries) Sort() Entries {
 	return sortedEntries
 }
 
+// SortByFile sorts the entries by the file name of the first location.
 func (e Entries) SortByFile() Entries {
 	sorted := make(Entries, len(e))
 	copy(sorted, e)
@@ -51,6 +59,7 @@ func (e Entries) SortByFile() Entries {
 	return sorted
 }
 
+// SortByID sorts the entries by their ID.
 func (e Entries) SortByID() Entries {
 	sorted := make(Entries, len(e))
 	copy(sorted, e)
@@ -60,6 +69,7 @@ func (e Entries) SortByID() Entries {
 	return sorted
 }
 
+// SortByLine sorts the entries by line number in their first location.
 func (e Entries) SortByLine() Entries {
 	sorted := make(Entries, len(e))
 	copy(sorted, e)
@@ -75,9 +85,9 @@ func (e Entries) SortByLine() Entries {
 	return sorted
 }
 
+// CleanDuplicates removes duplicate entries with the same ID and context, merging their locations.
 func (e Entries) CleanDuplicates() Entries {
 	var cleaned Entries
-
 	seenID := make(map[string]int)
 
 	for _, translation := range e {
@@ -97,15 +107,16 @@ func (e Entries) CleanDuplicates() Entries {
 	return cleaned
 }
 
+// Solve merges entries with the same ID and context, keeping the most complete translation.
 func (e Entries) Solve() Entries {
 	var cleaned Entries
-
 	seenID := make(map[string]int)
 
 	for _, translation := range e {
 		idIndex, ok := seenID[translation.ID]
 		if ok {
 			if translation.Context == cleaned[idIndex].Context {
+				// If the new entry has a translation and the previous one does not, replace it.
 				if translation.Str != "" && cleaned[idIndex].Str == "" {
 					cleaned[idIndex] = translation
 				}

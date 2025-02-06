@@ -3,6 +3,7 @@ package parse_test
 import (
 	"testing"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
@@ -39,7 +40,7 @@ func main(){
 	}
 
 	if !types.EqualEntries(file.Entries, expected) {
-		t.Log("Unexpected translations slice")
+		t.Log("Unexpected entries slice")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)
 		t.FailNow()
@@ -109,7 +110,7 @@ func main(){
 		},
 	}
 
-	if !types.EqualEntries(file.Entries, expected) {
+	if !util.Equal(file.Entries, expected) {
 		t.Error("Unexpected translation")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)

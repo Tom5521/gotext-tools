@@ -160,18 +160,19 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 // Parse processes all files associated with the Parser and extracts translations.
 func (p *Parser) Parse() (file *types.File, errs []error) {
 	file = &types.File{
-		Nplurals: int(p.Config.Nplurals),
+		Header:   types.DefaultHeaderFromConfig(p.Config),
+		Nplurals: p.Config.Nplurals,
 	}
 
 	for _, f := range p.files {
-		t, e := f.Translations()
+		entries, e := f.Entries()
 		if p.Config.Logger != nil {
 			for _, err := range e {
 				p.Config.Logger.Println(err)
 			}
 		}
 		errs = append(errs, e...)
-		file.Entries = append(file.Entries, t...)
+		file.Entries = append(file.Entries, entries...)
 	}
 
 	return

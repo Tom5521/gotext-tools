@@ -1,77 +1,120 @@
 package types
 
 import (
+	"fmt"
 	"slices"
 	"time"
+
+	"github.com/Tom5521/xgotext/pkg/po/config"
 )
 
+// HeaderField represents a single key-value pair in a header.
 type HeaderField struct {
-	Key   string
-	Value string
+	Key   string // The name of the header field.
+	Value string // The value associated with the header field.
 }
 
+// Header represents a collection of header fields.
 type Header struct {
-	Values []HeaderField
+	Values []HeaderField // A slice storing all registered header fields.
 }
 
-func DefaultHeader() (h Header) {
-	h.Register("Project-Id-Version")
-	h.Register("Report-Msgid-Bugs-To")
-	h.Register("POT-Creation-Date", time.Now().Format(time.DateTime))
-	h.Register("PO-Revision-Date")
-	h.Register("Last-Translator")
-	h.Register("Language-Team")
-	h.Register("Language")
-	h.Register("MIME-Version", "1.0")
-	h.Register("Content-Type", "text/plain; charset=CHARSET")
-	h.Register("Content-Transfer-Encoding", "8bit")
-	h.Register("Plural-Forms", "nplurals=%d; plural=(n != 1);")
+func DefaultHeaderFromConfig(cfg config.Config) (h Header) {
+	h = DefaultHeader()
+	h.Set("Project-Id-Version", cfg.PackageVersion)
+	h.Set("Report-Msgid-Bugs-To", cfg.MsgidBugsAddress)
+	h.Set("Language", cfg.Language)
+	h.Set("Plural-Forms", fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals))
 
+	return
+}
+
+// DefaultHeader initializes a Header object with commonly used default fields.
+// These fields are typically found in .po files for localization.
+func DefaultHeader() (h Header) {
+	// Register standard header fields with optional default values.
+	h.Register("Project-Id-Version")                                  // No default value.
+	h.Register("Report-Msgid-Bugs-To")                                // No default value.
+	h.Register("POT-Creation-Date", time.Now().Format(time.DateTime)) // Current date and time.
+	h.Register("PO-Revision-Date")                                    // No default value.
+	h.Register("Last-Translator")                                     // No default value.
+	h.Register("Language-Team")                                       // No default value.
+	h.Register("Language")                                            // No default value.
+	h.Register("MIME-Version", "1.0")                                 // MIME version.
+	h.Register(
+		"Content-Type",
+		"text/plain; charset=CHARSET",
+	) // Content type with placeholder charset.
+	h.Register("Content-Transfer-Encoding", "8bit") // Encoding type.
+	h.Register(
+		"Plural-Forms",
+		"nplurals=2; plural=(n != 1);",
+	) // Placeholder plural form formula.
 	return h
 }
 
+// Register adds a new header field to the Header object if the key does not already exist.
+// Parameters:
+//   - key: The name of the header field to register.
+//   - d: Optional variadic arguments representing the value(s) to associate with the key.
+//     If provided, they are concatenated into a single string using fmt.Sprint.
 func (h *Header) Register(key string, d ...string) {
+	// Check if the key already exists in the Values slice.
 	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
 		return f.Key == key
 	})
-
 	if i != -1 {
+		// Key already exists; do nothing.
 		return
 	}
 
-	var v string
-	if len(d) > 0 {
-		v = d[0]
+	var values []any
+	for _, b := range d {
+		values = append(values, b)
 	}
 
+	// Append a new HeaderField to the Values slice.
 	h.Values = append(h.Values,
 		HeaderField{
 			Key:   key,
-			Value: v,
+			Value: fmt.Sprint(values...), // Concatenate variadic arguments into a single string.
 		},
 	)
 }
 
+// Load retrieves the value associated with a given key from the Header object.
+// Parameters:
+// - key: The name of the header field to retrieve.
+// Returns:
+// - The value associated with the key if found; otherwise, an empty string ("").
 func (h *Header) Load(key string) string {
+	// Search for the key in the Values slice.
 	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
 		return f.Key == key
 	})
-
 	if i >= 0 {
+		// Key found; return its value.
 		return h.Values[i].Value
 	}
+	// Key not found; return an empty string.
 	return ""
 }
 
+// Set updates the value of an existing header field or adds a new field if the key does not exist.
+// Parameters:
+// - key: The name of the header field to update or add.
+// - value: The new value to associate with the key.
 func (h *Header) Set(key, value string) {
+	// Search for the key in the Values slice.
 	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
 		return f.Key == key
 	})
-
 	if i >= 0 {
+		// Key found; update its value.
 		h.Values[i].Value = value
 		return
 	}
+	// Key not found; append a new HeaderField to the Values slice.
 	h.Values = append(h.Values,
 		HeaderField{
 			Key:   key,

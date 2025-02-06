@@ -197,9 +197,11 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 		"",
 		`Use string (or "" if not specified) as suffix for msgstr values.`,
 	)
+}
 
+func initConfig() {
 	cfg = config.Config{
-		Logger:           log.New(os.Stdout, "LOG: ", log.Ltime),
+		Logger:           log.New(os.Stdout, "", log.Ltime),
 		DefaultDomain:    defaultDomain,
 		ForcePo:          forcePo,
 		NoLocation:       noLocation,

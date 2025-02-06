@@ -132,24 +132,24 @@ func (f *File) determinePackageInfo() {
 	}
 }
 
-// Translations returns all translations found in the file.
-func (f *File) Translations() (types.Entries, []error) {
+// Entries returns all translations found in the file.
+func (f *File) Entries() (types.Entries, []error) {
 	if f.config.Logger != nil && f.config.Verbose {
 		f.config.Logger.Printf("Parsing %s...", f.path)
 	}
 
-	var translations types.Entries
+	var entries types.Entries
 	var errors []error
 
-	if !f.hasGotext {
-		return translations, errors
+	if !f.hasGotext && !f.config.ExtractAll {
+		return entries, errors
 	}
 
 	for n := range InspectNode(f.file) {
 		t, e := f.processNode(n)
-		translations = append(translations, t...)
+		entries = append(entries, t...)
 		errors = append(errors, e...)
 	}
 
-	return translations.CleanDuplicates(), errors
+	return entries.CleanDuplicates(), errors
 }

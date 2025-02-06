@@ -66,7 +66,7 @@ func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 }
 
 func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
-	var translations types.Entries
+	var entries types.Entries
 	var errors []error
 
 	for _, expr := range exprs {
@@ -79,18 +79,18 @@ func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
 				continue
 			}
 
-			translation, err := f.basicLitToTranslation(lit)
+			entry, err := f.basicLitToTranslation(lit)
 			if err != nil {
 				errors = append(errors, err)
 				continue
 			}
 
-			translations = append(translations, translation)
+			entries = append(entries, entry)
 			f.seenTokens[lit] = true
 		}
 	}
 
-	return translations, errors
+	return entries, errors
 }
 
 type argumentData struct {
@@ -137,7 +137,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 func (f *File) processPoCall(
 	call *ast.CallExpr,
-) (translation types.Entry, valid bool, err error) {
+) (entry types.Entry, valid bool, err error) {
 	selector := call.Fun.(*ast.SelectorExpr)
 	method := translationMethods[selector.Sel.Name]
 
@@ -155,8 +155,8 @@ func (f *File) processPoCall(
 		switch i {
 		case 0:
 			valid = arg.valid
-			translation.ID = arg.str
-			translation.Locations = append(translation.Locations,
+			entry.ID = arg.str
+			entry.Locations = append(entry.Locations,
 				types.Location{
 					File: f.path,
 					Line: util.FindLine(f.content, arg.pos),
@@ -164,10 +164,10 @@ func (f *File) processPoCall(
 			)
 			fallthrough
 		case 1:
-			translation.Context = arg.str
+			entry.Context = arg.str
 			fallthrough
 		case 2:
-			translation.Plural = arg.str
+			entry.Plural = arg.str
 		}
 	}
 
@@ -178,12 +178,12 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 	if n == nil {
 		return nil, nil
 	}
-	var translations types.Entries
+	var entries types.Entries
 	var errors []error
 
 	processGeneric := func(exprs ...ast.Expr) {
 		t, e := f.processGeneric(exprs...)
-		translations = append(translations, t...)
+		entries = append(entries, t...)
 		errors = append(errors, e...)
 	}
 
@@ -195,7 +195,7 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 		if !valid {
 			return
 		}
-		translations = append(translations, t)
+		entries = append(entries, t)
 	}
 
 	if !f.config.ExtractAll {
@@ -204,7 +204,7 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 			processPoCall(call)
 		}
 
-		return translations, errors
+		return entries, errors
 	}
 
 	switch t := n.(type) {
@@ -235,5 +235,5 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 		processGeneric(t.List...)
 	}
 
-	return translations, errors
+	return entries, errors
 }
