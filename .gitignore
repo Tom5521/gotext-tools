@@ -5,3 +5,4 @@ vendor
 *.log
 *.diff
 default.pot
+messages.*
