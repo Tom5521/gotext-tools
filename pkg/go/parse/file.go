@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
@@ -27,7 +27,7 @@ type File struct {
 	// Config is a pointer to the configuration used for parsing.
 	// Using a pointer avoids excessive memory usage when working with many files
 	// and allows changes to the parser configuration to propagate to each file.
-	config     *config.Config
+	config     *parsers.Config
 	seenTokens map[ast.Node]bool
 	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
 	content    []byte    // The raw content of the file as a byte slice.
@@ -38,7 +38,7 @@ type File struct {
 
 // NewFileFromReader creates a new File instance by reading content from an io.Reader.
 // The content is read into memory and processed according to the provided configuration.
-func NewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, error) {
+func NewFileFromReader(r io.Reader, name string, cfg *parsers.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func NewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, err
 
 // unsafeNewFileFromReader is an internal method that creates a File instance
 // from an io.Reader without validating the configuration.
-func unsafeNewFileFromReader(r io.Reader, name string, cfg *config.Config) (*File, error) {
+func unsafeNewFileFromReader(r io.Reader, name string, cfg *parsers.Config) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content: %w", err)
@@ -58,7 +58,7 @@ func unsafeNewFileFromReader(r io.Reader, name string, cfg *config.Config) (*Fil
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
-func NewFileFromPath(path string, cfg *config.Config) (*File, error) {
+func NewFileFromPath(path string, cfg *parsers.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func NewFileFromPath(path string, cfg *config.Config) (*File, error) {
 
 // unsafeNewFileFromPath is an internal method that creates a File instance
 // from a file on disk without validating the configuration.
-func unsafeNewFileFromPath(path string, cfg *config.Config) (*File, error) {
+func unsafeNewFileFromPath(path string, cfg *parsers.Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -80,7 +80,7 @@ func unsafeNewFileFromPath(path string, cfg *config.Config) (*File, error) {
 }
 
 // NewFileFromBytes creates a new File instance from raw byte data.
-func NewFileFromBytes(b []byte, name string, cfg *config.Config) (*File, error) {
+func NewFileFromBytes(b []byte, name string, cfg *parsers.Config) (*File, error) {
 	err := validateConfig(*cfg)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func NewFileFromBytes(b []byte, name string, cfg *config.Config) (*File, error) 
 
 // unsafeNewFile is an internal method that creates a File instance from raw byte data
 // and the provided configuration without validating the configuration.
-func unsafeNewFile(content []byte, name string, cfg *config.Config) (*File, error) {
+func unsafeNewFile(content []byte, name string, cfg *parsers.Config) (*File, error) {
 	file := &File{
 		content:    content,
 		path:       name,
@@ -134,10 +134,6 @@ func (f *File) determinePackageInfo() {
 
 // Entries returns all translations found in the file.
 func (f *File) Entries() (types.Entries, []error) {
-	if f.config.Logger != nil && f.config.Verbose {
-		f.config.Logger.Printf("Parsing %s...", f.path)
-	}
-
 	var entries types.Entries
 	var errors []error
 

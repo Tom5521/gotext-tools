@@ -5,8 +5,9 @@ import (
 
 	"github.com/Tom5521/xgotext/internal/util"
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
-	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/kr/pretty"
 )
 
 func TestParse(t *testing.T) {
@@ -28,18 +29,18 @@ func main(){
 			},
 		},
 	}
-	cfg := config.Default()
+	cfg := parsers.Config{Nplurals: 2}
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Error(err)
 	}
 
-	file, errs := parser.Parse()
-	if len(errs) > 0 {
-		t.Error(errs[0])
+	file := parser.Parse()
+	if len(parser.Errors()) > 0 {
+		t.Error(parser.Errors()[0])
 	}
 
-	if !types.EqualEntries(file.Entries, expected) {
+	if !types.EqualEntries(file.Entries[1:], expected) {
 		t.Log("Unexpected entries slice")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)
@@ -59,16 +60,18 @@ func main(){
 	
 	var eggs string = "sugar"
 }`
-	cfg := config.Default()
-	cfg.ExtractAll = true
+	cfg := parsers.Config{
+		ExtractAll: true,
+		Nplurals:   2,
+	}
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Error(err)
 	}
 
-	file, errs := parser.Parse()
-	if len(errs) > 0 {
-		t.Error(errs[0])
+	file := parser.Parse()
+	if len(parser.Errors()) > 0 {
+		t.Error(parser.Errors()[0])
 	}
 
 	expected := types.Entries{
@@ -110,9 +113,13 @@ func main(){
 		},
 	}
 
-	if !util.Equal(file.Entries, expected) {
+	if !util.Equal(file.Entries[1:], expected) {
 		t.Error("Unexpected translation")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)
+		t.Log("DIFF:")
+		for _, d := range pretty.Diff(file.Entries, expected) {
+			t.Log(d)
+		}
 	}
 }

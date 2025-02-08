@@ -8,9 +8,7 @@ import (
 
 func TestMergeFiles(t *testing.T) {
 	file1 := &types.File{
-		Name:     "file1",
-		Header:   types.Header{},
-		Nplurals: 2,
+		Name: "file1",
 		Entries: types.Entries{
 			{ID: "id1", Str: "str1", Locations: []types.Location{{File: "file1.go", Line: 10}}},
 			{ID: "id2", Str: "str2", Locations: []types.Location{{File: "file1.go", Line: 20}}},
@@ -18,9 +16,7 @@ func TestMergeFiles(t *testing.T) {
 	}
 
 	file2 := &types.File{
-		Name:     "file2",
-		Header:   types.Header{},
-		Nplurals: 3,
+		Name: "file2",
 		Entries: types.Entries{
 			{ID: "id3", Str: "str3", Locations: []types.Location{{File: "file2.go", Line: 15}}},
 			{
@@ -32,9 +28,7 @@ func TestMergeFiles(t *testing.T) {
 	}
 
 	file3 := &types.File{
-		Name:     "file3",
-		Header:   types.Header{},
-		Nplurals: 1,
+		Name: "file3",
 		Entries: types.Entries{
 			{ID: "id4", Str: "str4", Locations: []types.Location{{File: "file3.go", Line: 30}}},
 		},
@@ -46,10 +40,6 @@ func TestMergeFiles(t *testing.T) {
 	expectedName := "file1_file2_file3"
 	if mergedFile.Name != expectedName {
 		t.Errorf("Expected merged file name to be %s, got %s", expectedName, mergedFile.Name)
-	}
-
-	if mergedFile.Nplurals != file1.Nplurals {
-		t.Errorf("Expected Nplurals to be %d, got %d", file1.Nplurals, mergedFile.Nplurals)
 	}
 
 	expectedEntries := types.Entries{

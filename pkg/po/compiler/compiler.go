@@ -7,13 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Compiler struct {
 	File   *types.File
-	Config config.Config
+	Config Config
 }
 
 // CompileToWriter writes the compiled translations to an `io.Writer` in the PO file format.

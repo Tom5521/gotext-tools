@@ -2,10 +2,11 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
-
-	"github.com/Tom5521/xgotext/pkg/po/config"
 )
 
 // HeaderField represents a single key-value pair in a header.
@@ -16,15 +17,98 @@ type HeaderField struct {
 
 // Header represents a collection of header fields.
 type Header struct {
-	Values []HeaderField // A slice storing all registered header fields.
+	Fields []HeaderField // A slice storing all registered header fields.
 }
 
-func DefaultHeaderFromConfig(cfg config.Config) (h Header) {
+func (h Header) ToEntry() (e Entry) {
+	var b strings.Builder
+
+	e.Flags = append(e.Flags, "fuzzy")
+	for _, field := range h.Fields {
+		fmt.Fprintf(&b, "\n%s: %s\n", field.Key, field.Value)
+	}
+
+	e.Str = b.String()
+	return
+}
+
+type HeaderConfig struct {
+	Nplurals          uint
+	ProjectIDVersion  string
+	ReportMsgidBugsTo string
+	Language          string
+	LanguageTeam      string
+	LastTranslator    string
+}
+
+func DefaultHeaderConfig() HeaderConfig {
+	return HeaderConfig{
+		Nplurals:         2,
+		ProjectIDVersion: "PACKAGE VERSION",
+		Language:         "en",
+	}
+}
+
+var (
+	npluralsRegex = regexp.MustCompile(`nplurals=(\d*)`)
+	headerRegex   = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
+)
+
+func GenerateHeader(e Entries) (h Header) {
+	i := e.Index("", "")
+	if i == -1 {
+		return
+	}
+
+	header := e[i].Str
+	lines := strings.Split(header, "\n")
+	for _, line := range lines {
+		if !headerRegex.MatchString(line) {
+			continue
+		}
+		matches := headerRegex.FindStringSubmatch(line)
+		h.Fields = append(h.Fields,
+			HeaderField{
+				Key:   matches[1],
+				Value: matches[2],
+			},
+		)
+	}
+
+	return
+}
+
+func GenerateNplurals(header Header) (nplurals uint) {
+	nplurals = 2
+	value := header.Load("Plural-Forms")
+	if value == "" {
+		return
+	}
+	if !npluralsRegex.MatchString(value) {
+		return
+	}
+	matches := npluralsRegex.FindStringSubmatch(value)
+	n, err := strconv.ParseUint(matches[1], 10, 64)
+	if err != nil {
+		return
+	}
+
+	nplurals = uint(n)
+
+	return
+}
+
+func DefaultHeaderFromConfig(cfg HeaderConfig) (h Header) {
 	h = DefaultHeader()
-	h.Set("Project-Id-Version", cfg.PackageVersion)
-	h.Set("Report-Msgid-Bugs-To", cfg.MsgidBugsAddress)
+
+	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
+	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
+	h.Set("Language-Team", cfg.LanguageTeam)
 	h.Set("Language", cfg.Language)
-	h.Set("Plural-Forms", fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals))
+	h.Set(
+		"Plural-Forms",
+		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
+	)
 
 	return
 }
@@ -60,7 +144,7 @@ func DefaultHeader() (h Header) {
 //     If provided, they are concatenated into a single string using fmt.Sprint.
 func (h *Header) Register(key string, d ...string) {
 	// Check if the key already exists in the Values slice.
-	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
+	i := slices.IndexFunc(h.Fields, func(f HeaderField) bool {
 		return f.Key == key
 	})
 	if i != -1 {
@@ -74,7 +158,7 @@ func (h *Header) Register(key string, d ...string) {
 	}
 
 	// Append a new HeaderField to the Values slice.
-	h.Values = append(h.Values,
+	h.Fields = append(h.Fields,
 		HeaderField{
 			Key:   key,
 			Value: fmt.Sprint(values...), // Concatenate variadic arguments into a single string.
@@ -89,12 +173,12 @@ func (h *Header) Register(key string, d ...string) {
 // - The value associated with the key if found; otherwise, an empty string ("").
 func (h *Header) Load(key string) string {
 	// Search for the key in the Values slice.
-	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
+	i := slices.IndexFunc(h.Fields, func(f HeaderField) bool {
 		return f.Key == key
 	})
 	if i >= 0 {
 		// Key found; return its value.
-		return h.Values[i].Value
+		return h.Fields[i].Value
 	}
 	// Key not found; return an empty string.
 	return ""
@@ -106,16 +190,16 @@ func (h *Header) Load(key string) string {
 // - value: The new value to associate with the key.
 func (h *Header) Set(key, value string) {
 	// Search for the key in the Values slice.
-	i := slices.IndexFunc(h.Values, func(f HeaderField) bool {
+	i := slices.IndexFunc(h.Fields, func(f HeaderField) bool {
 		return f.Key == key
 	})
 	if i >= 0 {
 		// Key found; update its value.
-		h.Values[i].Value = value
+		h.Fields[i].Value = value
 		return
 	}
 	// Key not found; append a new HeaderField to the Values slice.
-	h.Values = append(h.Values,
+	h.Fields = append(h.Fields,
 		HeaderField{
 			Key:   key,
 			Value: value,

@@ -9,13 +9,23 @@ import (
 // Entries represents a collection of Entry objects.
 type Entries []Entry
 
+func (e Entries) Index(id, context string) int {
+	for i, entry := range e {
+		if entry.ID == id && entry.Context == context {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Sort organizes the entries by grouping them by file and sorting them by line.
 func (e Entries) Sort() Entries {
 	groupsMap := make(map[string]Entries)
 
 	// Group entries by file.
 	for _, entry := range e {
-		file := ""
+		var file string
 		if len(entry.Locations) > 0 {
 			file = filepath.Clean(entry.Locations[0].File)
 		}

@@ -4,27 +4,42 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Parser struct {
-	Config config.Config
-	file   *ast.File
+	Config parsers.Config
 	seen   map[string]bool
+	norm   *ast.Normalizer
+
 	warns  []string
+	errors []error
 }
 
-func baseParser(cfg config.Config) *Parser {
+func baseParser(cfg parsers.Config) *Parser {
 	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
 	}
 }
 
-func NewParserFromReader(r io.Reader, name string, cfg config.Config) (*Parser, error) {
+func NewParser(path string, cfg parsers.Config) (*Parser, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return unsafeNewParserFromBytes(file, path, cfg)
+}
+
+func NewParserFromReader(r io.Reader, name string, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -32,7 +47,7 @@ func NewParserFromReader(r io.Reader, name string, cfg config.Config) (*Parser, 
 	return unsafeNewParserFromReader(r, name, cfg)
 }
 
-func unsafeNewParserFromReader(r io.Reader, name string, cfg config.Config) (*Parser, error) {
+func unsafeNewParserFromReader(r io.Reader, name string, cfg parsers.Config) (*Parser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -41,7 +56,7 @@ func unsafeNewParserFromReader(r io.Reader, name string, cfg config.Config) (*Pa
 	return unsafeNewParserFromBytes(data, name, cfg)
 }
 
-func NewParserFromFile(f *os.File, cfg config.Config) (*Parser, error) {
+func NewParserFromFile(f *os.File, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -50,7 +65,7 @@ func NewParserFromFile(f *os.File, cfg config.Config) (*Parser, error) {
 	return unsafeNewParserFromReader(f, f.Name(), cfg)
 }
 
-func NewParserFromString(s, name string, cfg config.Config) (*Parser, error) {
+func NewParserFromString(s, name string, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -58,7 +73,7 @@ func NewParserFromString(s, name string, cfg config.Config) (*Parser, error) {
 	return unsafeNewParserFromBytes([]byte(s), name, cfg)
 }
 
-func NewParserFromBytes(d []byte, name string, cfg config.Config) (*Parser, error) {
+func NewParserFromBytes(d []byte, name string, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -66,38 +81,48 @@ func NewParserFromBytes(d []byte, name string, cfg config.Config) (*Parser, erro
 	return unsafeNewParserFromBytes(d, name, cfg)
 }
 
-func unsafeNewParserFromBytes(data []byte, name string, cfg config.Config) (*Parser, error) {
-	var err error
-	var warns []string
+func unsafeNewParserFromBytes(data []byte, name string, cfg parsers.Config) (*Parser, error) {
 	p := baseParser(cfg)
-	p.file, warns, err = p.processpath(data, name)
-	p.warns = append(p.warns, warns...)
-	return p, err
+	p.processpath(data, name)
+	if len(p.errors) > 0 {
+		return nil, p.errors[0]
+	}
+	return p, nil
 }
 
-func (p *Parser) processpath(content []byte, path string) (*ast.File, []string, error) {
+func (p Parser) Errors() []error {
+	return p.errors
+}
+
+func (p Parser) Warnings() []string {
+	return p.warns
+}
+
+func (p *Parser) processpath(content []byte, path string) {
 	norm, errs := ast.NewParser(content, path).Normalizer()
 	if len(errs) > 0 {
-		return nil, nil, errs[0]
+		p.errors = append(p.errors, errs...)
+		return
 	}
 
-	norm.Normalize()
-
-	if len(norm.Errors()) > 0 {
-		return nil, norm.Warnings(), norm.Errors()[0]
-	}
-
-	if p.Config.Logger != nil && p.Config.Verbose {
-		for _, warn := range norm.Warnings() {
-			p.Config.Logger.Println("WARN:", warn)
-		}
-	}
-
-	return norm.File(), norm.Warnings(), nil
+	p.norm = norm
 }
 
-func (p *Parser) Parse() (*types.File, []string, []error) {
-	g := generator.New(p.file)
+func (p *Parser) Parse() *types.File {
+	p.norm.Normalize()
+	p.warns = append(p.warns, p.norm.Warnings()...)
+	if len(p.norm.Errors()) > 0 {
+		p.errors = append(p.errors, p.norm.Errors()...)
+		return nil
+	}
 
-	return g.Generate(), p.warns, g.Errors()
+	g := generator.New(p.norm.File())
+
+	file := g.Generate()
+	if len(g.Errors()) > 0 {
+		p.errors = append(p.errors, g.Errors()...)
+		return nil
+	}
+
+	return file
 }

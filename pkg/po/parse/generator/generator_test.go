@@ -139,31 +139,9 @@ msgstr ""
 
 	expected := &types.File{
 		Name: "test.po",
-		Header: types.Header{
-			Values: []types.HeaderField{
-				{Key: "Project-Id-Version", Value: "PACKAGE VERSION"},
-				{Key: "Report-Msgid-Bugs-To", Value: ""},
-				{Key: "POT-Creation-Date: 2025-01-20 14:53", Value: "37"},
-				{Key: "PO-Revision-Date", Value: ""},
-				{Key: "Last-Translator", Value: ""},
-				{Key: "Language-Team", Value: ""},
-				{Key: "Language", Value: "en"},
-				{Key: "MIME-Version", Value: "1.0"},
-				{Key: "Content-Type", Value: "text/plain; charset=CHARSET"},
-				{Key: "Content-Transfer-Encoding", Value: "8bit"},
-				{Key: "Plural-Forms", Value: "nplurals=2; plural=(n != 1);"},
-			},
-		},
-		Nplurals: 2,
 		Entries: types.Entries{
 			{
-				Flags:     []string(nil),
-				ID:        "",
-				Context:   "",
-				Plural:    "",
-				Plurals:   []types.PluralEntry(nil),
-				Str:       "\nProject-Id-Version: PACKAGE VERSION\n\nReport-Msgid-Bugs-To: \n\nPOT-Creation-Date: 2025-01-20 14:53:37\n\nPO-Revision-Date: \n\nLast-Translator: \n\nLanguage-Team: \n\nLanguage: en\n\nMIME-Version: 1.0\n\nContent-Type: text/plain; charset=CHARSET\n\nContent-Transfer-Encoding: 8bit\n\nPlural-Forms: nplurals=2; plural=(n != 1);\n",
-				Locations: []types.Location(nil),
+				Str: "\nProject-Id-Version: PACKAGE VERSION\n\nReport-Msgid-Bugs-To: \n\nPOT-Creation-Date: 2025-01-20 14:53:37\n\nPO-Revision-Date: \n\nLast-Translator: \n\nLanguage-Team: \n\nLanguage: en\n\nMIME-Version: 1.0\n\nContent-Type: text/plain; charset=CHARSET\n\nContent-Transfer-Encoding: 8bit\n\nPlural-Forms: nplurals=2; plural=(n != 1);\n",
 			},
 		},
 	}

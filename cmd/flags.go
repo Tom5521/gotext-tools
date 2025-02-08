@@ -1,42 +1,55 @@
 package cmd
 
 import (
-	"log"
-	"os"
-
-	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/parsers"
+	"github.com/Tom5521/xgotext/pkg/po/compiler"
+	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
-var cfg config.Config
 var (
-	// Input.
-	filesFrom string
-	directory string
-	exclude   []string
-	// Output.
-	defaultDomain    string
-	output           string
-	outputDir        string
-	forcePo          bool
-	noLocation       bool
-	addLocation      string
-	omitHeader       bool
-	packageName      string
-	packageVersion   string
-	foreignUser      bool
-	title            string
-	copyrightHolder  string
-	msgidBugsAddress string
-	msgstrPrefix     string
-	msgstrSuffix     string
-	lang             string
-	// Operation Mode.
+	ParserCfg   parsers.Config
+	CompilerCfg compiler.Config
+	HeadersCfg  types.HeaderConfig
+)
+
+var (
+	// CLI.
+
+	filesFrom    string
+	directory    string
+	output       string
+	outputDir    string
 	joinExisting bool
 	excludeFile  string
-	nplurals     uint
-	// Other.
+
+	// Parser.
+
+	exclude    []string
 	extractAll bool
-	verbose    bool
+
+	// Header.
+
+	lang             string
+	packageVersion   string
+	nplurals         uint
+	msgidBugsAddress string
+
+	// Compiler.
+
+	forcePo         bool
+	noLocation      bool
+	addLocation     string
+	omitHeader      bool
+	packageName     string
+	foreignUser     bool
+	title           string
+	copyrightHolder string
+	msgstrPrefix    string
+	msgstrSuffix    string
+
+	// Other.
+	defaultDomain string
+	// verbose       bool
 )
 
 func init() {
@@ -90,7 +103,7 @@ This option is equivalent to ‘--copyright-holder=''’. It can be useful
 for packages outside the GNU project that want their translations to
 be in the public domain.`,
 	)
-	flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
+	// flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
 	flag.StringSliceVarP(&exclude, "exclude", "X", nil, "Specifies which files will be omitted.")
 	flag.BoolVarP(&extractAll, "extract-all", "a", false, "Extract all strings.")
 	flag.StringVarP(
@@ -200,27 +213,28 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 }
 
 func initConfig() {
-	cfg = config.Config{
-		Logger:           log.New(os.Stdout, "", log.Ltime),
-		DefaultDomain:    defaultDomain,
-		ForcePo:          forcePo,
-		NoLocation:       noLocation,
-		AddLocation:      addLocation,
-		OmitHeader:       omitHeader,
-		PackageName:      packageName,
-		PackageVersion:   packageVersion,
-		Language:         lang,
-		Nplurals:         nplurals,
-		Exclude:          exclude,
-		ForeignUser:      foreignUser,
-		MsgidBugsAddress: msgidBugsAddress,
-		Title:            title,
-		CopyrightHolder:  copyrightHolder,
-		JoinExisting:     joinExisting,
-		ExtractAll:       extractAll,
-		Verbose:          verbose,
+	ParserCfg = parsers.Config{
+		Language:   lang,
+		Nplurals:   nplurals,
+		Exclude:    exclude,
+		ExtractAll: extractAll,
 	}
-
-	cfg.Msgstr.Prefix = msgstrPrefix
-	cfg.Msgstr.Suffix = msgstrSuffix
+	CompilerCfg = compiler.Config{
+		ForcePo:         forcePo,
+		OmitHeader:      omitHeader,
+		PackageName:     packageName,
+		CopyrightHolder: copyrightHolder,
+		ForeignUser:     foreignUser,
+		Title:           title,
+		NoLocation:      noLocation,
+		AddLocation:     addLocation,
+		MsgstrPrefix:    msgstrPrefix,
+		MsgstrSuffix:    msgstrSuffix,
+	}
+	HeadersCfg = types.HeaderConfig{
+		Nplurals:          nplurals,
+		ProjectIDVersion:  packageVersion,
+		ReportMsgidBugsTo: msgidBugsAddress,
+		Language:          lang,
+	}
 }

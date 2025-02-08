@@ -11,15 +11,19 @@ import (
 
 	krfs "github.com/kr/fs"
 
-	"github.com/Tom5521/xgotext/pkg/po/config"
+	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 // Parser represents a parser that processes Go files according to a given configuration.
 type Parser struct {
-	Config config.Config   // Configuration settings for parsing.
-	files  []*File         // List of parsed files.
-	seen   map[string]bool // Tracks already processed files to avoid duplication.
+	Config    parsers.Config      // Configuration settings for parsing.
+	HeaderCfg *types.HeaderConfig // Optional config.
+	files     []*File             // List of parsed files.
+	seen      map[string]bool     // Tracks already processed files to avoid duplication.
+
+	warns  []string
+	errors []error
 }
 
 func (p *Parser) appendFiles(files ...string) error {
@@ -28,9 +32,6 @@ func (p *Parser) appendFiles(files ...string) error {
 		for walker.Step() {
 			if p.shouldSkipFile(walker) {
 				continue
-			}
-			if p.Config.Verbose && p.Config.Logger != nil {
-				p.Config.Logger.Printf("Reading %s...", walker.Path())
 			}
 			f, err := NewFileFromPath(walker.Path(), &p.Config)
 			if err != nil {
@@ -44,7 +45,7 @@ func (p *Parser) appendFiles(files ...string) error {
 }
 
 // NewParser initializes a new Parser for a given directory path and configuration.
-func NewParser(path string, cfg config.Config) (*Parser, error) {
+func NewParser(path string, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -59,7 +60,7 @@ func NewParser(path string, cfg config.Config) (*Parser, error) {
 }
 
 // baseParser creates a base Parser instance with the provided configuration.
-func baseParser(cfg config.Config) *Parser {
+func baseParser(cfg parsers.Config) *Parser {
 	return &Parser{
 		Config: cfg,
 		seen:   make(map[string]bool),
@@ -70,7 +71,7 @@ func baseParser(cfg config.Config) *Parser {
 func NewParserFromReader(
 	r io.Reader,
 	name string,
-	cfg config.Config,
+	cfg parsers.Config,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -88,7 +89,7 @@ func NewParserFromReader(
 func unsafeNewParserFromBytes(
 	b []byte,
 	name string,
-	cfg config.Config,
+	cfg parsers.Config,
 ) (*Parser, error) {
 	p := baseParser(cfg)
 	f, err := unsafeNewFile(b, name, &cfg)
@@ -103,7 +104,7 @@ func unsafeNewParserFromBytes(
 func NewParserFromString(
 	s string,
 	name string,
-	cfg config.Config,
+	cfg parsers.Config,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -116,7 +117,7 @@ func NewParserFromString(
 func NewParserFromBytes(
 	b []byte,
 	name string,
-	cfg config.Config,
+	cfg parsers.Config,
 ) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
@@ -126,7 +127,7 @@ func NewParserFromBytes(
 }
 
 // NewParserFromFile creates a Parser from an os.File instance.
-func NewParserFromFile(file *os.File, cfg config.Config) (*Parser, error) {
+func NewParserFromFile(file *os.File, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -143,7 +144,7 @@ func NewParserFromFile(file *os.File, cfg config.Config) (*Parser, error) {
 }
 
 // NewParserFromFiles initializes a Parser from a list of file paths.
-func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
+func NewParserFromFiles(files []string, cfg parsers.Config) (*Parser, error) {
 	err := validateConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -158,24 +159,38 @@ func NewParserFromFiles(files []string, cfg config.Config) (*Parser, error) {
 }
 
 // Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse() (file *types.File, errs []error) {
-	file = &types.File{
-		Header:   types.DefaultHeaderFromConfig(p.Config),
+func (p *Parser) Parse() (file *types.File) {
+	file = &types.File{}
+
+	header := types.DefaultHeaderFromConfig(types.HeaderConfig{
 		Nplurals: p.Config.Nplurals,
+		Language: "en",
+	})
+
+	if p.HeaderCfg != nil {
+		header = types.DefaultHeaderFromConfig(*p.HeaderCfg)
 	}
+
+	file.Entries = append(file.Entries, header.ToEntry())
 
 	for _, f := range p.files {
 		entries, e := f.Entries()
-		if p.Config.Logger != nil {
-			for _, err := range e {
-				p.Config.Logger.Println(err)
-			}
+		if len(e) > 0 {
+			p.errors = append(p.errors, e...)
+			continue
 		}
-		errs = append(errs, e...)
 		file.Entries = append(file.Entries, entries...)
 	}
 
 	return
+}
+
+func (p Parser) Errors() []error {
+	return p.errors
+}
+
+func (p Parser) Warnings() []string {
+	return p.warns
 }
 
 // Files returns the list of files associated with the Parser.
@@ -200,9 +215,6 @@ func (p *Parser) shouldSkipFile(w *krfs.Walker) bool {
 
 	_, seen := p.seen[abs]
 	if seen {
-		if p.Config.Logger != nil {
-			p.Config.Logger.Printf("warning: skipping duplicated file: %s", w.Path())
-		}
 		return true
 	}
 	p.seen[abs] = true

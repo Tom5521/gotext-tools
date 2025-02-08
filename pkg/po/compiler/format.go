@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/config"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
@@ -27,6 +26,7 @@ func (c Compiler) formatHeader() string {
 		return ""
 	}
 	var b strings.Builder
+	header := c.File.Header()
 
 	copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
 	if c.Config.ForeignUser {
@@ -35,9 +35,9 @@ func (c Compiler) formatHeader() string {
 
 	fmt.Fprintf(&b, headerFormat, c.Config.Title, copyright)
 
-	for i, field := range c.File.Header.Values {
+	for i, field := range header.Fields {
 		fmt.Fprintf(&b, headerFieldFormat, field.Key, field.Value)
-		if i != len(c.File.Header.Values) {
+		if i != len(header.Fields) {
 			b.WriteByte('\n')
 		}
 	}
@@ -47,6 +47,7 @@ func (c Compiler) formatHeader() string {
 
 func (c Compiler) formatEntry(t types.Entry) string {
 	var builder strings.Builder
+	nplurals := c.File.Nplurals()
 
 	// Helper function to append formatted lines to the builder.
 	fprintfln := func(format string, args ...any) {
@@ -92,7 +93,7 @@ func (c Compiler) formatEntry(t types.Entry) string {
 	// Add plural forms if present.
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		for i := range c.Config.Nplurals {
+		for i := range nplurals {
 			if i == 1 {
 				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, c.Config))
 				continue
@@ -107,14 +108,14 @@ func (c Compiler) formatEntry(t types.Entry) string {
 	return builder.String()
 }
 
-func formatPrefixAndSuffix(id string, cfg config.Config) string {
+func formatPrefixAndSuffix(id string, cfg Config) string {
 	text := `""`
 
-	if cfg.Msgstr.Prefix != "" {
-		text = formatString(cfg.Msgstr.Prefix + id)
+	if cfg.MsgstrPrefix != "" {
+		text = formatString(cfg.MsgstrPrefix + id)
 	}
-	if cfg.Msgstr.Suffix != "" {
-		text = formatString(id + cfg.Msgstr.Suffix)
+	if cfg.MsgstrSuffix != "" {
+		text = formatString(id + cfg.MsgstrSuffix)
 	}
 
 	return text

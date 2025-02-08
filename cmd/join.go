@@ -10,26 +10,26 @@ import (
 )
 
 func join(newParse *goparse.Parser, rawfile *os.File) error {
-	baseParse, err := poparse.NewParserFromReader(rawfile, rawfile.Name(), cfg)
+	baseParse, err := poparse.NewParserFromReader(rawfile, rawfile.Name(), ParserCfg)
 	if err != nil {
 		return err
 	}
 
-	base, _, errs := baseParse.Parse()
-	if len(errs) > 0 {
-		return errs[0]
+	base := baseParse.Parse()
+	if len(baseParse.Errors()) > 0 {
+		return baseParse.Errors()[0]
 	}
 
-	parsed, errs := newParse.Parse()
-	if len(errs) > 0 {
-		return errs[0]
+	parsed := newParse.Parse()
+	if len(newParse.Errors()) > 0 {
+		return newParse.Errors()[0]
 	}
 
 	types.MergeFiles(base, parsed)
 
 	compiler := compiler.Compiler{
 		File:   base,
-		Config: cfg,
+		Config: CompilerCfg,
 	}
 
 	err = rawfile.Truncate(0)

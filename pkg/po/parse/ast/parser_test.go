@@ -1,4 +1,3 @@
-// TODO: Remove repetitive code.
 package ast_test
 
 import (

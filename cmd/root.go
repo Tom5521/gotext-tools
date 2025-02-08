@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tom5521/xgotext/pkg/go/parse"
+	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/spf13/cobra"
 )
@@ -49,17 +49,18 @@ Similarly for optional arguments.`,
 			}
 		}
 
-		p, err := parse.NewParserFromFiles(
+		p, err := goparse.NewParserFromFiles(
 			inputfiles,
-			cfg,
+			ParserCfg,
 		)
+		p.HeaderCfg = &HeadersCfg
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
 		}
 
-		pofile, errs := p.Parse()
-		if len(errs) > 0 {
-			return fmt.Errorf("errors in entries parsing (%d): %w", len(errs), errs[0])
+		pofile := p.Parse()
+		if len(p.Errors()) > 0 {
+			return fmt.Errorf("errors in entries parsing (%d): %w", len(p.Errors()), p.Errors()[0])
 		}
 
 		outputFile := filepath.Join(outputDir, defaultDomain+".pot")
@@ -111,7 +112,7 @@ Similarly for optional arguments.`,
 
 		compiler := compiler.Compiler{
 			File:   pofile,
-			Config: cfg,
+			Config: CompilerCfg,
 		}
 
 		err = compiler.CompileToWriter(out)

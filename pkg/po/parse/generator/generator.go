@@ -1,17 +1,12 @@
 package generator
 
 import (
-	"regexp"
-	"strconv"
-	"strings"
-
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Generator struct {
 	file *ast.File
-
 	errs []error
 }
 
@@ -27,54 +22,7 @@ func (g Generator) Errors() []error {
 }
 
 func (g *Generator) Generate() (f *types.File) {
-	f = &types.File{
-		Name:    g.file.Name,
-		Entries: g.genEntries(),
-	}
-	g.genHeader(f)
-	g.genNplurals(f)
-
-	return
-}
-
-var (
-	npluralsRegex = regexp.MustCompile(`nplurals=(\d*)`)
-	headerRegex   = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
-)
-
-func (g *Generator) genHeader(f *types.File) {
-	header := f.LoadID("")
-	lines := strings.Split(header, "\n")
-	for _, line := range lines {
-		if !headerRegex.MatchString(line) {
-			continue
-		}
-		matches := headerRegex.FindStringSubmatch(line)
-		f.Header.Values = append(f.Header.Values,
-			types.HeaderField{
-				Key:   matches[1],
-				Value: matches[2],
-			},
-		)
-	}
-}
-
-func (g *Generator) genNplurals(f *types.File) {
-	for _, field := range f.Header.Values {
-		if field.Key == "Plural-Forms" {
-			if !npluralsRegex.MatchString(field.Value) {
-				break
-			}
-			matches := npluralsRegex.FindStringSubmatch(field.Value)
-			nplurals, err := strconv.ParseUint(matches[1], 10, 64)
-			if err != nil {
-				g.errs = append(g.errs, err)
-				break
-			}
-			f.Nplurals = uint(nplurals)
-			break
-		}
-	}
+	return types.NewFile(g.file.Name, g.genEntries()...)
 }
 
 func (g *Generator) genEntries() types.Entries {
