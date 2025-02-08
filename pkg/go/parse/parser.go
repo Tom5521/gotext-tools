@@ -46,12 +46,8 @@ func (p *Parser) appendFiles(files ...string) error {
 
 // NewParser initializes a new Parser for a given directory path and configuration.
 func NewParser(path string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
 	p := baseParser(cfg)
-	err = p.appendFiles(path)
+	err := p.appendFiles(path)
 	if err != nil {
 		return nil, err
 	}
@@ -73,32 +69,11 @@ func NewParserFromReader(
 	name string,
 	cfg parsers.Config,
 ) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	return unsafeNewParserFromBytes(data, name, cfg)
-}
-
-// unsafeNewParserFromBytes creates a Parser from raw byte data without validating the configuration.
-func unsafeNewParserFromBytes(
-	b []byte,
-	name string,
-	cfg parsers.Config,
-) (*Parser, error) {
-	p := baseParser(cfg)
-	f, err := unsafeNewFile(b, name, &cfg)
-	if err != nil {
-		return nil, err
-	}
-	p.files = append(p.files, f)
-
-	return p, nil
+	return NewParserFromBytes(data, name, cfg)
 }
 
 func NewParserFromString(
@@ -106,11 +81,7 @@ func NewParserFromString(
 	name string,
 	cfg parsers.Config,
 ) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return unsafeNewParserFromBytes([]byte(s), name, cfg)
+	return NewParserFromBytes([]byte(s), name, cfg)
 }
 
 // NewParserFromBytes creates a Parser from raw byte data after validating the configuration.
@@ -119,21 +90,20 @@ func NewParserFromBytes(
 	name string,
 	cfg parsers.Config,
 ) (*Parser, error) {
-	err := validateConfig(cfg)
+	p := baseParser(cfg)
+	f, err := NewFileFromBytes(b, name, &cfg)
 	if err != nil {
 		return nil, err
 	}
-	return unsafeNewParserFromBytes(b, name, cfg)
+	p.files = append(p.files, f)
+
+	return p, nil
 }
 
 // NewParserFromFile creates a Parser from an os.File instance.
 func NewParserFromFile(file *os.File, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
 	p := baseParser(cfg)
-	f, err := unsafeNewFileFromReader(file, file.Name(), &cfg)
+	f, err := NewFileFromReader(file, file.Name(), &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +115,8 @@ func NewParserFromFile(file *os.File, cfg parsers.Config) (*Parser, error) {
 
 // NewParserFromFiles initializes a Parser from a list of file paths.
 func NewParserFromFiles(files []string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
 	p := baseParser(cfg)
-	err = p.appendFiles(files...)
+	err := p.appendFiles(files...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,10 +128,7 @@ func NewParserFromFiles(files []string, cfg parsers.Config) (*Parser, error) {
 func (p *Parser) Parse() (file *types.File) {
 	file = &types.File{}
 
-	header := types.DefaultHeaderFromConfig(types.HeaderConfig{
-		Nplurals: p.Config.Nplurals,
-		Language: "en",
-	})
+	header := types.DefaultHeader()
 
 	if p.HeaderCfg != nil {
 		header = types.DefaultHeaderFromConfig(*p.HeaderCfg)

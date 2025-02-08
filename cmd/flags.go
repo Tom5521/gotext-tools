@@ -215,7 +215,6 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 func initConfig() {
 	ParserCfg = parsers.Config{
 		Language:   lang,
-		Nplurals:   nplurals,
 		Exclude:    exclude,
 		ExtractAll: extractAll,
 	}

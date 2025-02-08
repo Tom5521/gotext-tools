@@ -1,10 +1,7 @@
 package parse
 
 import (
-	"fmt"
 	"go/ast"
-
-	"github.com/Tom5521/xgotext/pkg/parsers"
 )
 
 // InspectNode wraps the `ast.Inspect` function, allowing for convenient traversal
@@ -39,10 +36,3 @@ func InspectNode(root ast.Node) func(func(ast.Node) bool) {
 //	if err != nil {
 //	    fmt.Println("Invalid configuration:", err)
 //	}
-func validateConfig(cfg parsers.Config) error {
-	err := cfg.Validate()
-	if err != nil {
-		return fmt.Errorf("configuration is invalid: %w", err)
-	}
-	return nil
-}

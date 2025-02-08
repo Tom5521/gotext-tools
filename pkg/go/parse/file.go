@@ -39,65 +39,32 @@ type File struct {
 // NewFileFromReader creates a new File instance by reading content from an io.Reader.
 // The content is read into memory and processed according to the provided configuration.
 func NewFileFromReader(r io.Reader, name string, cfg *parsers.Config) (*File, error) {
-	err := validateConfig(*cfg)
-	if err != nil {
-		return nil, err
-	}
-	return unsafeNewFileFromReader(r, name, cfg)
-}
-
-// unsafeNewFileFromReader is an internal method that creates a File instance
-// from an io.Reader without validating the configuration.
-func unsafeNewFileFromReader(r io.Reader, name string, cfg *parsers.Config) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content: %w", err)
 	}
 
-	return unsafeNewFile(content, name, cfg)
+	return NewFileFromBytes(content, name, cfg)
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
 func NewFileFromPath(path string, cfg *parsers.Config) (*File, error) {
-	err := validateConfig(*cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return unsafeNewFileFromPath(path, cfg)
-}
-
-// unsafeNewFileFromPath is an internal method that creates a File instance
-// from a file on disk without validating the configuration.
-func unsafeNewFileFromPath(path string, cfg *parsers.Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
-	return unsafeNewFileFromReader(file, path, cfg)
+	return NewFileFromReader(file, path, cfg)
 }
 
 // NewFileFromBytes creates a new File instance from raw byte data.
 func NewFileFromBytes(b []byte, name string, cfg *parsers.Config) (*File, error) {
-	err := validateConfig(*cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return unsafeNewFile(b, name, cfg)
-}
-
-// unsafeNewFile is an internal method that creates a File instance from raw byte data
-// and the provided configuration without validating the configuration.
-func unsafeNewFile(content []byte, name string, cfg *parsers.Config) (*File, error) {
 	file := &File{
-		content:    content,
-		path:       name,
-		config:     cfg,
-		seenTokens: make(map[ast.Node]bool),
-		pkgName:    DefaultPackageName,
+		content: b,
+		path:    name,
+		config:  cfg,
+		pkgName: DefaultPackageName,
 	}
 
 	if err := file.parse(); err != nil {
@@ -134,6 +101,11 @@ func (f *File) determinePackageInfo() {
 
 // Entries returns all translations found in the file.
 func (f *File) Entries() (types.Entries, []error) {
+	f.seenTokens = make(map[ast.Node]bool)
+	defer func() {
+		f.seenTokens = nil
+	}()
+
 	var entries types.Entries
 	var errors []error
 

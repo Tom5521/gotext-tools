@@ -11,25 +11,30 @@ import (
 )
 
 // translationMethod defines the structure for different getter methods.
+// It contains the positions of the message ID, plural form, and context arguments.
 type translationMethod struct {
 	ID      int // Position of message ID argument
 	Plural  int // Position of plural form argument (-1 if not applicable)
 	Context int // Position of context argument (-1 if not applicable)
 }
 
-// Define supported translation methods.
+// translationMethods maps method names to their respective argument positions.
 var translationMethods = map[string]translationMethod{
-	"Get":    {0, -1, -1},
-	"GetN":   {0, 1, -1},
-	"GetD":   {1, -1, -1},
-	"GetND":  {1, 2, -1},
-	"GetC":   {0, -1, 1},
-	"GetNC":  {0, 1, 3},
-	"GetDC":  {1, -1, 2},
-	"GetNDC": {1, 2, 4},
+	"Get":   {0, -1, -1}, // (str string, vars ...interface{})
+	"GetN":  {0, 1, -1},  // (str string, plural string, n int, vars ...interface{})
+	"GetD":  {1, -1, -1}, // (dom string, str string, vars ...interface{})
+	"GetND": {1, 2, -1},  // (dom string, str string, plural string, n int, vars ...interface{})
+	"GetC":  {0, -1, 1},  // (str string, ctx string, vars ...interface{})
+	"GetNC": {0, 1, 3},   // (str string, plural string, n int, ctx string, vars ...interface{})
+	"GetDC": {1, -1, 2},  // (dom string, str string, ctx string, vars ...interface{})
+	"GetNDC": {
+		1,
+		2,
+		4,
+	}, // (dom string, str string, plural string, n int, ctx string, vars ...interface{})
 }
 
-// isGotextCall checks if an AST node represents a gotext function call.
+// isGotextCall checks if an AST node represents a gotext GET function call.
 func (f *File) isGotextCall(n ast.Node) bool {
 	callExpr, ok := n.(*ast.CallExpr)
 	if !ok {
@@ -50,6 +55,7 @@ func (f *File) isGotextCall(n ast.Node) bool {
 	return ok
 }
 
+// basicLitToTranslation converts a basic literal AST node to a translation entry.
 func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
@@ -65,6 +71,7 @@ func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 	}, nil
 }
 
+// processGeneric processes a list of AST expressions and extracts translation entries.
 func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
 	var entries types.Entries
 	var errors []error
@@ -93,6 +100,7 @@ func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
 	return entries, errors
 }
 
+// argumentData holds information about an argument extracted from a function call.
 type argumentData struct {
 	str   string
 	valid bool
@@ -100,6 +108,7 @@ type argumentData struct {
 	pos   token.Pos
 }
 
+// extractArg extracts a string argument from a function call at the specified index.
 func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 	if index == -1 {
 		return
@@ -135,6 +144,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 	return argumentData{str, true, err, pos}
 }
 
+// processPoCall processes a gotext function call and extracts translation entries.
 func (f *File) processPoCall(
 	call *ast.CallExpr,
 ) (entry types.Entry, valid bool, err error) {
@@ -174,6 +184,7 @@ func (f *File) processPoCall(
 	return
 }
 
+// processNode processes an AST node and extracts translation entries.
 func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 	if n == nil {
 		return nil, nil

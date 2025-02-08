@@ -1,3 +1,28 @@
+// Package parse provides the functionality to parse PO (Portable Object)
+// files from various sources, such as files, byte slices, strings, and readers.
+// It integrates with the `ast`, `generator`, and `types`
+// packages to normalize and generate structured representations of PO files.
+//
+// Key Features:
+// - Parses PO files from different input sources (file paths, strings, byte slices, and readers).
+// - Normalizes PO entries using the `ast.Normalizer`.
+// - Generates a structured `types.File` representation of the PO file.
+// - Handles errors and warnings during parsing and normalization.
+//
+// Example Usage:
+//
+//	cfg := parsers.Config{}
+//	p, err := parse.NewParser("example.po", cfg)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	file := p.Parse()
+//	if len(p.Errors()) > 0 {
+//	    log.Fatal(p.Errors()[0])
+//	}
+//	fmt.Println(file)
+//
+// For more details, refer to the individual functions and types.
 package parse
 
 import (
@@ -27,61 +52,32 @@ func baseParser(cfg parsers.Config) *Parser {
 }
 
 func NewParser(path string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return unsafeNewParserFromBytes(file, path, cfg)
+	return NewParserFromBytes(file, path, cfg)
 }
 
 func NewParserFromReader(r io.Reader, name string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return unsafeNewParserFromReader(r, name, cfg)
-}
-
-func unsafeNewParserFromReader(r io.Reader, name string, cfg parsers.Config) (*Parser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	return unsafeNewParserFromBytes(data, name, cfg)
+	return NewParserFromBytes(data, name, cfg)
 }
 
 func NewParserFromFile(f *os.File, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return unsafeNewParserFromReader(f, f.Name(), cfg)
+	return NewParserFromReader(f, f.Name(), cfg)
 }
 
 func NewParserFromString(s, name string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return unsafeNewParserFromBytes([]byte(s), name, cfg)
+	return NewParserFromBytes([]byte(s), name, cfg)
 }
 
-func NewParserFromBytes(d []byte, name string, cfg parsers.Config) (*Parser, error) {
-	err := validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return unsafeNewParserFromBytes(d, name, cfg)
-}
-
-func unsafeNewParserFromBytes(data []byte, name string, cfg parsers.Config) (*Parser, error) {
+func NewParserFromBytes(data []byte, name string, cfg parsers.Config) (*Parser, error) {
 	p := baseParser(cfg)
 	p.processpath(data, name)
 	if len(p.errors) > 0 {

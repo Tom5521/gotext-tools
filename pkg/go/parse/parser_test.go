@@ -29,7 +29,7 @@ func main(){
 			},
 		},
 	}
-	cfg := parsers.Config{Nplurals: 2}
+	cfg := parsers.Config{}
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
 		t.Error(err)
@@ -62,7 +62,6 @@ func main(){
 }`
 	cfg := parsers.Config{
 		ExtractAll: true,
-		Nplurals:   2,
 	}
 	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
 	if err != nil {
