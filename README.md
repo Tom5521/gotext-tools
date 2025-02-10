@@ -18,7 +18,7 @@ A command-line tool for extracting translatable strings from Go source code that
 ## Installation
 
 ```bash
-go install github.com/Tom5521/xgotext@latest
+go install github.com/Tom5521/xgotext/cli/xgotext@latest
 ```
 
 ## Usage
