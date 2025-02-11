@@ -1,10 +1,10 @@
 package types
 
-func MergeFiles(base *File, files ...*File) {
+func MergeFiles(fuzzyMatch bool, base *File, files ...*File) {
 	for _, file := range files {
 		base.Name += "_" + file.Name
 		base.Entries = append(base.Entries, file.Entries...)
 	}
 
-	base.Entries = base.Entries.Solve().Sort()
+	base.Entries = base.Entries.Solve(fuzzyMatch).Sort()
 }

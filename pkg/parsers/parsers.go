@@ -14,4 +14,5 @@ type Config struct {
 	Language   string
 	Exclude    []string
 	ExtractAll bool
+	FuzzyMatch bool
 }

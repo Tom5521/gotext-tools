@@ -19,20 +19,3 @@ func InspectNode(root ast.Node) func(func(ast.Node) bool) {
 		ast.Inspect(root, f)
 	}
 }
-
-// validateConfig checks if a `poconfig.Config` instance is valid by calling its
-// `Validate` method. If the configuration contains errors, the first error is returned.
-//
-// Parameters:
-//   - cfg: The configuration object to validate.
-//
-// Returns:
-//   - nil if the configuration is valid.
-//   - An error describing the first validation issue, if any.
-//
-// Example:
-//
-//	err := validateConfig(cfg)
-//	if err != nil {
-//	    fmt.Println("Invalid configuration:", err)
-//	}

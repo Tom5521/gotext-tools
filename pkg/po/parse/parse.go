@@ -120,5 +120,7 @@ func (p *Parser) Parse() *types.File {
 		return nil
 	}
 
+	file.Entries = file.Entries.Solve(p.Config.FuzzyMatch)
+
 	return file
 }

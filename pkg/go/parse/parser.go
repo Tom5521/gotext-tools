@@ -145,6 +145,8 @@ func (p *Parser) Parse() (file *types.File) {
 		file.Entries = append(file.Entries, entries...)
 	}
 
+	file.Entries = file.Entries.Solve(p.Config.FuzzyMatch)
+
 	return
 }
 

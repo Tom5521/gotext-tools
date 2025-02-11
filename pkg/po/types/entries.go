@@ -4,8 +4,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-
-	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 // Entries represents a collection of Entry objects.
@@ -119,21 +117,11 @@ func (e Entries) CleanDuplicates() Entries {
 	return cleaned
 }
 
-func FuzzyMatch(e1, e2 Entry) bool {
-	return fuzzy.Match(e1.ID, e2.ID)
-}
-
 // Solve processes a list of translation entries and merges those with the same ID and context,
 // keeping the most complete translation. If two entries have the same ID and context, the one
 // with a non-empty translation string is retained. Additionally, if the entries are similar but not
 // identical, the resulting entry is marked as "fuzzy". The locations of the merged entries are combined.
-//
-// Parameters:
-//   - e: A list of translation entries (Entries).
-//
-// Returns:
-//   - A list of cleaned and merged translation entries (Entries).
-func (e Entries) Solve() Entries {
+func (e Entries) Solve(fuzzyMatch bool) Entries {
 	var cleaned Entries
 	seenID := make(map[string]int)
 
@@ -147,7 +135,7 @@ func (e Entries) Solve() Entries {
 				}
 
 				// If the entries are similar but not identical, mark as "fuzzy".
-				if FuzzyMatch(translation, cleaned[idIndex]) &&
+				if fuzzyMatch && FuzzyMatch(translation, cleaned[idIndex]) &&
 					translation.ID != cleaned[idIndex].ID {
 					cleaned[idIndex].Flags = append(cleaned[idIndex].Flags, "fuzzy")
 				}
