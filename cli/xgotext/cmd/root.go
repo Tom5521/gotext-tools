@@ -13,7 +13,7 @@ import (
 )
 
 var root = &cobra.Command{
-	Use:   "xgotext",
+	Use:   os.Args[0],
 	Short: "Extract translatable strings from given input files.",
 	Long: `Extract translatable strings from given input files.
 
