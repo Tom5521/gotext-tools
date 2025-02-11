@@ -82,6 +82,10 @@ func (c Compiler) formatEntry(t types.Entry) string {
 		fprintfln("#, %s", flag)
 	}
 
+	for _, previous := range t.Previous {
+		fprintfln("#| %s", previous)
+	}
+
 	// Add context if available.
 	if t.Context != "" {
 		fprintfln("msgctxt %s", context)

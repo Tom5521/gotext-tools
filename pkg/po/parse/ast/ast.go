@@ -11,6 +11,7 @@ type (
 		ExtractedComments []*ExtractedComment
 		LocationComments  []*LocationComment
 		GeneralComments   []*GeneralComment
+		PreviousComments  []*PreviousComment
 		Msgid             *Msgid
 		Msgstr            *Msgstr
 		Msgctxt           *Msgctxt
@@ -38,6 +39,10 @@ type (
 		Text string
 	}
 	ExtractedComment struct {
+		pos  int
+		Text string
+	}
+	PreviousComment struct {
 		pos  int
 		Text string
 	}
@@ -77,6 +82,7 @@ type (
 	}
 )
 
+func (e PreviousComment) Pos() int  { return e.pos }
 func (e ExtractedComment) Pos() int { return e.pos }
 func (e Entry) Pos() int            { return e.pos }
 func (n File) Pos() int             { return n.pos }

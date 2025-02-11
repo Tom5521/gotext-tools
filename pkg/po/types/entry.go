@@ -19,6 +19,7 @@ type Entry struct {
 	Flags             []string
 	Comments          []string
 	ExtractedComments []string
+	Previous          []string
 	ID                string // The original string to be translated.
 	Context           string // The context in which the string is used (optional).
 	Plural            string // The plural form of the string (optional).

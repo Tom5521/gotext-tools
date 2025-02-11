@@ -53,6 +53,7 @@ var (
 	generalRegex   = regexp.MustCompile(`#\s?(.*)`)
 	extractedRegex = regexp.MustCompile(`#\.\s?(.*)`)
 	flagRegex      = regexp.MustCompile(`#,\s?(.*)`)
+	previousRegex  = regexp.MustCompile(`#\|\s?(.*)`)
 )
 
 func (p *Parser) comment() (Node, error) {
@@ -85,6 +86,11 @@ func (p *Parser) comment() (Node, error) {
 		return FlagComment{
 			pos:  tok.Pos,
 			Flag: flagRegex.FindStringSubmatch(tok.Literal)[1],
+		}, nil
+	case previousRegex.MatchString(tok.Literal):
+		return PreviousComment{
+			pos:  tok.Pos,
+			Text: previousRegex.FindStringSubmatch(tok.Literal)[1],
 		}, nil
 	default:
 		return GeneralComment{

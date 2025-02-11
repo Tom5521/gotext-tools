@@ -45,6 +45,7 @@ msgstr "Saludos"
 
 #, flag1
 #: Hello.go:123
+#| You have %s apple
 msgid "You have %d apple"
 msgid_plural "You have %d apples"
 msgstr[0] "Tienes %d manzana"
@@ -52,34 +53,26 @@ msgstr[1] "Tienes %d manzanas"`
 
 	expected := types.Entries{
 		{
-			Comments:  []string{"hello.go:123"},
-			Flags:     nil,
-			ID:        "Hi",
-			Context:   "",
-			Plural:    "",
-			Plurals:   nil,
-			Str:       "Hola",
-			Locations: nil,
+			Comments: []string{"hello.go:123"},
+			ID:       "Hi",
+			Str:      "Hola",
 		}, {
 			Flags:   []string{"myflag"},
 			ID:      "Hello",
 			Context: "formal",
-			Plural:  "",
-			Plurals: nil,
 			Str:     "Saludos",
 			Locations: []types.Location{
 				{Line: 12, File: "myfile"},
 			},
 		}, {
-			Flags:   []string{"flag1"},
-			ID:      "You have %d apple",
-			Context: "",
-			Plural:  "You have %d apples",
+			Flags:    []string{"flag1"},
+			Previous: []string{"You have %s apple"},
+			ID:       "You have %d apple",
+			Plural:   "You have %d apples",
 			Plurals: []types.PluralEntry{
 				{ID: 0, Str: "Tienes %d manzana"},
 				{ID: 1, Str: "Tienes %d manzanas"},
 			},
-			Str: "",
 			Locations: []types.Location{
 				{Line: 123, File: "Hello.go"},
 			},

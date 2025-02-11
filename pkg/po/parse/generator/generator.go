@@ -60,6 +60,9 @@ func (g *Generator) genEntries() types.Entries {
 				types.Location{Line: location.Line, File: location.File},
 			)
 		}
+		for _, previousComment := range raw.PreviousComments {
+			entry.Previous = append(entry.Previous, previousComment.Text)
+		}
 		for _, generalComment := range raw.GeneralComments {
 			entry.Comments = append(entry.Comments, generalComment.Text)
 		}

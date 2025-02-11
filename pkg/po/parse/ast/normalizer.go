@@ -91,7 +91,13 @@ func (n *Normalizer) resetState() {
 }
 
 func (n *Normalizer) reset() {
-	n.toSkip = types(FlagComment{}, GeneralComment{}, ExtractedComment{}, LocationComment{})
+	n.toSkip = types(
+		FlagComment{},
+		GeneralComment{},
+		ExtractedComment{},
+		LocationComment{},
+		PreviousComment{},
+	)
 	n.entries = nil
 	n.warns = nil
 	n.errs = nil
@@ -131,6 +137,7 @@ func (n *Normalizer) genParseMap() map[reflect.Type]func(Node, int) {
 		tfor[FlagComment]():      n.handleComment,
 		tfor[LocationComment]():  n.handleComment,
 		tfor[ExtractedComment](): n.handleComment,
+		tfor[PreviousComment]():  n.handleComment,
 
 		tfor[Msgctxt]():      n.handleMsgctxt,
 		tfor[Msgid]():        n.handleMsgid,
@@ -150,6 +157,8 @@ func (n *Normalizer) handleComment(node Node, i int) {
 		n.curEntry.ExtractedComments = append(n.curEntry.ExtractedComments, &node)
 	case FlagComment:
 		n.curEntry.Flags = append(n.curEntry.Flags, &node)
+	case PreviousComment:
+		n.curEntry.PreviousComments = append(n.curEntry.PreviousComments, &node)
 	}
 }
 
