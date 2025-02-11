@@ -64,10 +64,6 @@ func (c Compiler) formatEntry(t types.Entry) string {
 	for _, xcomment := range t.ExtractedComments {
 		fprintfln("#. %s", xcomment)
 	}
-	for _, flag := range t.Flags {
-		fprintfln("#, %s", flag)
-	}
-
 	// Add location comments if not suppressed by the configuration.
 	if !c.Config.NoLocation || c.Config.AddLocation == "never" {
 		switch c.Config.AddLocation {
@@ -80,6 +76,10 @@ func (c Compiler) formatEntry(t types.Entry) string {
 				fprintfln("#: %s", location.File)
 			}
 		}
+	}
+
+	for _, flag := range t.Flags {
+		fprintfln("#, %s", flag)
 	}
 
 	// Add context if available.
