@@ -15,6 +15,7 @@ type Config struct {
 	Header        *types.Header
 	FuzzyMatch    bool
 	Logger        *log.Logger
+	Verbose       bool
 }
 
 func DefaultConfig(opts ...Option) Config {
@@ -23,7 +24,7 @@ func DefaultConfig(opts ...Option) Config {
 			h := types.DefaultHeader()
 			return &h
 		}(),
-		Logger: log.New(io.Discard, "", log.Ldate),
+		Logger: log.New(io.Discard, "", 0),
 	}
 
 	for _, opt := range opts {
@@ -34,6 +35,12 @@ func DefaultConfig(opts ...Option) Config {
 }
 
 type Option func(c *Config)
+
+func WithVerbose(v bool) Option {
+	return func(c *Config) {
+		c.Verbose = v
+	}
+}
 
 func WithLogger(l *log.Logger) Option {
 	return func(c *Config) {

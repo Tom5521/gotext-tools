@@ -24,12 +24,22 @@ type Parser struct {
 	errors []error
 }
 
+func (p *Parser) applyOptions(options ...Option) {
+	for _, opt := range options {
+		opt(&p.config)
+	}
+}
+
 func (p *Parser) appendFiles(files ...string) error {
 	for _, file := range files {
 		walker := krfs.Walk(file)
 		for walker.Step() {
 			if p.shouldSkipFile(walker) {
 				continue
+			}
+
+			if p.config.Verbose {
+				p.config.Logger.Println("Reading", walker.Path(), "...")
 			}
 			f, err := NewFileFromPath(walker.Path(), p.options...)
 			if err != nil {
@@ -49,6 +59,8 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	err := p.appendFiles(path)
 	if err != nil {
+		err = fmt.Errorf("error parsing files: %w", err)
+		p.config.Logger.Println(err)
 		return nil, err
 	}
 
@@ -137,10 +149,16 @@ func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
 }
 
 // Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse() (file *types.File) {
+func (p *Parser) Parse(options ...Option) (file *types.File) {
+	p.applyOptions(p.options...)
+	p.applyOptions(options...)
+	defer p.applyOptions(p.options...) // Reset default settings.
 	file = &types.File{}
 
-	header := *p.config.Header
+	var header types.Header
+	if p.config.Header != nil {
+		header = *p.config.Header
+	}
 
 	if p.config.HeaderConfig != nil {
 		header = p.config.HeaderConfig.ToHeader()
@@ -153,11 +171,14 @@ func (p *Parser) Parse() (file *types.File) {
 	file.Entries = append(file.Entries, header.ToEntry())
 
 	for _, f := range p.files {
+		if p.config.Verbose {
+			p.config.Logger.Println("Parsing", f.path, "...")
+		}
 		entries, e := f.Entries()
 		if len(e) > 0 {
 			p.errors = append(p.errors, e...)
 			for _, err := range e {
-				p.config.Logger.Println(fmt.Errorf("error parsing entries: %w", err))
+				p.config.Logger.Println(fmt.Errorf("error parsing file %s: %w", f.path, err))
 			}
 			continue
 		}

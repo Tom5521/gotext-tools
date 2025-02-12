@@ -29,7 +29,7 @@ func (c *Compiler) applyOptions(opts ...Option) {
 func New(file *types.File, options ...Option) Compiler {
 	return Compiler{
 		File:   file,
-		Config: NewConfigFromOptions(options...),
+		Config: DefaultConfig(options...),
 	}
 }
 
@@ -40,20 +40,33 @@ func (c Compiler) ToWriter(w io.Writer, options ...Option) error {
 	c.applyOptions(options...)
 	var err error
 
+	if c.Config.Verbose {
+		c.Config.Logger.Println("Writing header...")
+	}
 	// Write the PO file header.
 	_, err = fmt.Fprintln(w, c.formatHeader())
 	if err != nil && !c.Config.IgnoreErrors {
+		err = fmt.Errorf("error writing header format: %w", err)
+		c.Config.Logger.Println(err)
 		return err
 	}
-
-	// Remove duplicate translations and write each entry to the writer.
-	translations := c.File.Entries.CleanDuplicates()
-	for _, t := range translations {
-		if t.ID == "" {
+	if c.Config.Verbose {
+		c.Config.Logger.Println("Cleaning duplicates...")
+	}
+	// Remove duplicate entries and write each entry to the writer.
+	entries := c.File.Entries.CleanDuplicates()
+	if c.Config.Verbose {
+		c.Config.Logger.Println("Writing entries...")
+	}
+	for i, e := range entries {
+		if e.ID == "" {
 			continue
 		}
-		_, err = fmt.Fprintln(w, c.formatEntry(t))
+
+		_, err = fmt.Fprintln(w, c.formatEntry(e))
 		if err != nil && !c.Config.IgnoreErrors {
+			err = fmt.Errorf("error writing entry[%d]: %w", i, err)
+			c.Config.Logger.Println(err)
 			return err
 		}
 	}
@@ -69,23 +82,35 @@ func (c Compiler) ToFile(f string, options ...Option) error {
 		flags |= os.O_CREATE
 	}
 
+	if c.Config.Verbose {
+		c.Config.Logger.Println("Opening file...")
+	}
 	// Open the file with the determined flags.
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !c.Config.IgnoreErrors {
+		err = fmt.Errorf("error opening file: %w", err)
+		c.Config.Logger.Println(err)
 		return err
 	}
 	defer file.Close()
 
 	// If `ForcePo` is enabled, truncate and reset the file position.
 	if c.Config.ForcePo {
+		if c.Config.Verbose {
+			c.Config.Logger.Println("Cleaning file contents...")
+		}
 		err = file.Truncate(0)
 		if err != nil && !c.Config.IgnoreErrors {
+			err = fmt.Errorf("error truncating file: %w", err)
+			c.Config.Logger.Println(err)
 			return err
 		}
 
 		// Move the file pointer back to the beginning.
 		_, err = file.Seek(0, 0)
 		if err != nil && !c.Config.IgnoreErrors {
+			err = fmt.Errorf("error moving the file pointer back to the beginning: %w", err)
+			c.Config.Logger.Println(err)
 			return err
 		}
 	}

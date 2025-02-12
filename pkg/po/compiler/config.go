@@ -1,9 +1,14 @@
 package compiler
 
-import "errors"
+import (
+	"errors"
+	"io"
+	"log"
+)
 
 // Config holds the settings for the compiler, affecting how translations are processed.
 type Config struct {
+	Logger          *log.Logger
 	ForcePo         bool         // If true, forces the creation of a `.po` file, even if not strictly needed.
 	OmitHeader      bool         // If true, omits the header section in the generated `.po` file.
 	PackageName     string       // Name of the package associated with the translation.
@@ -15,6 +20,7 @@ type Config struct {
 	MsgstrPrefix    string       // Prefix added to all translation strings.
 	MsgstrSuffix    string       // Suffix added to all translation strings.
 	IgnoreErrors    bool         // If true, allows compilation to proceed despite non-critical errors.
+	Verbose         bool
 }
 
 type LocationMode string
@@ -24,6 +30,20 @@ const (
 	LocationModeNever LocationMode = "never"
 	LocationModeFile  LocationMode = "file"
 )
+
+func DefaultConfig(opts ...Option) Config {
+	c := Config{
+		Logger:      log.New(io.Discard, "", 0),
+		PackageName: "PACKAGE NAME",
+		AddLocation: LocationModeFull,
+	}
+
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	return c
+}
 
 func NewConfigFromOptions(opts ...Option) Config {
 	var config Config
@@ -36,6 +56,18 @@ func NewConfigFromOptions(opts ...Option) Config {
 }
 
 type Option func(*Config)
+
+func WithVerbose(v bool) Option {
+	return func(c *Config) {
+		c.Verbose = v
+	}
+}
+
+func WithLogger(logger *log.Logger) Option {
+	return func(c *Config) {
+		c.Logger = logger
+	}
+}
 
 func WithIgnoreErrors(i bool) Option {
 	return func(c *Config) {

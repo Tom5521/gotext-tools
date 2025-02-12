@@ -49,7 +49,7 @@ var (
 
 	// Other.
 	defaultDomain string
-	// verbose       bool
+	verbose       bool
 )
 
 func init() {
@@ -103,7 +103,7 @@ This option is equivalent to ‘--copyright-holder=''’. It can be useful
 for packages outside the GNU project that want their translations to
 be in the public domain.`,
 	)
-	// flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
+	flag.BoolVar(&verbose, "verbose", false, "increase verbosity level")
 	flag.StringSliceVarP(&exclude, "exclude", "X", nil, "Specifies which files will be omitted.")
 	flag.BoolVarP(&extractAll, "extract-all", "a", false, "Extract all strings.")
 	flag.StringVarP(
@@ -223,8 +223,11 @@ func initConfig() {
 		Exclude:      exclude,
 		ExtractAll:   extractAll,
 		HeaderConfig: &HeadersCfg,
+		Logger:       logger,
+		Verbose:      verbose,
 	}
 	CompilerCfg = compiler.Config{
+		Logger:          logger,
 		ForcePo:         forcePo,
 		OmitHeader:      omitHeader,
 		PackageName:     packageName,
@@ -235,5 +238,6 @@ func initConfig() {
 		AddLocation:     compiler.LocationMode(addLocation),
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
+		Verbose:         verbose,
 	}
 }

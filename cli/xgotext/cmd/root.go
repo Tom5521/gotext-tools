@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/spf13/cobra"
 )
+
+var logger = log.New(os.Stdout, "", log.Ldate)
 
 var root = &cobra.Command{
 	Use:   os.Args[0],
@@ -52,7 +55,6 @@ Similarly for optional arguments.`,
 		p, err := goparse.NewParserFromFiles(
 			inputfiles,
 			goparse.WithConfig(ParserCfg),
-			goparse.WithHeaderConfig(&HeadersCfg),
 		)
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
