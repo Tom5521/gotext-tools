@@ -65,7 +65,7 @@ func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
 	}
 
 	if err := file.parse(); err != nil {
-		return nil, fmt.Errorf("failed to parse file: %w", err)
+		return nil, err
 	}
 
 	file.determinePackageInfo()
@@ -76,7 +76,7 @@ func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
 func (f *File) parse() error {
 	parsedFile, err := parser.ParseFile(token.NewFileSet(), f.path, f.content, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse the file: %w", err)
 	}
 	f.file = parsedFile
 	return nil

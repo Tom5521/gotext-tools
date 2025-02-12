@@ -59,7 +59,7 @@ func (f *File) isGotextCall(n ast.Node) bool {
 func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return types.Entry{}, err
+		return types.Entry{}, fmt.Errorf("error unquoting basic literal: %w", err)
 	}
 
 	return types.Entry{
@@ -137,7 +137,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil {
-		a.err = fmt.Errorf("error unquoting string: %w", err)
+		a.err = fmt.Errorf("error unquoting basic literal: %w", err)
 		return
 	}
 

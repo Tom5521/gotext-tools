@@ -21,7 +21,6 @@ type Parser struct {
 	files   []*File         // List of parsed files.
 	seen    map[string]bool // Tracks already processed files to avoid duplication.
 
-	warns  []string
 	errors []error
 }
 
@@ -34,7 +33,9 @@ func (p *Parser) appendFiles(files ...string) error {
 			}
 			f, err := NewFileFromPath(walker.Path(), p.options...)
 			if err != nil {
-				return fmt.Errorf("error reading file %s: %w", walker.Path(), err)
+				err = fmt.Errorf("error reading file %s: %w", walker.Path(), err)
+				p.config.Logger.Println(err.Error())
+				return err
 			}
 			p.files = append(p.files, f)
 		}
@@ -56,11 +57,13 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 
 // baseParser creates a base Parser instance with the provided configuration.
 func baseParser(options ...Option) *Parser {
-	return &Parser{
+	p := &Parser{
 		options: options,
-		config:  DefaultConfig(),
+		config:  DefaultConfig(options...),
 		seen:    make(map[string]bool),
 	}
+
+	return p
 }
 
 // NewParserFromReader creates a Parser from an io.Reader, such as a file or memory buffer.
@@ -69,8 +72,11 @@ func NewParserFromReader(
 	name string,
 	options ...Option,
 ) (*Parser, error) {
+	logger := DefaultConfig(options...).Logger
 	data, err := io.ReadAll(r)
 	if err != nil {
+		err = fmt.Errorf("error reading: %w", err)
+		logger.Println(err)
 		return nil, err
 	}
 	return NewParserFromBytes(data, name, options...)
@@ -93,6 +99,8 @@ func NewParserFromBytes(
 	p := baseParser(options...)
 	f, err := NewFileFromBytes(b, name, options...)
 	if err != nil {
+		err = fmt.Errorf("error configuring file: %w", err)
+		p.config.Logger.Println(err)
 		return nil, err
 	}
 	p.files = append(p.files, f)
@@ -105,6 +113,8 @@ func NewParserFromFile(file *os.File, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	f, err := NewFileFromReader(file, file.Name(), options...)
 	if err != nil {
+		err = fmt.Errorf("error configuring file: %w", err)
+		p.config.Logger.Println(err.Error())
 		return nil, err
 	}
 
@@ -118,6 +128,8 @@ func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	err := p.appendFiles(files...)
 	if err != nil {
+		err = fmt.Errorf("error parsing files: %w", err)
+		p.config.Logger.Println(err)
 		return nil, err
 	}
 
@@ -144,6 +156,9 @@ func (p *Parser) Parse() (file *types.File) {
 		entries, e := f.Entries()
 		if len(e) > 0 {
 			p.errors = append(p.errors, e...)
+			for _, err := range e {
+				p.config.Logger.Println(fmt.Errorf("error parsing entries: %w", err))
+			}
 			continue
 		}
 		file.Entries = append(file.Entries, entries...)
@@ -156,10 +171,6 @@ func (p *Parser) Parse() (file *types.File) {
 
 func (p Parser) Errors() []error {
 	return p.errors
-}
-
-func (p Parser) Warnings() []string {
-	return p.warns
 }
 
 // Files returns the list of files associated with the Parser.
@@ -184,6 +195,7 @@ func (p *Parser) shouldSkipFile(w *krfs.Walker) bool {
 
 	_, seen := p.seen[abs]
 	if seen {
+		p.config.Logger.Printf("skipping duplicated file: %s", w.Path())
 		return true
 	}
 	p.seen[abs] = true

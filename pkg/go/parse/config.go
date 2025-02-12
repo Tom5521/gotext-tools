@@ -1,6 +1,11 @@
 package parse
 
-import "github.com/Tom5521/xgotext/pkg/po/types"
+import (
+	"io"
+	"log"
+
+	"github.com/Tom5521/xgotext/pkg/po/types"
+)
 
 type Config struct {
 	Exclude       []string
@@ -9,18 +14,32 @@ type Config struct {
 	HeaderOptions []types.HeaderOption
 	Header        *types.Header
 	FuzzyMatch    bool
+	Logger        *log.Logger
 }
 
-func DefaultConfig() Config {
-	return Config{
+func DefaultConfig(opts ...Option) Config {
+	c := Config{
 		Header: func() *types.Header {
 			h := types.DefaultHeader()
 			return &h
 		}(),
+		Logger: log.New(io.Discard, "", log.Ldate),
 	}
+
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	return c
 }
 
 type Option func(c *Config)
+
+func WithLogger(l *log.Logger) Option {
+	return func(c *Config) {
+		c.Logger = l
+	}
+}
 
 func WithConfig(cfg Config) Option {
 	return func(c *Config) {
