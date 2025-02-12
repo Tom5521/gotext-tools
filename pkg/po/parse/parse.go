@@ -35,17 +35,10 @@ import (
 )
 
 type Parser struct {
-	seen map[string]bool
 	norm *ast.Normalizer
 
 	warns  []string
 	errors []error
-}
-
-func baseParser() *Parser {
-	return &Parser{
-		seen: make(map[string]bool),
-	}
 }
 
 func NewParser(path string) (*Parser, error) {
@@ -75,7 +68,7 @@ func NewParserFromString(s, name string) (*Parser, error) {
 }
 
 func NewParserFromBytes(data []byte, name string) (*Parser, error) {
-	p := baseParser()
+	p := &Parser{}
 	p.processpath(data, name)
 	if len(p.errors) > 0 {
 		return nil, p.errors[0]

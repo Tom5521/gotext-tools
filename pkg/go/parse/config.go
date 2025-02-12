@@ -11,7 +11,7 @@ type Config struct {
 	FuzzyMatch    bool
 }
 
-func defaultConfig() Config {
+func DefaultConfig() Config {
 	return Config{
 		Header: func() *types.Header {
 			h := types.DefaultHeader()

@@ -58,7 +58,7 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 func baseParser(options ...Option) *Parser {
 	return &Parser{
 		options: options,
-		config:  defaultConfig(),
+		config:  DefaultConfig(),
 		seen:    make(map[string]bool),
 	}
 }
