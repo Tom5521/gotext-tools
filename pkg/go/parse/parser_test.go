@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tom5521/xgotext/internal/util"
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
-	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 	"github.com/kr/pretty"
 )
@@ -29,8 +28,7 @@ func main(){
 			},
 		},
 	}
-	cfg := parsers.Config{}
-	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
+	parser, err := goparse.NewParserFromString(input, "test.go")
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,10 +58,12 @@ func main(){
 	
 	var eggs string = "sugar"
 }`
-	cfg := parsers.Config{
-		ExtractAll: true,
-	}
-	parser, err := goparse.NewParserFromBytes([]byte(input), "test.go", cfg)
+
+	parser, err := goparse.NewParserFromString(
+		input,
+		"test.go",
+		goparse.WithExtractAll(true),
+	)
 	if err != nil {
 		t.Error(err)
 	}

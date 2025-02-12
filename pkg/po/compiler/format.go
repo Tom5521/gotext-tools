@@ -65,13 +65,13 @@ func (c Compiler) formatEntry(t types.Entry) string {
 		fprintfln("#. %s", xcomment)
 	}
 	// Add location comments if not suppressed by the configuration.
-	if !c.Config.NoLocation || c.Config.AddLocation == "never" {
+	if !c.Config.NoLocation && c.Config.AddLocation != LocationModeNever {
 		switch c.Config.AddLocation {
-		case "full":
+		case LocationModeFull:
 			for _, location := range t.Locations {
 				fprintfln("#: %s:%d", location.File, location.Line)
 			}
-		case "file":
+		case LocationModeFile:
 			for _, location := range t.Locations {
 				fprintfln("#: %s", location.File)
 			}

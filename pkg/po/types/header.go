@@ -41,6 +41,43 @@ type HeaderConfig struct {
 	LastTranslator    string
 }
 
+func (cfg HeaderConfig) ToHeaderWithDefaults() (h Header) {
+	h = DefaultHeader()
+
+	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
+	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
+	h.Set("Language-Team", cfg.LanguageTeam)
+	h.Set("Language", cfg.Language)
+	h.Set(
+		"Plural-Forms",
+		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
+	)
+
+	return
+}
+
+func (cfg HeaderConfig) ToHeader() (h Header) {
+	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
+	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
+	h.Set("Language-Team", cfg.LanguageTeam)
+	h.Set("Language", cfg.Language)
+	h.Set(
+		"Plural-Forms",
+		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
+	)
+
+	return
+}
+
+func HeaderConfigFromOptions(options ...HeaderOption) HeaderConfig {
+	var h HeaderConfig
+	for _, opt := range options {
+		opt(&h)
+	}
+
+	return h
+}
+
 func DefaultHeaderConfig() HeaderConfig {
 	return HeaderConfig{
 		Nplurals:         2,
@@ -94,21 +131,6 @@ func GenerateNplurals(header Header) (nplurals uint) {
 	}
 
 	nplurals = uint(n)
-
-	return
-}
-
-func DefaultHeaderFromConfig(cfg HeaderConfig) (h Header) {
-	h = DefaultHeader()
-
-	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
-	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
-	h.Set("Language-Team", cfg.LanguageTeam)
-	h.Set("Language", cfg.Language)
-	h.Set(
-		"Plural-Forms",
-		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
-	)
 
 	return
 }

@@ -29,56 +29,53 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Parser struct {
-	Config parsers.Config
-	seen   map[string]bool
-	norm   *ast.Normalizer
+	seen map[string]bool
+	norm *ast.Normalizer
 
 	warns  []string
 	errors []error
 }
 
-func baseParser(cfg parsers.Config) *Parser {
+func baseParser() *Parser {
 	return &Parser{
-		Config: cfg,
-		seen:   make(map[string]bool),
+		seen: make(map[string]bool),
 	}
 }
 
-func NewParser(path string, cfg parsers.Config) (*Parser, error) {
+func NewParser(path string) (*Parser, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewParserFromBytes(file, path, cfg)
+	return NewParserFromBytes(file, path)
 }
 
-func NewParserFromReader(r io.Reader, name string, cfg parsers.Config) (*Parser, error) {
+func NewParserFromReader(r io.Reader, name string) (*Parser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewParserFromBytes(data, name, cfg)
+	return NewParserFromBytes(data, name)
 }
 
-func NewParserFromFile(f *os.File, cfg parsers.Config) (*Parser, error) {
-	return NewParserFromReader(f, f.Name(), cfg)
+func NewParserFromFile(f *os.File) (*Parser, error) {
+	return NewParserFromReader(f, f.Name())
 }
 
-func NewParserFromString(s, name string, cfg parsers.Config) (*Parser, error) {
-	return NewParserFromBytes([]byte(s), name, cfg)
+func NewParserFromString(s, name string) (*Parser, error) {
+	return NewParserFromBytes([]byte(s), name)
 }
 
-func NewParserFromBytes(data []byte, name string, cfg parsers.Config) (*Parser, error) {
-	p := baseParser(cfg)
+func NewParserFromBytes(data []byte, name string) (*Parser, error) {
+	p := baseParser()
 	p.processpath(data, name)
 	if len(p.errors) > 0 {
 		return nil, p.errors[0]
@@ -119,8 +116,6 @@ func (p *Parser) Parse() *types.File {
 		p.errors = append(p.errors, g.Errors()...)
 		return nil
 	}
-
-	file.Entries = file.Entries.Solve(p.Config.FuzzyMatch)
 
 	return file
 }

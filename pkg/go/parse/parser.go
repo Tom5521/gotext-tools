@@ -11,16 +11,15 @@ import (
 
 	krfs "github.com/kr/fs"
 
-	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 // Parser represents a parser that processes Go files according to a given configuration.
 type Parser struct {
-	Config    parsers.Config      // Configuration settings for parsing.
-	HeaderCfg *types.HeaderConfig // Optional config.
-	files     []*File             // List of parsed files.
-	seen      map[string]bool     // Tracks already processed files to avoid duplication.
+	config  Config // Configuration settings for parsing.
+	options []Option
+	files   []*File         // List of parsed files.
+	seen    map[string]bool // Tracks already processed files to avoid duplication.
 
 	warns  []string
 	errors []error
@@ -33,7 +32,7 @@ func (p *Parser) appendFiles(files ...string) error {
 			if p.shouldSkipFile(walker) {
 				continue
 			}
-			f, err := NewFileFromPath(walker.Path(), &p.Config)
+			f, err := NewFileFromPath(walker.Path(), p.options...)
 			if err != nil {
 				return fmt.Errorf("error reading file %s: %w", walker.Path(), err)
 			}
@@ -45,8 +44,8 @@ func (p *Parser) appendFiles(files ...string) error {
 }
 
 // NewParser initializes a new Parser for a given directory path and configuration.
-func NewParser(path string, cfg parsers.Config) (*Parser, error) {
-	p := baseParser(cfg)
+func NewParser(path string, options ...Option) (*Parser, error) {
+	p := baseParser(options...)
 	err := p.appendFiles(path)
 	if err != nil {
 		return nil, err
@@ -56,10 +55,11 @@ func NewParser(path string, cfg parsers.Config) (*Parser, error) {
 }
 
 // baseParser creates a base Parser instance with the provided configuration.
-func baseParser(cfg parsers.Config) *Parser {
+func baseParser(options ...Option) *Parser {
 	return &Parser{
-		Config: cfg,
-		seen:   make(map[string]bool),
+		options: options,
+		config:  defaultConfig(),
+		seen:    make(map[string]bool),
 	}
 }
 
@@ -67,31 +67,31 @@ func baseParser(cfg parsers.Config) *Parser {
 func NewParserFromReader(
 	r io.Reader,
 	name string,
-	cfg parsers.Config,
+	options ...Option,
 ) (*Parser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	return NewParserFromBytes(data, name, cfg)
+	return NewParserFromBytes(data, name, options...)
 }
 
 func NewParserFromString(
 	s string,
 	name string,
-	cfg parsers.Config,
+	options ...Option,
 ) (*Parser, error) {
-	return NewParserFromBytes([]byte(s), name, cfg)
+	return NewParserFromBytes([]byte(s), name, options...)
 }
 
 // NewParserFromBytes creates a Parser from raw byte data after validating the configuration.
 func NewParserFromBytes(
 	b []byte,
 	name string,
-	cfg parsers.Config,
+	options ...Option,
 ) (*Parser, error) {
-	p := baseParser(cfg)
-	f, err := NewFileFromBytes(b, name, &cfg)
+	p := baseParser(options...)
+	f, err := NewFileFromBytes(b, name, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,9 @@ func NewParserFromBytes(
 }
 
 // NewParserFromFile creates a Parser from an os.File instance.
-func NewParserFromFile(file *os.File, cfg parsers.Config) (*Parser, error) {
-	p := baseParser(cfg)
-	f, err := NewFileFromReader(file, file.Name(), &cfg)
+func NewParserFromFile(file *os.File, options ...Option) (*Parser, error) {
+	p := baseParser(options...)
+	f, err := NewFileFromReader(file, file.Name(), options...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +114,8 @@ func NewParserFromFile(file *os.File, cfg parsers.Config) (*Parser, error) {
 }
 
 // NewParserFromFiles initializes a Parser from a list of file paths.
-func NewParserFromFiles(files []string, cfg parsers.Config) (*Parser, error) {
-	p := baseParser(cfg)
+func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
+	p := baseParser(options...)
 	err := p.appendFiles(files...)
 	if err != nil {
 		return nil, err
@@ -128,10 +128,14 @@ func NewParserFromFiles(files []string, cfg parsers.Config) (*Parser, error) {
 func (p *Parser) Parse() (file *types.File) {
 	file = &types.File{}
 
-	header := types.DefaultHeader()
+	header := *p.config.Header
 
-	if p.HeaderCfg != nil {
-		header = types.DefaultHeaderFromConfig(*p.HeaderCfg)
+	if p.config.HeaderConfig != nil {
+		header = p.config.HeaderConfig.ToHeader()
+	}
+
+	if p.config.HeaderOptions != nil {
+		header = types.HeaderConfigFromOptions(p.config.HeaderOptions...).ToHeaderWithDefaults()
 	}
 
 	file.Entries = append(file.Entries, header.ToEntry())
@@ -145,7 +149,7 @@ func (p *Parser) Parse() (file *types.File) {
 		file.Entries = append(file.Entries, entries...)
 	}
 
-	file.Entries = file.Entries.Solve(p.Config.FuzzyMatch)
+	file.Entries = file.Entries.Solve(p.config.FuzzyMatch)
 
 	return
 }
@@ -189,7 +193,7 @@ func (p *Parser) shouldSkipFile(w *krfs.Walker) bool {
 
 // isExcludedPath checks if a path is in the exclude list defined in the configuration.
 func (p Parser) isExcludedPath(path string) bool {
-	return slices.ContainsFunc(p.Config.Exclude, func(s string) bool {
+	return slices.ContainsFunc(p.config.Exclude, func(s string) bool {
 		abs1, err1 := filepath.Abs(s)
 		abs2, err2 := filepath.Abs(path)
 		return (abs1 == abs2) && (err1 == nil && err2 == nil)

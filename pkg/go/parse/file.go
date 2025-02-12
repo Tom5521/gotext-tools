@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/parsers"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
@@ -24,10 +23,8 @@ const (
 // This struct contains information about the file's content, path, package,
 // and whether it imports the desired package for translation processing.
 type File struct {
-	// Config is a pointer to the configuration used for parsing.
-	// Using a pointer avoids excessive memory usage when working with many files
-	// and allows changes to the parser configuration to propagate to each file.
-	config     *parsers.Config
+	config     Config
+	options    []Option
 	seenTokens map[ast.Node]bool
 	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
 	content    []byte    // The raw content of the file as a byte slice.
@@ -38,32 +35,32 @@ type File struct {
 
 // NewFileFromReader creates a new File instance by reading content from an io.Reader.
 // The content is read into memory and processed according to the provided configuration.
-func NewFileFromReader(r io.Reader, name string, cfg *parsers.Config) (*File, error) {
+func NewFileFromReader(r io.Reader, name string, options ...Option) (*File, error) {
 	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content: %w", err)
 	}
 
-	return NewFileFromBytes(content, name, cfg)
+	return NewFileFromBytes(content, name, options...)
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
-func NewFileFromPath(path string, cfg *parsers.Config) (*File, error) {
+func NewFileFromPath(path string, options ...Option) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
-	return NewFileFromReader(file, path, cfg)
+	return NewFileFromReader(file, path, options...)
 }
 
 // NewFileFromBytes creates a new File instance from raw byte data.
-func NewFileFromBytes(b []byte, name string, cfg *parsers.Config) (*File, error) {
+func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
 	file := &File{
 		content: b,
 		path:    name,
-		config:  cfg,
+		options: options,
 		pkgName: DefaultPackageName,
 	}
 
@@ -102,6 +99,10 @@ func (f *File) determinePackageInfo() {
 // Entries returns all translations found in the file.
 func (f *File) Entries() (types.Entries, []error) {
 	f.seenTokens = make(map[ast.Node]bool)
+	for _, opt := range f.options {
+		opt(&f.config)
+	}
+
 	defer func() {
 		f.seenTokens = nil
 	}()

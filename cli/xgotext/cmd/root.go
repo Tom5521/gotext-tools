@@ -51,9 +51,9 @@ Similarly for optional arguments.`,
 
 		p, err := goparse.NewParserFromFiles(
 			inputfiles,
-			ParserCfg,
+			goparse.WithConfig(ParserCfg),
+			goparse.WithHeaderConfig(&HeadersCfg),
 		)
-		p.HeaderCfg = &HeadersCfg
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
 		}
@@ -110,12 +110,9 @@ Similarly for optional arguments.`,
 			out = file
 		}
 
-		compiler := compiler.Compiler{
-			File:   pofile,
-			Config: CompilerCfg,
-		}
+		compiler := compiler.New(pofile, compiler.WithConfig(CompilerCfg))
 
-		err = compiler.CompileToWriter(out)
+		err = compiler.ToWriter(out)
 		if err != nil {
 			return fmt.Errorf("error compiling translations: %w", err)
 		}

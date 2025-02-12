@@ -10,7 +10,7 @@ import (
 )
 
 func join(newParse *goparse.Parser, rawfile *os.File) error {
-	baseParse, err := poparse.NewParserFromReader(rawfile, rawfile.Name(), ParserCfg)
+	baseParse, err := poparse.NewParserFromReader(rawfile, rawfile.Name())
 	if err != nil {
 		return err
 	}
@@ -27,10 +27,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 
 	types.MergeFiles(false, base, parsed)
 
-	compiler := compiler.Compiler{
-		File:   base,
-		Config: CompilerCfg,
-	}
+	compiler := compiler.New(base, compiler.WithConfig(CompilerCfg))
 
 	err = rawfile.Truncate(0)
 	if err != nil {
@@ -42,7 +39,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 		return err
 	}
 
-	err = compiler.CompileToWriter(rawfile)
+	err = compiler.ToWriter(rawfile)
 	if err != nil {
 		return err
 	}

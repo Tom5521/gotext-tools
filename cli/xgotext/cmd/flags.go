@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/Tom5521/xgotext/pkg/parsers"
+	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 var (
-	ParserCfg   parsers.Config
+	ParserCfg   goparse.Config
 	CompilerCfg compiler.Config
 	HeadersCfg  types.HeaderConfig
 )
@@ -213,10 +213,16 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 }
 
 func initConfig() {
-	ParserCfg = parsers.Config{
-		Language:   lang,
-		Exclude:    exclude,
-		ExtractAll: extractAll,
+	HeadersCfg = types.HeaderConfig{
+		Nplurals:          nplurals,
+		ProjectIDVersion:  packageVersion,
+		ReportMsgidBugsTo: msgidBugsAddress,
+		Language:          lang,
+	}
+	ParserCfg = goparse.Config{
+		Exclude:      exclude,
+		ExtractAll:   extractAll,
+		HeaderConfig: &HeadersCfg,
 	}
 	CompilerCfg = compiler.Config{
 		ForcePo:         forcePo,
@@ -226,14 +232,8 @@ func initConfig() {
 		ForeignUser:     foreignUser,
 		Title:           title,
 		NoLocation:      noLocation,
-		AddLocation:     addLocation,
+		AddLocation:     compiler.LocationMode(addLocation),
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
-	}
-	HeadersCfg = types.HeaderConfig{
-		Nplurals:          nplurals,
-		ProjectIDVersion:  packageVersion,
-		ReportMsgidBugsTo: msgidBugsAddress,
-		Language:          lang,
 	}
 }
