@@ -7,6 +7,33 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
+// Config defines the configuration options for customizing the parsing process.
+//
+// ### Attributes:
+// - `Exclude`: A list of file paths or directories to exclude from processing.
+// - `ExtractAll`: If true, extracts all string literals, not just those marked for translation.
+// - `HeaderConfig`: Configuration for the PO file header.
+// - `HeaderOptions`: Additional options to customize the PO file header.
+// - `Header`: The PO file header to include in the output.
+// - `FuzzyMatch`: Enables fuzzy matching for translation entries (e.g., for deduplication).
+// - `Logger`: A logger instance for tracking parsing activity and errors.
+// - `Verbose`: If true, enables verbose logging.
+//
+// ### Responsibilities:
+// - Provide flexible options to customize the parser behavior.
+// - Control what strings are extracted and how the output is generated.
+//
+// ### Methods:
+// - `DefaultConfig`: Returns a default configuration with reasonable defaults.
+// - `WithVerbose`: Enables or disables verbose logging.
+// - `WithLogger`: Sets a custom logger instance.
+// - `WithConfig`: Applies a predefined configuration.
+// - `WithExclude`: Specifies files or directories to exclude from parsing.
+// - `WithExtractAll`: Enables or disables extraction of all string literals.
+// - `WithHeaderConfig`: Sets the PO file header configuration.
+// - `WithHeaderOptions`: Adds header options for PO file generation.
+// - `WithHeader`: Sets a custom header for the PO file.
+// - `WithFuzzyMatch`: Enables or disables fuzzy matching for translations.
 type Config struct {
 	Exclude       []string
 	ExtractAll    bool

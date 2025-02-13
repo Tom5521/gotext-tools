@@ -1,34 +1,64 @@
 // Package parse provides tools for parsing Go source files to extract translations and handle various configurations.
-// It is designed to work with the "gotext" library,
-// allowing users to extract strings that need translation from Go code.
+// It is designed to work with the "gotext" library, allowing users to extract translatable strings from Go code.
 //
-// The package includes functionality to:
-// - Parse Go files and extract translation entries.
-// - Handle different configurations for parsing, such as excluding specific paths or extracting all strings.
-// - Process abstract syntax trees (AST) to identify translation function calls and string literals.
-// - Generate translation entries with location information for use in PO files.
+// ### Key Features
 //
-// The main components of the package are:
-// - Parser: The core struct that manages the parsing process, including file handling and configuration.
-// - File: Represents a Go source file being processed, containing methods to parse and extract translations.
-// - Util: Provides utility functions for AST traversal and configuration validation.
-// - Process: Contains logic for processing AST nodes and
-// extracting translation entries from function calls and string literals.
+// 1. **Translation Extraction**:
+//   - Extracts strings meant for translation, including those from specific function calls (e.g., `gotext.Get`).
+//   - Optionally extracts all string literals in the code (useful for broader analysis).
 //
-// Example usage:
+// 2. **Configurable Parsing**:
+//   - Exclude specific paths or files from processing.
+//   - Handle custom configurations such as headers, fuzzy matching, and verbose logging.
 //
-//	cfg := parsers.Config{
-//	    ExtractAll: true, // Extract all strings, not just those marked for translation.
+// 3. **AST-Based Processing**:
+//   - Processes Go abstract syntax trees (AST) to identify translation function calls and string literals.
+//   - Generates translation entries with metadata, including file location and line number.
+//
+// 4. **Integration with PO Files**:
+//   - Produces translation entries compatible with PO (Portable Object) files, facilitating localization workflows.
+//
+// ### Main Components
+//
+// - **Parser**:
+//   - Manages the parsing process, including file handling, configuration, and error reporting.
+//   - Processes files and extracts translation entries.
+//
+// - **File**:
+//   - Represents a single Go source file.
+//   - Handles parsing, package detection, and translation extraction.
+//
+// - **Process**:
+//   - Contains logic to traverse AST nodes and extract translation entries from function calls and string literals.
+//
+// - **Config**:
+//   - Defines configurations for customizing the parsing process
+//
+// (e.g., verbosity, exclusion rules, header customization).
+//
+// ### Example Usage
+//
+// ```go
+//
+//	cfg := parse.Config{
+//	    ExtractAll: true, // Extract all string literals, not just those marked for translation.
+//	    Verbose:    true, // Enable verbose logging.
 //	}
-//	parser, err := parse.NewParserFromFiles([]string{"example.go"}, cfg)
+//
+// parser, err := parse.NewParserFromFiles([]string{"example.go"}, parse.WithConfig(cfg))
+//
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-//	file := parser.Parse()
+//
+// file := parser.Parse()
+//
 //	for _, entry := range file.Entries {
-//	    fmt.Println(entry.ID, entry.Locations)
+//	    fmt.Printf("String: %s, Locations: %v\n", entry.ID, entry.Locations)
 //	}
 //
-// This package is part of the xgotext project,
-// which aims to provide comprehensive tools for internationalization in Go.
+// ```
+//
+// ### About
+// This package is part of the xgotext project, which provides comprehensive tools for internationalization in Go.
 package parse

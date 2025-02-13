@@ -148,7 +148,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 func (f *File) processPoCall(
 	call *ast.CallExpr,
 ) (entry types.Entry, valid bool, err error) {
-	selector := call.Fun.(*ast.SelectorExpr)
+	selector, _ := call.Fun.(*ast.SelectorExpr)
 	method := translationMethods[selector.Sel.Name]
 
 	args := []argumentData{
@@ -211,7 +211,7 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 
 	if !f.config.ExtractAll {
 		if f.isGotextCall(n) {
-			call := n.(*ast.CallExpr)
+			call, _ := n.(*ast.CallExpr)
 			processPoCall(call)
 		}
 

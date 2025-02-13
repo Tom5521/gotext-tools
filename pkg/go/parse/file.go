@@ -20,8 +20,28 @@ const (
 )
 
 // File represents a Go source file that is being processed by the parser.
-// This struct contains information about the file's content, path, package,
-// and whether it imports the desired package for translation processing.
+//
+// ### Attributes:
+// - `config`: The parser configuration options (e.g., to enable verbose logging or extract all strings).
+// - `file`: The parsed AST (abstract syntax tree) representation of the Go source file.
+// - `content`: The raw content of the source file as a byte slice.
+// - `path`: The file path of the Go source file.
+// - `pkgName`: The name of the package declared in the file. Defaults to "gotext" unless overridden.
+// - `hasGotext`: Indicates whether the file imports the "gotext" package (required for translation extraction).
+// - `seenTokens`: Tracks processed AST nodes to avoid duplicate entries.
+//
+// ### Responsibilities:
+// - Parse the Go source file into an AST.
+// - Extract translation entries and their metadata (e.g., locations in the source file).
+// - Check if the file imports the "gotext" library and determine the package alias if used.
+//
+// ### Methods:
+// - `NewFileFromReader`: Creates a `File` instance from an `io.Reader`.
+// - `NewFileFromPath`: Creates a `File` instance from a file path.
+// - `NewFileFromBytes`: Creates a `File` instance from raw byte data.
+// - `Entries`: Extracts all translation entries from the file.
+// - `parse`: Parses the file content into an AST.
+// - `determinePackageInfo`: Extracts package-related metadata, such as the package name and `gotext` import.
 type File struct {
 	config     Config
 	options    []Option

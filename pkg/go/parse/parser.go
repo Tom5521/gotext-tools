@@ -14,7 +14,28 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
-// Parser represents a parser that processes Go files according to a given configuration.
+// Parser represents a parser for processing Go source files and extracting translation entries.
+//
+// ### Attributes:
+// - `config`: Configuration settings for the parser (e.g., exclude paths, verbose logging).
+// - `options`: Additional options to customize the parser behavior.
+// - `files`: A list of `File` objects representing the Go source files to be processed.
+// - `seen`: Tracks already processed files to avoid duplicate processing.
+// - `errors`: Stores errors encountered during parsing.
+//
+// ### Responsibilities:
+// - Manage the parsing process, including file handling, configuration, and error reporting.
+// - Traverse ASTs to extract translation entries and generate compatible PO file data.
+//
+// ### Methods:
+// - `NewParser`: Initializes a parser for a directory of Go files.
+// - `NewParserFromReader`: Creates a parser from an `io.Reader` (e.g., file or memory buffer).
+// - `NewParserFromString`: Creates a parser from a string containing Go source code.
+// - `NewParserFromBytes`: Creates a parser from raw byte data.
+// - `NewParserFromFiles`: Initializes a parser for a list of file paths.
+// - `Parse`: Processes all files in the parser, extracting translations and generating entries.
+// - `Errors`: Returns any errors encountered during parsing.
+// - `Files`: Returns the list of files associated with the parser.
 type Parser struct {
 	config  Config // Configuration settings for parsing.
 	options []Option
