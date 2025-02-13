@@ -287,7 +287,7 @@ func (n *Normalizer) Normalize() {
 
 func validateEntry(e Entry) error {
 	if e.Plural == nil && len(e.Plurals) > 0 {
-		return errors.New("plural translations providad but no plural form has been specified")
+		return errors.New("plural translations provided but no plural form has been specified")
 	}
 
 	if e.Msgstr == nil && len(e.Plurals) == 0 {

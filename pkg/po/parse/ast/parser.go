@@ -56,14 +56,6 @@ func (p *Parser) genParseMap() map[token.Type]parserFunc {
 	}
 }
 
-func (p *Parser) token(i int) token.Token {
-	if i < 0 || i >= len(p.tokens) {
-		return token.Token{Type: token.EOF}
-	}
-
-	return p.tokens[i]
-}
-
 func (p *Parser) Normalizer() (*Normalizer, []error) {
 	errs := p.Parse()
 	return NewNormalizer(p.name, p.content, p.nodes), errs
@@ -74,12 +66,12 @@ func (p *Parser) Parse() []error {
 
 	parseMap := p.genParseMap()
 
-	for i, tok := range p.tokens {
+	var tok token.Token
+	for p.position, tok = range p.tokens {
 		if len(errs) > 3 {
 			errs = append(errs, errors.New("too many errors"))
 			break
 		}
-		p.position = i
 		var node Node
 		var err error
 		switch tok.Type {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/go/parse"
-	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 	"github.com/kr/pretty"
 )
@@ -29,7 +28,7 @@ func main(){
 			},
 		},
 	}
-	parser, err := goparse.NewParserFromString(input, "test.go")
+	parser, err := parse.NewParserFromString(input, "test.go")
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,10 +59,10 @@ func main(){
 	var eggs string = "sugar"
 }`
 
-	parser, err := goparse.NewParserFromString(
+	parser, err := parse.NewParserFromString(
 		input,
 		"test.go",
-		goparse.WithExtractAll(true),
+		parse.WithExtractAll(true),
 	)
 	if err != nil {
 		t.Error(err)
@@ -126,27 +125,6 @@ func main(){
 
 func BenchmarkParse(b *testing.B) {
 	const input = `package main
-import "github.com/leonelquinteros/gotext"
-
-func main(){
-	gotext.Get("Hello World!")
-}`
-
-	for i := 0; i < b.N; i++ {
-		parser, err := parse.NewParserFromString(input, "test.go")
-		if err != nil {
-			b.Error(err)
-		}
-
-		parser.Parse()
-		if len(parser.Errors()) > 0 {
-			b.Error(parser.Errors()[0])
-		}
-	}
-}
-
-func BenchmarkExtractAll(b *testing.B) {
-	const input = `package main
 
 import "github.com/leonelquinteros/gotext"
 
@@ -157,20 +135,28 @@ func main(){
 	
 	var eggs string = "sugar"
 }`
+	bytes := []byte(input)
+	parser, err := parse.NewParserFromBytes(bytes, "test.go")
+	if err != nil {
+		b.Error(err)
+	}
 
-	for i := 0; i < b.N; i++ {
-		parser, err := parse.NewParserFromString(
-			input,
-			"test.go",
-			parse.WithExtractAll(true),
-		)
-		if err != nil {
-			b.Error(err)
-		}
+	tests := []struct {
+		name    string
+		options []parse.Option
+	}{
+		{name: "normal"},
+		{name: "extract-all", options: []parse.Option{parse.WithExtractAll(true)}},
+	}
 
-		parser.Parse()
-		if len(parser.Errors()) > 0 {
-			b.Error(parser.Errors()[0])
-		}
+	for _, t := range tests {
+		b.Run(t.name, func(b *testing.B) {
+			for range b.N {
+				parser.Parse(t.options...)
+				if len(parser.Errors()) > 0 {
+					b.Error(parser.Errors()[0])
+				}
+			}
+		})
 	}
 }

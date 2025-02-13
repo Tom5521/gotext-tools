@@ -60,3 +60,22 @@ msgid_plural "a"`
 		fmt.Println(tokens)
 	}
 }
+
+func BenchmarkLexer(b *testing.B) {
+	l := NewFromString(`#: file:32
+msgid "MEOW!"
+msgstr "LOL"
+msgctxt "WOAS"
+msgid "MEOW!"
+msgstr "MIAU!"
+msgstr[1234] "apples"
+"1234"
+msgid_plural "a"`)
+
+	for range b.N {
+		tok := l.NextToken()
+		for tok.Type != EOF {
+			tok = l.NextToken()
+		}
+	}
+}

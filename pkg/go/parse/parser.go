@@ -175,6 +175,7 @@ func (p *Parser) Parse(options ...Option) (file *types.File) {
 	p.applyOptions(options...)
 	defer p.applyOptions(p.options...) // Reset default settings.
 	file = &types.File{}
+	p.errors = nil // Clean errors
 
 	var header types.Header
 	if p.config.Header != nil {
@@ -206,7 +207,9 @@ func (p *Parser) Parse(options ...Option) (file *types.File) {
 		file.Entries = append(file.Entries, entries...)
 	}
 
-	file.Entries = file.Entries.Solve(p.config.FuzzyMatch)
+	if p.config.CleanDuplicates {
+		file.Entries = file.Entries.CleanDuplicates()
+	}
 
 	return
 }

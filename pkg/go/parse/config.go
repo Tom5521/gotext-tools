@@ -35,14 +35,14 @@ import (
 // - `WithHeader`: Sets a custom header for the PO file.
 // - `WithFuzzyMatch`: Enables or disables fuzzy matching for translations.
 type Config struct {
-	Exclude       []string
-	ExtractAll    bool
-	HeaderConfig  *types.HeaderConfig
-	HeaderOptions []types.HeaderOption
-	Header        *types.Header
-	FuzzyMatch    bool
-	Logger        *log.Logger
-	Verbose       bool
+	Exclude         []string
+	ExtractAll      bool
+	HeaderConfig    *types.HeaderConfig
+	HeaderOptions   []types.HeaderOption
+	Header          *types.Header
+	Logger          *log.Logger
+	Verbose         bool
+	CleanDuplicates bool
 }
 
 func DefaultConfig(opts ...Option) Config {
@@ -51,7 +51,8 @@ func DefaultConfig(opts ...Option) Config {
 			h := types.DefaultHeader()
 			return &h
 		}(),
-		Logger: log.New(io.Discard, "", 0),
+		Logger:          log.New(io.Discard, "", 0),
+		CleanDuplicates: true,
 	}
 
 	for _, opt := range opts {
@@ -78,6 +79,12 @@ func WithLogger(l *log.Logger) Option {
 func WithConfig(cfg Config) Option {
 	return func(c *Config) {
 		*c = cfg
+	}
+}
+
+func WithCleanDuplicates(cl bool) Option {
+	return func(c *Config) {
+		c.CleanDuplicates = cl
 	}
 }
 
@@ -108,11 +115,5 @@ func WithHeaderOptions(hopts ...types.HeaderOption) Option {
 func WithHeader(h *types.Header) Option {
 	return func(c *Config) {
 		c.Header = h
-	}
-}
-
-func WithFuzzyMatch(f bool) Option {
-	return func(c *Config) {
-		c.FuzzyMatch = f
 	}
 }

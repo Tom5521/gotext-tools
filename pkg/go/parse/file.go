@@ -140,5 +140,5 @@ func (f *File) Entries() (types.Entries, []error) {
 		errors = append(errors, e...)
 	}
 
-	return entries.CleanDuplicates(), errors
+	return entries, errors
 }
