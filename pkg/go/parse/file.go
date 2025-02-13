@@ -61,7 +61,7 @@ func NewFileFromReader(r io.Reader, name string, options ...Option) (*File, erro
 		return nil, fmt.Errorf("failed to read content: %w", err)
 	}
 
-	return NewFileFromBytes(content, name, options...)
+	return NewFile(content, name, options...)
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
@@ -75,8 +75,8 @@ func NewFileFromPath(path string, options ...Option) (*File, error) {
 	return NewFileFromReader(file, path, options...)
 }
 
-// NewFileFromBytes creates a new File instance from raw byte data.
-func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
+// NewFile creates a new File instance from raw byte data.
+func NewFile(b []byte, name string, options ...Option) (*File, error) {
 	file := &File{
 		content: b,
 		path:    name,

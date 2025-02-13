@@ -130,7 +130,7 @@ func NewParserFromBytes(
 	options ...Option,
 ) (*Parser, error) {
 	p := baseParser(options...)
-	f, err := NewFileFromBytes(b, name, options...)
+	f, err := NewFile(b, name, options...)
 	if err != nil {
 		err = fmt.Errorf("error configuring file: %w", err)
 		p.config.Logger.Println(err)

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var logger = log.New(os.Stdout, "", log.Ldate)
+var logger = log.New(os.Stdout, "", log.Ltime)
 
 var root = &cobra.Command{
 	Use:   os.Args[0],

@@ -1,12 +1,9 @@
-
-
-[private]
-run-test path:
-  go test -v {{path}}
-
 test:
-  @just run-test ./pkg/po/types
-  @just run-test ./pkg/po/parse/generator
-  @just run-test ./pkg/po/parse/lexer
-  @just run-test ./pkg/po/parse/ast
-  @just run-test ./pkg/go/parse/
+  go test -v ./pkg/po/types
+  go test -v ./pkg/po/parse/generator
+  go test -v ./pkg/po/parse/lexer
+  go test -v ./pkg/po/parse/ast
+  go test -v ./pkg/go/parse/
+bench:
+  go test -v -bench=. ./pkg/go/parse
+

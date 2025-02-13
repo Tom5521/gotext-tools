@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/xgotext/pkg/go/parse"
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 	"github.com/kr/pretty"
@@ -119,6 +120,57 @@ func main(){
 		t.Log("DIFF:")
 		for _, d := range pretty.Diff(file.Entries, expected) {
 			t.Log(d)
+		}
+	}
+}
+
+func BenchmarkParse(b *testing.B) {
+	const input = `package main
+import "github.com/leonelquinteros/gotext"
+
+func main(){
+	gotext.Get("Hello World!")
+}`
+
+	for i := 0; i < b.N; i++ {
+		parser, err := parse.NewParserFromString(input, "test.go")
+		if err != nil {
+			b.Error(err)
+		}
+
+		parser.Parse()
+		if len(parser.Errors()) > 0 {
+			b.Error(parser.Errors()[0])
+		}
+	}
+}
+
+func BenchmarkExtractAll(b *testing.B) {
+	const input = `package main
+
+import "github.com/leonelquinteros/gotext"
+
+func main(){
+	_ = "Hello World"
+	a := "Hi world"
+	b := "I love onions!"
+	
+	var eggs string = "sugar"
+}`
+
+	for i := 0; i < b.N; i++ {
+		parser, err := parse.NewParserFromString(
+			input,
+			"test.go",
+			parse.WithExtractAll(true),
+		)
+		if err != nil {
+			b.Error(err)
+		}
+
+		parser.Parse()
+		if len(parser.Errors()) > 0 {
+			b.Error(parser.Errors()[0])
 		}
 	}
 }

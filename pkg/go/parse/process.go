@@ -55,8 +55,8 @@ func (f *File) isGotextCall(n ast.Node) bool {
 	return ok
 }
 
-// basicLitToTranslation converts a basic literal AST node to a translation entry.
-func (f *File) basicLitToTranslation(n *ast.BasicLit) (types.Entry, error) {
+// basicLitToEntry converts a basic literal AST node to a translation entry.
+func (f *File) basicLitToEntry(n *ast.BasicLit) (types.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
 		return types.Entry{}, fmt.Errorf("error unquoting basic literal: %w", err)
@@ -86,7 +86,7 @@ func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
 				continue
 			}
 
-			entry, err := f.basicLitToTranslation(lit)
+			entry, err := f.basicLitToEntry(lit)
 			if err != nil {
 				errors = append(errors, err)
 				continue
@@ -222,9 +222,9 @@ func (f *File) processNode(n ast.Node) (types.Entries, []error) {
 	case *ast.CallExpr:
 		if f.isGotextCall(t) {
 			processPoCall(t)
-		} else {
-			processGeneric(t.Args...)
+			break
 		}
+		processGeneric(t.Args...)
 	case *ast.AssignStmt:
 		processGeneric(t.Rhs...)
 	case *ast.ValueSpec:

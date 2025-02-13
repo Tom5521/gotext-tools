@@ -81,7 +81,7 @@ func WithConfig(cfg Config) Option {
 	}
 }
 
-func WithExclude(exclude []string) Option {
+func WithExclude(exclude ...string) Option {
 	return func(c *Config) {
 		c.Exclude = exclude
 	}
