@@ -235,7 +235,7 @@ func TestEntriesSolve(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := tc.input.Solve(false)
+			result := tc.input.Solve()
 			if !util.Equal(result, tc.expected) {
 				t.Errorf("Test failed: %s\nExpected: %+v\nGot: %+v", name, tc.expected, result)
 			}

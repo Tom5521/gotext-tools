@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
 // Entries represents a collection of Entry objects.
@@ -121,7 +123,7 @@ func (e Entries) CleanDuplicates() Entries {
 // keeping the most complete translation. If two entries have the same ID and context, the one
 // with a non-empty translation string is retained. Additionally, if the entries are similar but not
 // identical, the resulting entry is marked as "fuzzy". The locations of the merged entries are combined.
-func (e Entries) Solve(fuzzyMatch bool) Entries {
+func (e Entries) Solve() Entries {
 	var cleaned Entries
 	seenID := make(map[string]int)
 
@@ -132,12 +134,6 @@ func (e Entries) Solve(fuzzyMatch bool) Entries {
 				// If the new entry has a translation and the previous one does not, replace it.
 				if translation.Str != "" && cleaned[idIndex].Str == "" {
 					cleaned[idIndex] = translation
-				}
-
-				// If the entries are similar but not identical, mark as "fuzzy".
-				if fuzzyMatch && FuzzyMatch(translation, cleaned[idIndex]) &&
-					translation.ID != cleaned[idIndex].ID {
-					cleaned[idIndex].Flags = append(cleaned[idIndex].Flags, "fuzzy")
 				}
 
 				// Combine the locations of the merged entries.
@@ -152,4 +148,54 @@ func (e Entries) Solve(fuzzyMatch bool) Entries {
 	}
 
 	return cleaned
+}
+
+func (e Entries) FuzzyFind(id, context string) int {
+	for i, entry := range e {
+		if fuzzy.Ratio(entry.ID, id) >= 80 && entry.Context == context {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (e Entries) FuzzySolve() (cleaned Entries) {
+	var dupedGroups []Entries
+
+	find := func(e Entry) int {
+		for i, group := range dupedGroups {
+			if len(group) > 0 {
+				if fuzzy.Ratio(group[0].ID, e.ID) >= 80 &&
+					group[0].Context == e.Context {
+					return i
+				}
+			}
+		}
+		return -1
+	}
+
+	// Collect duplicates
+	for _, entry := range e {
+		groupIndex := find(entry)
+		if groupIndex == -1 {
+			dupedGroups = append(dupedGroups, []Entry{entry})
+		} else {
+			dupedGroups[groupIndex] = append(dupedGroups[groupIndex], entry)
+		}
+	}
+	// Clean duplicates
+	for _, group := range dupedGroups {
+		if len(group) == 1 {
+			cleaned = append(cleaned, group[0])
+			continue
+		}
+		entry := group.Solve()[0]
+		if !slices.Contains(entry.Flags, "fuzzy") {
+			entry.Flags = append(entry.Flags, "fuzzy")
+		}
+		cleaned = append(cleaned, entry)
+	}
+
+	return
 }

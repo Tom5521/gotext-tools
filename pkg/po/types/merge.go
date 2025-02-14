@@ -6,5 +6,10 @@ func MergeFiles(fuzzyMatch bool, base *File, files ...*File) {
 		base.Entries = append(base.Entries, file.Entries...)
 	}
 
-	base.Entries = base.Entries.Solve(fuzzyMatch).Sort()
+	if fuzzyMatch {
+		base.Entries = base.Entries.FuzzySolve()
+	} else {
+		base.Entries = base.Entries.Solve()
+	}
+	base.Entries = base.Entries.Sort()
 }
