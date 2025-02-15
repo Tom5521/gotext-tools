@@ -47,7 +47,7 @@ func (c Compiler) ToWriter(w io.Writer, options ...Option) error {
 	_, err = fmt.Fprintln(w, c.formatHeader())
 	if err != nil && !c.Config.IgnoreErrors {
 		err = fmt.Errorf("error writing header format: %w", err)
-		c.Config.Logger.Println(err)
+		c.Config.Logger.Println("ERROR:", err)
 		return err
 	}
 	if c.Config.Verbose {
@@ -66,7 +66,7 @@ func (c Compiler) ToWriter(w io.Writer, options ...Option) error {
 		_, err = fmt.Fprintln(w, c.formatEntry(e))
 		if err != nil && !c.Config.IgnoreErrors {
 			err = fmt.Errorf("error writing entry[%d]: %w", i, err)
-			c.Config.Logger.Println(err)
+			c.Config.Logger.Println("ERROR:", err)
 			return err
 		}
 	}
@@ -89,7 +89,7 @@ func (c Compiler) ToFile(f string, options ...Option) error {
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !c.Config.IgnoreErrors {
 		err = fmt.Errorf("error opening file: %w", err)
-		c.Config.Logger.Println(err)
+		c.Config.Logger.Println("ERROR:", err)
 		return err
 	}
 	defer file.Close()
@@ -102,7 +102,7 @@ func (c Compiler) ToFile(f string, options ...Option) error {
 		err = file.Truncate(0)
 		if err != nil && !c.Config.IgnoreErrors {
 			err = fmt.Errorf("error truncating file: %w", err)
-			c.Config.Logger.Println(err)
+			c.Config.Logger.Println("ERROR:", err)
 			return err
 		}
 
@@ -110,7 +110,7 @@ func (c Compiler) ToFile(f string, options ...Option) error {
 		_, err = file.Seek(0, 0)
 		if err != nil && !c.Config.IgnoreErrors {
 			err = fmt.Errorf("error moving the file pointer back to the beginning: %w", err)
-			c.Config.Logger.Println(err)
+			c.Config.Logger.Println("ERROR:", err)
 			return err
 		}
 	}

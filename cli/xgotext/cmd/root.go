@@ -54,7 +54,7 @@ Similarly for optional arguments.`,
 
 		p, err := goparse.NewParserFromFiles(
 			inputfiles,
-			goparse.WithConfig(ParserCfg),
+			goparse.WithConfig(GoParserCfg),
 		)
 		if err != nil {
 			return fmt.Errorf("error parsing files: %w", err)
@@ -108,6 +108,11 @@ Similarly for optional arguments.`,
 				if err != nil {
 					return fmt.Errorf("error truncating file %s: %w", outputFile, err)
 				}
+				_, err = file.Seek(0, 0)
+				if err != nil {
+					return fmt.Errorf("error seeking file(%s) offset: %w", outputFile, err)
+				}
+
 			}
 			out = file
 		}

@@ -35,43 +35,54 @@ import (
 )
 
 type Parser struct {
-	norm *ast.Normalizer
+	config  Config
+	options []Option
+	norm    *ast.Normalizer
 
 	warns  []string
 	errors []error
 }
 
-func NewParser(path string) (*Parser, error) {
+func (p *Parser) applyOptions(opts ...Option) {
+	for _, opt := range opts {
+		opt(&p.config)
+	}
+}
+
+func NewParser(path string, options ...Option) (*Parser, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewParserFromBytes(file, path)
+	return NewParserFromBytes(file, path, options...)
 }
 
-func NewParserFromReader(r io.Reader, name string) (*Parser, error) {
+func NewParserFromReader(r io.Reader, name string, options ...Option) (*Parser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewParserFromBytes(data, name)
+	return NewParserFromBytes(data, name, options...)
 }
 
-func NewParserFromFile(f *os.File) (*Parser, error) {
-	return NewParserFromReader(f, f.Name())
+func NewParserFromFile(f *os.File, options ...Option) (*Parser, error) {
+	return NewParserFromReader(f, f.Name(), options...)
 }
 
-func NewParserFromString(s, name string) (*Parser, error) {
-	return NewParserFromBytes([]byte(s), name)
+func NewParserFromString(s, name string, options ...Option) (*Parser, error) {
+	return NewParserFromBytes([]byte(s), name, options...)
 }
 
-func NewParserFromBytes(data []byte, name string) (*Parser, error) {
-	p := &Parser{}
-	p.processpath(data, name)
-	if len(p.errors) > 0 {
-		return nil, p.errors[0]
+func NewParserFromBytes(data []byte, name string, options ...Option) (*Parser, error) {
+	p := &Parser{
+		options: options,
+		config:  DefaultConfig(),
+	}
+	err := p.processpath(data, name)
+	if err != nil {
+		return nil, err
 	}
 	return p, nil
 }
@@ -84,18 +95,39 @@ func (p Parser) Warnings() []string {
 	return p.warns
 }
 
-func (p *Parser) processpath(content []byte, path string) {
+func (p *Parser) processpath(content []byte, path string) error {
+	if p.config.Verbose {
+		p.config.Logger.Println("Extracting tokens...")
+	}
 	norm, errs := ast.NewParser(content, path).Normalizer()
+	for _, e := range errs {
+		p.config.Logger.Println("ERROR:", e)
+	}
 	if len(errs) > 0 {
-		p.errors = append(p.errors, errs...)
-		return
+		return errs[0]
 	}
 
 	p.norm = norm
+	return nil
 }
 
-func (p *Parser) Parse() *types.File {
+func (p *Parser) Parse(options ...Option) *types.File {
+	p.applyOptions(p.options...)
+	p.applyOptions(options...)
+	p.errors = nil // Reset errors.
+	p.warns = nil  // Reset warnings.
+
+	if p.config.Verbose {
+		p.config.Logger.Println("Parsing...")
+	}
+
 	p.norm.Normalize()
+	for _, w := range p.norm.Warnings() {
+		p.config.Logger.Println("WARN:", w)
+	}
+	for _, e := range p.norm.Errors() {
+		p.config.Logger.Println("ERROR:", e)
+	}
 	p.warns = append(p.warns, p.norm.Warnings()...)
 	if len(p.norm.Errors()) > 0 {
 		p.errors = append(p.errors, p.norm.Errors()...)

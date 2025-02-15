@@ -65,7 +65,7 @@ func (p *Parser) appendFiles(files ...string) error {
 			f, err := NewFileFromPath(walker.Path(), p.options...)
 			if err != nil {
 				err = fmt.Errorf("error reading file %s: %w", walker.Path(), err)
-				p.config.Logger.Println(err.Error())
+				p.config.Logger.Println("ERROR:", err.Error())
 				return err
 			}
 			p.files = append(p.files, f)
@@ -81,7 +81,7 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 	err := p.appendFiles(path)
 	if err != nil {
 		err = fmt.Errorf("error parsing files: %w", err)
-		p.config.Logger.Println(err)
+		p.config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func NewParserFromReader(
 	data, err := io.ReadAll(r)
 	if err != nil {
 		err = fmt.Errorf("error reading: %w", err)
-		logger.Println(err)
+		logger.Println("ERROR:", err)
 		return nil, err
 	}
 	return NewParserFromBytes(data, name, options...)
@@ -133,7 +133,7 @@ func NewParserFromBytes(
 	f, err := NewFile(b, name, options...)
 	if err != nil {
 		err = fmt.Errorf("error configuring file: %w", err)
-		p.config.Logger.Println(err)
+		p.config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 	p.files = append(p.files, f)
@@ -147,7 +147,7 @@ func NewParserFromFile(file *os.File, options ...Option) (*Parser, error) {
 	f, err := NewFileFromReader(file, file.Name(), options...)
 	if err != nil {
 		err = fmt.Errorf("error configuring file: %w", err)
-		p.config.Logger.Println(err.Error())
+		p.config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
 	err := p.appendFiles(files...)
 	if err != nil {
 		err = fmt.Errorf("error parsing files: %w", err)
-		p.config.Logger.Println(err)
+		p.config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 
@@ -200,7 +200,10 @@ func (p *Parser) Parse(options ...Option) (file *types.File) {
 		if len(e) > 0 {
 			p.errors = append(p.errors, e...)
 			for _, err := range e {
-				p.config.Logger.Println(fmt.Errorf("error parsing file %s: %w", f.path, err))
+				p.config.Logger.Println(
+					"ERROR:",
+					fmt.Errorf("error parsing file %s: %w", f.path, err),
+				)
 			}
 			continue
 		}

@@ -3,11 +3,13 @@ package cmd
 import (
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
+	poparse "github.com/Tom5521/xgotext/pkg/po/parse"
 	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 var (
-	ParserCfg   goparse.Config
+	PoParserCfg poparse.Config
+	GoParserCfg goparse.Config
 	CompilerCfg compiler.Config
 	HeadersCfg  types.HeaderConfig
 )
@@ -19,7 +21,7 @@ func initConfig() {
 		ReportMsgidBugsTo: msgidBugsAddress,
 		Language:          lang,
 	}
-	ParserCfg = goparse.Config{
+	GoParserCfg = goparse.Config{
 		Exclude:      exclude,
 		ExtractAll:   extractAll,
 		HeaderConfig: &HeadersCfg,
@@ -39,5 +41,9 @@ func initConfig() {
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
 		Verbose:         verbose,
+	}
+	PoParserCfg = poparse.Config{
+		Logger:  logger,
+		Verbose: verbose,
 	}
 }

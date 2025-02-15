@@ -65,55 +65,37 @@ func DefaultConfig(opts ...Option) Config {
 type Option func(c *Config)
 
 func WithVerbose(v bool) Option {
-	return func(c *Config) {
-		c.Verbose = v
-	}
+	return func(c *Config) { c.Verbose = v }
 }
 
 func WithLogger(l *log.Logger) Option {
-	return func(c *Config) {
-		c.Logger = l
-	}
+	return func(c *Config) { c.Logger = l }
 }
 
 func WithConfig(cfg Config) Option {
-	return func(c *Config) {
-		*c = cfg
-	}
+	return func(c *Config) { *c = cfg }
 }
 
 func WithCleanDuplicates(cl bool) Option {
-	return func(c *Config) {
-		c.CleanDuplicates = cl
-	}
+	return func(c *Config) { c.CleanDuplicates = cl }
 }
 
 func WithExclude(exclude ...string) Option {
-	return func(c *Config) {
-		c.Exclude = exclude
-	}
+	return func(c *Config) { c.Exclude = exclude }
 }
 
 func WithExtractAll(e bool) Option {
-	return func(c *Config) {
-		c.ExtractAll = e
-	}
+	return func(c *Config) { c.ExtractAll = e }
 }
 
 func WithHeaderConfig(h *types.HeaderConfig) Option {
-	return func(c *Config) {
-		c.HeaderConfig = h
-	}
+	return func(c *Config) { c.HeaderConfig = h }
 }
 
 func WithHeaderOptions(hopts ...types.HeaderOption) Option {
-	return func(c *Config) {
-		c.HeaderOptions = hopts
-	}
+	return func(c *Config) { c.HeaderOptions = hopts }
 }
 
 func WithHeader(h *types.Header) Option {
-	return func(c *Config) {
-		c.Header = h
-	}
+	return func(c *Config) { c.Header = h }
 }
