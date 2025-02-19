@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tom5521/xgotext/internal/util"
 )
 
 // HeaderField represents a single key-value pair in a header.
@@ -106,8 +108,8 @@ func GenerateHeader(e Entries) (h Header) {
 		matches := headerRegex.FindStringSubmatch(line)
 		h.Fields = append(h.Fields,
 			HeaderField{
-				Key:   matches[1],
-				Value: matches[2],
+				Key:   util.SafeSliceAccess(matches, 1),
+				Value: util.SafeSliceAccess(matches, 2),
 			},
 		)
 	}
@@ -125,7 +127,7 @@ func GenerateNplurals(header Header) (nplurals uint) {
 		return
 	}
 	matches := npluralsRegex.FindStringSubmatch(value)
-	n, err := strconv.ParseUint(matches[1], 10, 64)
+	n, err := strconv.ParseUint(util.SafeSliceAccess(matches, 1), 10, 64)
 	if err != nil {
 		return
 	}

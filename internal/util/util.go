@@ -7,6 +7,16 @@ import (
 	"github.com/kr/pretty"
 )
 
+func SafeSliceAccess[T any](slice []T, index int) T {
+	var value T
+
+	if index >= 0 && index < len(slice) {
+		value = slice[index]
+	}
+
+	return value
+}
+
 func Format[T any](args ...T) string {
 	var a []any
 	for _, arg := range args {
