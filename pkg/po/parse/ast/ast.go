@@ -74,7 +74,7 @@ type (
 		Plural string
 	}
 
-	File struct {
+	AST struct {
 		pos     int
 		Name    string
 		Content []byte
@@ -85,7 +85,7 @@ type (
 func (e PreviousComment) Pos() int  { return e.pos }
 func (e ExtractedComment) Pos() int { return e.pos }
 func (e Entry) Pos() int            { return e.pos }
-func (n File) Pos() int             { return n.pos }
+func (n AST) Pos() int              { return n.pos }
 func (n FlagComment) Pos() int      { return n.pos }
 func (n LocationComment) Pos() int  { return n.pos }
 func (n GeneralComment) Pos() int   { return n.pos }

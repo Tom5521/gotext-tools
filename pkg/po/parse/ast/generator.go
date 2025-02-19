@@ -1,16 +1,13 @@
-package generator
+package ast
 
-import (
-	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
-)
+import "github.com/Tom5521/xgotext/pkg/po"
 
 type Generator struct {
-	file *ast.File
+	file *AST
 	errs []error
 }
 
-func New(input *ast.File) *Generator {
+func NewGenerator(input *AST) *Generator {
 	g := &Generator{
 		file: input,
 	}
@@ -26,9 +23,11 @@ func (g *Generator) Generate() (f *po.File) {
 }
 
 func (g *Generator) genEntries() po.Entries {
+	g.errs = nil
+
 	var entries po.Entries
 	for _, node := range g.file.Nodes {
-		raw, ok := node.(ast.Entry)
+		raw, ok := node.(Entry)
 		if !ok {
 			continue
 		}

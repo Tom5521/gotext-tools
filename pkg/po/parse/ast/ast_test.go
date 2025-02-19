@@ -28,19 +28,19 @@ msgstr ""
 "mundo"
 ""`
 
-func BenchmarkParser(b *testing.B) {
-	p := ast.NewParserFromString(input, "test.po")
+func BenchmarkTokenizer(b *testing.B) {
+	p := ast.NewTokenizerFromString(input, "test.po")
 
 	for range b.N {
-		e := p.Parse()
-		if len(e) > 0 {
-			b.Error(e[0])
+		p.Tokenize()
+		if len(p.Errors()) > 0 {
+			b.Error(p.Errors()[0])
 		}
 	}
 }
 
-func BenchmarkNormalizer(b *testing.B) {
-	p := ast.NewParserFromString(input, "test.po")
+func BenchmarkASTBuilder(b *testing.B) {
+	p := ast.NewTokenizerFromString(input, "test.po")
 	n, e := p.Normalizer()
 	if len(e) > 0 {
 		b.Error(e[0])
@@ -48,7 +48,7 @@ func BenchmarkNormalizer(b *testing.B) {
 	}
 
 	for range b.N {
-		n.Normalize()
+		n.Build()
 
 		if len(n.Errors()) > 0 {
 			b.Error(n.Errors()[0])

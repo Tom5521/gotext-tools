@@ -1,4 +1,4 @@
-package generator_test
+package ast_test
 
 import (
 	"testing"
@@ -6,18 +6,17 @@ import (
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
-	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
 	"github.com/kr/pretty"
 )
 
-func makefile(input string, t *testing.T) (file *ast.File, err error) {
-	norm, errs := ast.NewParserFromString(input, "test.po").Normalizer()
+func makefile(input string, t *testing.T) (file *ast.AST, err error) {
+	norm, errs := ast.NewTokenizerFromString(input, "test.po").Normalizer()
 	if len(errs) > 0 {
 		err = errs[0]
 		return
 	}
 
-	norm.Normalize()
+	norm.Build()
 	if len(norm.Errors()) > 0 {
 		err = norm.Errors()[0]
 		return
@@ -27,7 +26,7 @@ func makefile(input string, t *testing.T) (file *ast.File, err error) {
 		t.Log(warn)
 	}
 
-	file = norm.File()
+	file = norm.AST()
 
 	return
 }
@@ -85,7 +84,7 @@ msgstr[1] "Tienes %d manzanas"`
 		return
 	}
 
-	g := generator.New(f)
+	g := ast.NewGenerator(f)
 	file := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")
@@ -122,7 +121,7 @@ msgstr ""
 		return
 	}
 
-	g := generator.New(file)
+	g := ast.NewGenerator(file)
 	f := g.Generate()
 	if len(g.Errors()) > 0 {
 		t.Error("Unexpected error found:")

@@ -9,17 +9,17 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
-type Parser struct {
+type Tokenizer struct {
 	input    []byte
 	tokens   []token.Token
 	position int
 
-	nodes   []Node
-	content []byte
-	name    string
+	nodes  []Node
+	errors []error
+	name   string
 }
 
-func (p *Parser) collectTokens(l *lexer.Lexer) {
+func (p *Tokenizer) collectTokens(l *lexer.Lexer) {
 	tok := l.NextToken()
 	for tok.Type != token.EOF {
 		p.tokens = append(p.tokens, tok)
@@ -27,11 +27,10 @@ func (p *Parser) collectTokens(l *lexer.Lexer) {
 	}
 }
 
-func NewParser(input []byte, filename string) *Parser {
-	p := &Parser{
-		input:   input,
-		content: input,
-		name:    filename,
+func NewTokenizer(input []byte, filename string) *Tokenizer {
+	p := &Tokenizer{
+		input: input,
+		name:  filename,
 	}
 
 	p.collectTokens(lexer.New(input))
@@ -39,13 +38,23 @@ func NewParser(input []byte, filename string) *Parser {
 	return p
 }
 
-func NewParserFromString(input, filename string) *Parser {
-	return NewParser([]byte(input), filename)
+func NewTokenizerFromLexer(l *lexer.Lexer, input []byte, name string) *Tokenizer {
+	p := &Tokenizer{
+		input: input,
+		name:  name,
+	}
+	p.collectTokens(l)
+
+	return p
+}
+
+func NewTokenizerFromString(input, filename string) *Tokenizer {
+	return NewTokenizer([]byte(input), filename)
 }
 
 type parserFunc = func() (Node, error)
 
-func (p *Parser) genParseMap() map[token.Type]parserFunc {
+func (p *Tokenizer) genParseMap() map[token.Type]parserFunc {
 	return map[token.Type]parserFunc{
 		token.COMMENT:      p.comment,
 		token.MSGID:        p.msgid,
@@ -56,20 +65,21 @@ func (p *Parser) genParseMap() map[token.Type]parserFunc {
 	}
 }
 
-func (p *Parser) Normalizer() (*Normalizer, []error) {
-	errs := p.Parse()
-	return NewNormalizer(p.name, p.content, p.nodes), errs
+func (p *Tokenizer) Normalizer() (*ASTBuilder, []error) {
+	p.Tokenize()
+	return NewASTBuilder(p.name, p.input, p.nodes), p.Errors()
 }
 
-func (p *Parser) Parse() []error {
-	var errs []error
+func (p *Tokenizer) Tokenize() {
+	p.nodes = nil
+	p.errors = nil
 
 	parseMap := p.genParseMap()
 
 	var tok token.Token
 	for p.position, tok = range p.tokens {
-		if len(errs) > 3 {
-			errs = append(errs, errors.New("too many errors"))
+		if len(p.errors) > 3 {
+			p.errors = append(p.errors, errors.New("too many errors"))
 			break
 		}
 		var node Node
@@ -100,16 +110,18 @@ func (p *Parser) Parse() []error {
 		}
 
 		if err != nil {
-			errs = append(errs, err)
+			p.errors = append(p.errors, err)
 			continue
 		}
 
 		p.nodes = append(p.nodes, node)
 	}
-
-	return errs
 }
 
-func (p *Parser) Nodes() []Node {
+func (p Tokenizer) Nodes() []Node {
 	return p.nodes
+}
+
+func (p Tokenizer) Errors() []error {
+	return p.errors
 }

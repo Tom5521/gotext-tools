@@ -8,7 +8,7 @@ import (
 	"github.com/kr/pretty"
 )
 
-func TestNormalizer(t *testing.T) {
+func TestASTBuilder(t *testing.T) {
 	input := `# general comment
 #. extracted comment
 #, flag comment
@@ -25,14 +25,14 @@ msgid_plural "I want %d apples"
 msgstr[0] "Quiero %d manzana"
 msgstr[1] "Quiero %d manzanas"`
 
-	parser := ast.NewParser([]byte(input), "test.po")
-	normalizer, errs := parser.Normalizer()
+	tokenizer := ast.NewTokenizer([]byte(input), "test.po")
+	normalizer, errs := tokenizer.Normalizer()
 	if len(errs) > 0 {
 		t.Error(errs[0])
 		return
 	}
 
-	normalizer.Normalize()
+	normalizer.Build()
 
 	if len(normalizer.Errors()) > 0 {
 		t.Error(normalizer.Errors()[0])

@@ -31,13 +31,12 @@ import (
 
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
-	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
 )
 
 type Parser struct {
 	config  Config
 	options []Option
-	norm    *ast.Normalizer
+	norm    *ast.ASTBuilder
 
 	warns  []string
 	errors []error
@@ -99,7 +98,7 @@ func (p *Parser) processpath(content []byte, path string) error {
 	if p.config.Verbose {
 		p.config.Logger.Println("Extracting tokens...")
 	}
-	norm, errs := ast.NewParser(content, path).Normalizer()
+	norm, errs := ast.NewTokenizer(content, path).Normalizer()
 	for _, e := range errs {
 		p.config.Logger.Println("ERROR:", e)
 	}
@@ -121,7 +120,7 @@ func (p *Parser) Parse(options ...Option) *po.File {
 		p.config.Logger.Println("Parsing...")
 	}
 
-	p.norm.Normalize()
+	p.norm.Build()
 	for _, w := range p.norm.Warnings() {
 		p.config.Logger.Println("WARN:", w)
 	}
@@ -134,7 +133,7 @@ func (p *Parser) Parse(options ...Option) *po.File {
 		return nil
 	}
 
-	g := generator.New(p.norm.File())
+	g := ast.NewGenerator(p.norm.AST())
 
 	file := g.Generate()
 	if len(g.Errors()) > 0 {

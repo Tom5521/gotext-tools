@@ -21,8 +21,7 @@ func types(a ...any) []reflect.Type {
 	return t
 }
 
-type Normalizer struct {
-	// Modifiers.
+type ASTBuilder struct {
 	curEntry Entry
 
 	input []Node
@@ -37,8 +36,8 @@ type Normalizer struct {
 	toSkip []reflect.Type
 }
 
-func NewNormalizer(name string, content []byte, nodes []Node) *Normalizer {
-	n := &Normalizer{
+func NewASTBuilder(name string, content []byte, nodes []Node) *ASTBuilder {
+	n := &ASTBuilder{
 		name:    name,
 		content: content,
 		input:   nodes,
@@ -48,7 +47,7 @@ func NewNormalizer(name string, content []byte, nodes []Node) *Normalizer {
 	return n
 }
 
-func (n *Normalizer) finishEntry(cur Node) {
+func (n *ASTBuilder) finishEntry(cur Node) {
 	err := validateEntry(n.curEntry)
 	if err != nil {
 		n.appendErr(err)
@@ -84,13 +83,13 @@ func (n *Normalizer) finishEntry(cur Node) {
 	n.resetState()
 }
 
-func (n *Normalizer) resetState() {
+func (n *ASTBuilder) resetState() {
 	n.curEntry = Entry{
 		pos: -1,
 	}
 }
 
-func (n *Normalizer) reset() {
+func (n *ASTBuilder) reset() {
 	n.toSkip = types(
 		FlagComment{},
 		GeneralComment{},
@@ -104,8 +103,8 @@ func (n *Normalizer) reset() {
 	n.resetState()
 }
 
-func (n *Normalizer) File() *File {
-	return &File{
+func (n *ASTBuilder) AST() *AST {
+	return &AST{
 		pos:     0,
 		Content: n.content,
 		Name:    n.name,
@@ -113,7 +112,7 @@ func (n *Normalizer) File() *File {
 	}
 }
 
-func (n *Normalizer) Entries() []Entry {
+func (n *ASTBuilder) Entries() []Entry {
 	var entries []Entry
 	for _, node := range n.entries {
 		entries = append(entries, node.(Entry))
@@ -122,15 +121,15 @@ func (n *Normalizer) Entries() []Entry {
 	return entries
 }
 
-func (n *Normalizer) Errors() []error {
+func (n *ASTBuilder) Errors() []error {
 	return n.errs
 }
 
-func (n *Normalizer) Warnings() []string {
+func (n *ASTBuilder) Warnings() []string {
 	return n.warns
 }
 
-func (n *Normalizer) genParseMap() map[reflect.Type]func(Node, int) {
+func (n *ASTBuilder) genParseMap() map[reflect.Type]func(Node, int) {
 	return map[reflect.Type]func(Node, int){
 		// Comments.
 		tfor[GeneralComment]():   n.handleComment,
@@ -147,7 +146,7 @@ func (n *Normalizer) genParseMap() map[reflect.Type]func(Node, int) {
 	}
 }
 
-func (n *Normalizer) handleComment(node Node, i int) {
+func (n *ASTBuilder) handleComment(node Node, i int) {
 	switch node := node.(type) {
 	case LocationComment:
 		n.curEntry.LocationComments = append(n.curEntry.LocationComments, &node)
@@ -162,7 +161,7 @@ func (n *Normalizer) handleComment(node Node, i int) {
 	}
 }
 
-func (n *Normalizer) handleMsgctxt(node Node, i int) {
+func (n *ASTBuilder) handleMsgctxt(node Node, i int) {
 	msgctxt := node.(Msgctxt)
 
 	if n.curEntry.pos == -1 {
@@ -184,7 +183,7 @@ func (n *Normalizer) handleMsgctxt(node Node, i int) {
 	}
 }
 
-func (n *Normalizer) handleMsgid(node Node, i int) {
+func (n *ASTBuilder) handleMsgid(node Node, i int) {
 	msgid := node.(Msgid)
 
 	if n.curEntry.pos == -1 {
@@ -206,7 +205,7 @@ func (n *Normalizer) handleMsgid(node Node, i int) {
 	}
 }
 
-func (n *Normalizer) handleMsgstr(node Node, i int) {
+func (n *ASTBuilder) handleMsgstr(node Node, i int) {
 	msgstr := node.(Msgstr)
 
 	if n.curEntry.Plural != nil {
@@ -217,7 +216,7 @@ func (n *Normalizer) handleMsgstr(node Node, i int) {
 	n.finishEntry(node)
 }
 
-func (n *Normalizer) handleMsgidPlural(node Node, i int) {
+func (n *ASTBuilder) handleMsgidPlural(node Node, i int) {
 	msgidPlural := node.(MsgidPlural)
 
 	if n.curEntry.Plural != nil {
@@ -235,7 +234,7 @@ func (n *Normalizer) handleMsgidPlural(node Node, i int) {
 	}
 }
 
-func (n *Normalizer) handleMsgstrPlural(node Node, i int) {
+func (n *ASTBuilder) handleMsgstrPlural(node Node, i int) {
 	msgstrPlural := node.(MsgstrPlural)
 
 	n.curEntry.Plurals = append(n.curEntry.Plurals, &msgstrPlural)
@@ -245,19 +244,19 @@ func (n *Normalizer) handleMsgstrPlural(node Node, i int) {
 	}
 }
 
-func (n *Normalizer) appendWarn(format string, a ...any) {
+func (n *ASTBuilder) appendWarn(format string, a ...any) {
 	n.warns = append(n.warns, fmt.Sprintf(format, a...))
 }
 
-func (n *Normalizer) appendErr(err error) {
+func (n *ASTBuilder) appendErr(err error) {
 	n.errs = append(n.errs, err)
 }
 
-func (n *Normalizer) appendErrf(format string, a ...any) {
+func (n *ASTBuilder) appendErrf(format string, a ...any) {
 	n.appendErr(fmt.Errorf(format, a...))
 }
 
-func (n *Normalizer) comingType(offset int, ignore []reflect.Type) reflect.Type {
+func (n *ASTBuilder) comingType(offset int, ignore []reflect.Type) reflect.Type {
 	for _, node := range n.input[offset:] {
 		t := reflect.TypeOf(node)
 		if slices.Contains(ignore, t) {
@@ -270,12 +269,12 @@ func (n *Normalizer) comingType(offset int, ignore []reflect.Type) reflect.Type 
 	return nil
 }
 
-func (n *Normalizer) typeIsComing(offset int, ignore []reflect.Type, wanted ...reflect.Type) bool {
+func (n *ASTBuilder) typeIsComing(offset int, ignore []reflect.Type, wanted ...reflect.Type) bool {
 	t := n.comingType(offset, ignore)
 	return slices.Contains(wanted, t)
 }
 
-func (n *Normalizer) Normalize() {
+func (n *ASTBuilder) Build() {
 	n.reset()
 
 	parseMap := n.genParseMap()

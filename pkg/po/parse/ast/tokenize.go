@@ -10,7 +10,7 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po/parse/token"
 )
 
-func (p *Parser) readStringIdent() (string, error) {
+func (p *Tokenizer) readStringIdent() (string, error) {
 	var b strings.Builder
 
 	current := p.tokens[p.position]
@@ -56,7 +56,7 @@ var (
 	previousRegex  = regexp.MustCompile(`#\|\s?(.*)`)
 )
 
-func (p *Parser) comment() (Node, error) {
+func (p *Tokenizer) comment() (Node, error) {
 	tok := p.tokens[p.position]
 
 	switch {
@@ -100,7 +100,7 @@ func (p *Parser) comment() (Node, error) {
 	}
 }
 
-func (p *Parser) msgid() (Node, error) {
+func (p *Tokenizer) msgid() (Node, error) {
 	tok := p.tokens[p.position]
 	msgid := Msgid{
 		pos: tok.Pos,
@@ -116,7 +116,7 @@ func (p *Parser) msgid() (Node, error) {
 	return msgid, nil
 }
 
-func (p *Parser) msgstr() (Node, error) {
+func (p *Tokenizer) msgstr() (Node, error) {
 	tok := p.tokens[p.position]
 	msgstr := Msgstr{
 		pos: tok.Pos,
@@ -131,7 +131,7 @@ func (p *Parser) msgstr() (Node, error) {
 	return msgstr, nil
 }
 
-func (p *Parser) msgctxt() (Node, error) {
+func (p *Tokenizer) msgctxt() (Node, error) {
 	tok := p.tokens[p.position]
 	msgctxt := Msgctxt{
 		pos: tok.Pos,
@@ -147,7 +147,7 @@ func (p *Parser) msgctxt() (Node, error) {
 	return msgctxt, nil
 }
 
-func (p *Parser) pluralMsgid() (Node, error) {
+func (p *Tokenizer) pluralMsgid() (Node, error) {
 	tok := p.tokens[p.position]
 	pmsgid := MsgidPlural{
 		pos: tok.Pos,
@@ -165,7 +165,7 @@ func (p *Parser) pluralMsgid() (Node, error) {
 
 var pluralRegex = regexp.MustCompile(`msgstr\[(\d*)\]`)
 
-func (p *Parser) pluralMsgstr() (Node, error) {
+func (p *Tokenizer) pluralMsgstr() (Node, error) {
 	tok := p.tokens[p.position]
 	pmsgstr := MsgstrPlural{
 		pos: tok.Pos,

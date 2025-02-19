@@ -8,7 +8,7 @@ import (
 	"github.com/kr/pretty"
 )
 
-func TestParse(t *testing.T) {
+func TestTokenize(t *testing.T) {
 	const input = `# General Comment
 #, flag comment
 #: location_comment:123
@@ -31,10 +31,10 @@ msgstr ""
 "mundo"
 ""`
 
-	p := ast.NewParserFromString(input, "test.go")
-	errs := p.Parse()
-	if len(errs) > 0 {
-		t.Errorf("Unexpected error: %v\n", errs[0])
+	p := ast.NewTokenizerFromString(input, "test.go")
+	p.Tokenize()
+	if len(p.Errors()) > 0 {
+		t.Errorf("Unexpected error: %v\n", p.Errors()[0])
 		return
 	}
 
