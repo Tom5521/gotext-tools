@@ -1,8 +1,8 @@
 package generator
 
 import (
+	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
-	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Generator struct {
@@ -21,19 +21,19 @@ func (g Generator) Errors() []error {
 	return g.errs
 }
 
-func (g *Generator) Generate() (f *types.File) {
-	return types.NewFile(g.file.Name, g.genEntries()...)
+func (g *Generator) Generate() (f *po.File) {
+	return po.NewFile(g.file.Name, g.genEntries()...)
 }
 
-func (g *Generator) genEntries() types.Entries {
-	var entries types.Entries
+func (g *Generator) genEntries() po.Entries {
+	var entries po.Entries
 	for _, node := range g.file.Nodes {
 		raw, ok := node.(ast.Entry)
 		if !ok {
 			continue
 		}
 
-		var entry types.Entry
+		var entry po.Entry
 
 		if raw.Msgid != nil {
 			entry.ID = raw.Msgid.ID
@@ -57,7 +57,7 @@ func (g *Generator) genEntries() types.Entries {
 		for _, location := range raw.LocationComments {
 			entry.Locations = append(
 				entry.Locations,
-				types.Location{Line: location.Line, File: location.File},
+				po.Location{Line: location.Line, File: location.File},
 			)
 		}
 		for _, previousComment := range raw.PreviousComments {
@@ -67,7 +67,7 @@ func (g *Generator) genEntries() types.Entries {
 			entry.Comments = append(entry.Comments, generalComment.Text)
 		}
 		for _, plural := range raw.Plurals {
-			entry.Plurals = append(entry.Plurals, types.PluralEntry{
+			entry.Plurals = append(entry.Plurals, po.PluralEntry{
 				ID:  plural.PluralID,
 				Str: plural.Str,
 			})

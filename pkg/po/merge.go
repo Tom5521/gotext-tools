@@ -1,4 +1,4 @@
-package types
+package po
 
 func MergeFiles(fuzzyMatch bool, base *File, files ...*File) {
 	for _, file := range files {

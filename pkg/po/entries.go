@@ -1,4 +1,4 @@
-package types
+package po
 
 import (
 	"path/filepath"

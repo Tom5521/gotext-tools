@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 // Config defines the configuration options for customizing the parsing process.
@@ -37,9 +37,9 @@ import (
 type Config struct {
 	Exclude         []string
 	ExtractAll      bool
-	HeaderConfig    *types.HeaderConfig
-	HeaderOptions   []types.HeaderOption
-	Header          *types.Header
+	HeaderConfig    *po.HeaderConfig
+	HeaderOptions   []po.HeaderOption
+	Header          *po.Header
 	Logger          *log.Logger
 	Verbose         bool
 	CleanDuplicates bool
@@ -47,8 +47,8 @@ type Config struct {
 
 func DefaultConfig(opts ...Option) Config {
 	c := Config{
-		Header: func() *types.Header {
-			h := types.DefaultHeader()
+		Header: func() *po.Header {
+			h := po.DefaultHeader()
 			return &h
 		}(),
 		Logger:          log.New(io.Discard, "", 0),
@@ -88,14 +88,14 @@ func WithExtractAll(e bool) Option {
 	return func(c *Config) { c.ExtractAll = e }
 }
 
-func WithHeaderConfig(h *types.HeaderConfig) Option {
+func WithHeaderConfig(h *po.HeaderConfig) Option {
 	return func(c *Config) { c.HeaderConfig = h }
 }
 
-func WithHeaderOptions(hopts ...types.HeaderOption) Option {
+func WithHeaderOptions(hopts ...po.HeaderOption) Option {
 	return func(c *Config) { c.HeaderOptions = hopts }
 }
 
-func WithHeader(h *types.Header) Option {
+func WithHeader(h *po.Header) Option {
 	return func(c *Config) { c.Header = h }
 }

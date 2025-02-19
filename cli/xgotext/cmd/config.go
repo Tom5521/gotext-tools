@@ -2,20 +2,20 @@ package cmd
 
 import (
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
+	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	poparse "github.com/Tom5521/xgotext/pkg/po/parse"
-	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 var (
 	PoParserCfg poparse.Config
 	GoParserCfg goparse.Config
 	CompilerCfg compiler.Config
-	HeadersCfg  types.HeaderConfig
+	HeadersCfg  po.HeaderConfig
 )
 
 func initConfig() {
-	HeadersCfg = types.HeaderConfig{
+	HeadersCfg = po.HeaderConfig{
 		Nplurals:          nplurals,
 		ProjectIDVersion:  packageVersion,
 		ReportMsgidBugsTo: msgidBugsAddress,

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 // translationMethod defines the structure for different getter methods.
@@ -56,15 +56,15 @@ func (f *File) isGotextCall(n ast.Node) bool {
 }
 
 // basicLitToEntry converts a basic literal AST node to a translation entry.
-func (f *File) basicLitToEntry(n *ast.BasicLit) (types.Entry, error) {
+func (f *File) basicLitToEntry(n *ast.BasicLit) (po.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return types.Entry{}, fmt.Errorf("error unquoting basic literal: %w", err)
+		return po.Entry{}, fmt.Errorf("error unquoting basic literal: %w", err)
 	}
 
-	return types.Entry{
+	return po.Entry{
 		ID: str,
-		Locations: []types.Location{{
+		Locations: []po.Location{{
 			Line: util.FindLine(f.content, n.Pos()),
 			File: f.path,
 		}},
@@ -72,8 +72,8 @@ func (f *File) basicLitToEntry(n *ast.BasicLit) (types.Entry, error) {
 }
 
 // processGeneric processes a list of AST expressions and extracts translation entries.
-func (f *File) processGeneric(exprs ...ast.Expr) (types.Entries, []error) {
-	var entries types.Entries
+func (f *File) processGeneric(exprs ...ast.Expr) (po.Entries, []error) {
+	var entries po.Entries
 	var errors []error
 
 	for _, expr := range exprs {
@@ -147,7 +147,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 // processPoCall processes a gotext function call and extracts translation entries.
 func (f *File) processPoCall(
 	call *ast.CallExpr,
-) (entry types.Entry, valid bool, err error) {
+) (entry po.Entry, valid bool, err error) {
 	selector, _ := call.Fun.(*ast.SelectorExpr)
 	method := translationMethods[selector.Sel.Name]
 
@@ -167,7 +167,7 @@ func (f *File) processPoCall(
 			valid = arg.valid
 			entry.ID = arg.str
 			entry.Locations = append(entry.Locations,
-				types.Location{
+				po.Location{
 					File: f.path,
 					Line: util.FindLine(f.content, arg.pos),
 				},
@@ -185,11 +185,11 @@ func (f *File) processPoCall(
 }
 
 // processNode processes an AST node and extracts translation entries.
-func (f *File) processNode(n ast.Node) (types.Entries, []error) {
+func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 	if n == nil {
 		return nil, nil
 	}
-	var entries types.Entries
+	var entries po.Entries
 	var errors []error
 
 	processGeneric := func(exprs ...ast.Expr) {

@@ -11,7 +11,7 @@ import (
 
 	krfs "github.com/kr/fs"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 // Parser represents a parser for processing Go source files and extracting translation entries.
@@ -170,14 +170,14 @@ func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
 }
 
 // Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse(options ...Option) (file *types.File) {
+func (p *Parser) Parse(options ...Option) (file *po.File) {
 	p.applyOptions(p.options...)
 	p.applyOptions(options...)
 	defer p.applyOptions(p.options...) // Reset default settings.
-	file = &types.File{}
+	file = &po.File{}
 	p.errors = nil // Clean errors
 
-	var header types.Header
+	var header po.Header
 	if p.config.Header != nil {
 		header = *p.config.Header
 	}
@@ -187,7 +187,7 @@ func (p *Parser) Parse(options ...Option) (file *types.File) {
 	}
 
 	if p.config.HeaderOptions != nil {
-		header = types.HeaderConfigFromOptions(p.config.HeaderOptions...).ToHeaderWithDefaults()
+		header = po.HeaderConfigFromOptions(p.config.HeaderOptions...).ToHeaderWithDefaults()
 	}
 
 	file.Entries = append(file.Entries, header.ToEntry())

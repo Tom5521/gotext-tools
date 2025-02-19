@@ -29,9 +29,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
-	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 type Parser struct {
@@ -111,7 +111,7 @@ func (p *Parser) processpath(content []byte, path string) error {
 	return nil
 }
 
-func (p *Parser) Parse(options ...Option) *types.File {
+func (p *Parser) Parse(options ...Option) *po.File {
 	p.applyOptions(p.options...)
 	p.applyOptions(options...)
 	p.errors = nil // Reset errors.

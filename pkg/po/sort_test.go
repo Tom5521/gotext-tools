@@ -1,19 +1,19 @@
-package types_test
+package po_test
 
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 func TestSortEntriesByID(t *testing.T) {
-	entries := types.Entries{
+	entries := po.Entries{
 		{ID: "b"},
 		{ID: "a"},
 		{ID: "c"},
 	}
 
-	expected := types.Entries{
+	expected := po.Entries{
 		{ID: "a"},
 		{ID: "b"},
 		{ID: "c"},
@@ -29,16 +29,16 @@ func TestSortEntriesByID(t *testing.T) {
 }
 
 func TestSortEntriesByLine(t *testing.T) {
-	entries := types.Entries{
-		{Locations: []types.Location{{Line: 3}}},
-		{Locations: []types.Location{{Line: 1}}},
-		{Locations: []types.Location{{Line: 2}}},
+	entries := po.Entries{
+		{Locations: []po.Location{{Line: 3}}},
+		{Locations: []po.Location{{Line: 1}}},
+		{Locations: []po.Location{{Line: 2}}},
 	}
 
-	expected := types.Entries{
-		{Locations: []types.Location{{Line: 1}}},
-		{Locations: []types.Location{{Line: 2}}},
-		{Locations: []types.Location{{Line: 3}}},
+	expected := po.Entries{
+		{Locations: []po.Location{{Line: 1}}},
+		{Locations: []po.Location{{Line: 2}}},
+		{Locations: []po.Location{{Line: 3}}},
 	}
 
 	entries = entries.SortByLine()
@@ -56,16 +56,16 @@ func TestSortEntriesByLine(t *testing.T) {
 }
 
 func TestSortEntriesByFile(t *testing.T) {
-	entries := types.Entries{
-		{Locations: []types.Location{{File: "b.txt"}}},
-		{Locations: []types.Location{{File: "a.txt"}}},
-		{Locations: []types.Location{{File: "c.txt"}}},
+	entries := po.Entries{
+		{Locations: []po.Location{{File: "b.txt"}}},
+		{Locations: []po.Location{{File: "a.txt"}}},
+		{Locations: []po.Location{{File: "c.txt"}}},
 	}
 
-	expected := types.Entries{
-		{Locations: []types.Location{{File: "a.txt"}}},
-		{Locations: []types.Location{{File: "b.txt"}}},
-		{Locations: []types.Location{{File: "c.txt"}}},
+	expected := po.Entries{
+		{Locations: []po.Location{{File: "a.txt"}}},
+		{Locations: []po.Location{{File: "b.txt"}}},
+		{Locations: []po.Location{{File: "c.txt"}}},
 	}
 
 	entries = entries.SortByFile()
@@ -83,18 +83,18 @@ func TestSortEntriesByFile(t *testing.T) {
 }
 
 func TestSortEntries(t *testing.T) {
-	entries := types.Entries{
-		{Locations: []types.Location{{File: "b.txt", Line: 2}}},
-		{Locations: []types.Location{{File: "a.txt", Line: 2}}},
-		{Locations: []types.Location{{File: "a.txt", Line: 1}}},
-		{Locations: []types.Location{{File: "c.txt", Line: 1}}},
+	entries := po.Entries{
+		{Locations: []po.Location{{File: "b.txt", Line: 2}}},
+		{Locations: []po.Location{{File: "a.txt", Line: 2}}},
+		{Locations: []po.Location{{File: "a.txt", Line: 1}}},
+		{Locations: []po.Location{{File: "c.txt", Line: 1}}},
 	}
 
-	expected := types.Entries{
-		{Locations: []types.Location{{File: "a.txt", Line: 1}}},
-		{Locations: []types.Location{{File: "a.txt", Line: 2}}},
-		{Locations: []types.Location{{File: "b.txt", Line: 2}}},
-		{Locations: []types.Location{{File: "c.txt", Line: 1}}},
+	expected := po.Entries{
+		{Locations: []po.Location{{File: "a.txt", Line: 1}}},
+		{Locations: []po.Location{{File: "a.txt", Line: 2}}},
+		{Locations: []po.Location{{File: "b.txt", Line: 2}}},
+		{Locations: []po.Location{{File: "c.txt", Line: 1}}},
 	}
 
 	entries = entries.Sort()

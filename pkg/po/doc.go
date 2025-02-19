@@ -23,4 +23,4 @@
 //	mergedFile := types.MergeFiles(file1, file2)
 //
 // For more details, refer to the individual types and functions.
-package types
+package po

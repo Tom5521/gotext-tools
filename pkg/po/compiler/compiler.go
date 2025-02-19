@@ -7,14 +7,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 // Compiler is responsible for compiling translations from a `types.File`
 // into different output formats, such as strings, byte slices, or files.
 type Compiler struct {
-	File   *types.File // The source file containing translation entries.
-	Config Config      // Configuration settings for compilation.
+	File   *po.File // The source file containing translation entries.
+	Config Config   // Configuration settings for compilation.
 }
 
 // applyOptions applies a set of options to modify the compiler's configuration.
@@ -26,7 +26,7 @@ func (c *Compiler) applyOptions(opts ...Option) {
 
 // New creates a new Compiler instance with the given translation file and options.
 // The provided options override the default configuration.
-func New(file *types.File, options ...Option) Compiler {
+func New(file *po.File, options ...Option) Compiler {
 	return Compiler{
 		File:   file,
 		Config: DefaultConfig(options...),

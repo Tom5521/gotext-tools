@@ -1,4 +1,4 @@
-package types
+package po
 
 import "github.com/Tom5521/xgotext/internal/util"
 

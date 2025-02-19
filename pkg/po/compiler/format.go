@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 const (
@@ -45,7 +45,7 @@ func (c Compiler) formatHeader() string {
 	return b.String()
 }
 
-func (c Compiler) formatEntry(t types.Entry) string {
+func (c Compiler) formatEntry(t po.Entry) string {
 	var builder strings.Builder
 	nplurals := c.File.Nplurals()
 

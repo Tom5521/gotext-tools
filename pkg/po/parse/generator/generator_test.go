@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/parse/ast"
 	"github.com/Tom5521/xgotext/pkg/po/parse/generator"
-	"github.com/Tom5521/xgotext/pkg/po/types"
 	"github.com/kr/pretty"
 )
 
@@ -51,7 +51,7 @@ msgid_plural "You have %d apples"
 msgstr[0] "Tienes %d manzana"
 msgstr[1] "Tienes %d manzanas"`
 
-	expected := types.Entries{
+	expected := po.Entries{
 		{
 			Comments: []string{"hello.go:123"},
 			ID:       "Hi",
@@ -61,7 +61,7 @@ msgstr[1] "Tienes %d manzanas"`
 			ID:      "Hello",
 			Context: "formal",
 			Str:     "Saludos",
-			Locations: []types.Location{
+			Locations: []po.Location{
 				{Line: 12, File: "myfile"},
 			},
 		}, {
@@ -69,11 +69,11 @@ msgstr[1] "Tienes %d manzanas"`
 			Previous: []string{"You have %s apple"},
 			ID:       "You have %d apple",
 			Plural:   "You have %d apples",
-			Plurals: []types.PluralEntry{
+			Plurals: []po.PluralEntry{
 				{ID: 0, Str: "Tienes %d manzana"},
 				{ID: 1, Str: "Tienes %d manzanas"},
 			},
-			Locations: []types.Location{
+			Locations: []po.Location{
 				{Line: 123, File: "Hello.go"},
 			},
 		},
@@ -130,9 +130,9 @@ msgstr ""
 		return
 	}
 
-	expected := &types.File{
+	expected := &po.File{
 		Name: "test.po",
-		Entries: types.Entries{
+		Entries: po.Entries{
 			{
 				Str: "\nProject-Id-Version: PACKAGE VERSION\n\nReport-Msgid-Bugs-To: \n\nPOT-Creation-Date: 2025-01-20 14:53:37\n\nPO-Revision-Date: \n\nLast-Translator: \n\nLanguage-Team: \n\nLanguage: en\n\nMIME-Version: 1.0\n\nContent-Type: text/plain; charset=CHARSET\n\nContent-Transfer-Encoding: 8bit\n\nPlural-Forms: nplurals=2; plural=(n != 1);\n",
 			},

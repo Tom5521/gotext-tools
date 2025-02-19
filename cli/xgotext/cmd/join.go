@@ -5,9 +5,9 @@ import (
 	"os"
 
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
+	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	poparse "github.com/Tom5521/xgotext/pkg/po/parse"
-	"github.com/Tom5521/xgotext/pkg/po/types"
 )
 
 func join(newParse *goparse.Parser, rawfile *os.File) error {
@@ -30,7 +30,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 		return newParse.Errors()[0]
 	}
 
-	types.MergeFiles(false, base, parsed)
+	po.MergeFiles(false, base, parsed)
 
 	compiler := compiler.New(base, compiler.WithConfig(CompilerCfg))
 

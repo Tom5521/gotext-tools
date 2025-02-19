@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/po/types"
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 // Constants.
@@ -117,7 +117,7 @@ func (f *File) determinePackageInfo() {
 }
 
 // Entries returns all translations found in the file.
-func (f *File) Entries() (types.Entries, []error) {
+func (f *File) Entries() (po.Entries, []error) {
 	f.seenTokens = make(map[ast.Node]bool)
 	for _, opt := range f.options {
 		opt(&f.config)
@@ -127,7 +127,7 @@ func (f *File) Entries() (types.Entries, []error) {
 		f.seenTokens = nil
 	}()
 
-	var entries types.Entries
+	var entries po.Entries
 	var errors []error
 
 	if !f.hasGotext && !f.config.ExtractAll {
