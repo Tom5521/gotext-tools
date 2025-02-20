@@ -1,0 +1,72 @@
+@startuml
+namespace parse {
+    class Config << (S,Aquamarine) >> {
+        + Exclude []string
+        + ExtractAll bool
+        + HeaderConfig *po.HeaderConfig
+        + HeaderOptions []po.HeaderOption
+        + Header *po.Header
+        + Logger *log.Logger
+        + Verbose bool
+        + CleanDuplicates bool
+
+    }
+    class File << (S,Aquamarine) >> {
+        - config Config
+        - options []Option
+        - seenTokens <font color=blue>map</font>[ast.Node]bool
+        - file *ast.File
+        - content []byte
+        - path string
+        - pkgName string
+        - hasGotext bool
+
+        - parse() error
+        - determinePackageInfo() 
+        - isGotextCall(n ast.Node) bool
+        - basicLitToEntry(n *ast.BasicLit) (po.Entry, error)
+        - processGeneric(exprs ...ast.Expr) (po.Entries, []error)
+        - extractArg(index int, call *ast.CallExpr) argumentData
+        - processPoCall(call *ast.CallExpr) (po.Entry, bool, error)
+        - processNode(n ast.Node) (po.Entries, []error)
+
+        + Entries() (po.Entries, []error)
+
+    }
+    class Parser << (S,Aquamarine) >> {
+        - config Config
+        - options []Option
+        - files []*File
+        - seen <font color=blue>map</font>[string]bool
+        - errors []error
+
+        - applyOptions(options ...Option) 
+        - appendFiles(files ...string) error
+        - shouldSkipFile(w *fs.Walker) bool
+        - isExcludedPath(path string) bool
+
+        + Parse(options ...Option) *po.File
+        + Errors() []error
+        + Files() []*File
+
+    }
+    class argumentData << (S,Aquamarine) >> {
+        - str string
+        - valid bool
+        - err error
+        - pos token.Pos
+
+    }
+    class parse.Option << (T, #FF7700) >>  {
+    }
+    class translationMethod << (S,Aquamarine) >> {
+        + ID int
+        + Plural int
+        + Context int
+
+    }
+}
+
+
+"parse.<font color=blue>func</font>(*Config) " #.. "parse.Option"
+@enduml
