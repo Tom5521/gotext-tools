@@ -10,15 +10,6 @@ namespace po {
         + Solve() Entries
         + FuzzyFind(id string, context string) int
         + FuzzySolve() Entries
-        + Index(id string, context string) int
-        + Sort() Entries
-        + SortByFile() Entries
-        + SortByID() Entries
-        + SortByLine() Entries
-        + CleanDuplicates() Entries
-        + Solve() Entries
-        + FuzzyFind(id string, context string) int
-        + FuzzySolve() Entries
 
     }
     class Entry << (S,Aquamarine) >> {
@@ -32,31 +23,14 @@ namespace po {
         + Plurals []PluralEntry
         + Str string
         + Locations []Location
-        + Flags []string
-        + Comments []string
-        + ExtractedComments []string
-        + Previous []string
-        + ID string
-        + Context string
-        + Plural string
-        + Plurals []PluralEntry
-        + Str string
-        + Locations []Location
 
-        + String() string
         + String() string
 
     }
     class File << (S,Aquamarine) >> {
         + Entries Entries
         + Name string
-        + Entries Entries
-        + Name string
 
-        + Header() Header
-        + Nplurals() uint
-        + Set(id string, context string, e Entry) 
-        + LoadID(id string, context string) string
         + Header() Header
         + Nplurals() uint
         + Set(id string, context string, e Entry) 
@@ -65,12 +39,7 @@ namespace po {
     }
     class Header << (S,Aquamarine) >> {
         + Fields []HeaderField
-        + Fields []HeaderField
 
-        + ToEntry() Entry
-        + Register(key string, d ...string) 
-        + Load(key string) string
-        + Set(key string, value string) 
         + ToEntry() Entry
         + Register(key string, d ...string) 
         + Load(key string) string
@@ -84,15 +53,7 @@ namespace po {
         + Language string
         + LanguageTeam string
         + LastTranslator string
-        + Nplurals uint
-        + ProjectIDVersion string
-        + ReportMsgidBugsTo string
-        + Language string
-        + LanguageTeam string
-        + LastTranslator string
 
-        + ToHeaderWithDefaults() Header
-        + ToHeader() Header
         + ToHeaderWithDefaults() Header
         + ToHeader() Header
 
@@ -100,20 +61,14 @@ namespace po {
     class HeaderField << (S,Aquamarine) >> {
         + Key string
         + Value string
-        + Key string
-        + Value string
 
     }
     class Location << (S,Aquamarine) >> {
         + Line int
         + File string
-        + Line int
-        + File string
 
     }
     class PluralEntry << (S,Aquamarine) >> {
-        + ID int
-        + Str string
         + ID int
         + Str string
 

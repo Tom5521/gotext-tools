@@ -1,0 +1,44 @@
+@startuml
+namespace compiler {
+    class Compiler << (S,Aquamarine) >> {
+        + File *po.File
+        + Config Config
+
+        - applyOptions(opts ...Option) 
+        - formatHeader() string
+        - formatEntry(t po.Entry) string
+
+        + ToWriter(w io.Writer, options ...Option) error
+        + ToFile(f string, options ...Option) error
+        + ToString(options ...Option) string
+        + ToBytes(options ...Option) []byte
+
+    }
+    class Config << (S,Aquamarine) >> {
+        + Logger *log.Logger
+        + ForcePo bool
+        + OmitHeader bool
+        + PackageName string
+        + CopyrightHolder string
+        + ForeignUser bool
+        + Title string
+        + NoLocation bool
+        + AddLocation LocationMode
+        + MsgstrPrefix string
+        + MsgstrSuffix string
+        + IgnoreErrors bool
+        + Verbose bool
+
+        + Validate() error
+
+    }
+    class compiler.LocationMode << (T, #FF7700) >>  {
+    }
+    class compiler.Option << (T, #FF7700) >>  {
+    }
+}
+
+
+"__builtin__.string" #.. "compiler.LocationMode"
+"compiler.<font color=blue>func</font>(*Config) " #.. "compiler.Option"
+@enduml
