@@ -7,7 +7,6 @@ type File struct {
 
 func NewFile(name string, entries ...Entry) *File {
 	f := &File{Name: name, Entries: entries}
-	f.Entries = f.Entries.CleanDuplicates()
 
 	return f
 }
