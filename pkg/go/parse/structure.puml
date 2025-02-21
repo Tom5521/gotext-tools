@@ -42,8 +42,6 @@ namespace parse {
 
         - applyOptions(options ...Option) 
         - appendFiles(files ...string) error
-        - shouldSkipFile(w *fs.Walker) bool
-        - isExcludedPath(path string) bool
 
         + Parse(options ...Option) *po.File
         + Errors() []error

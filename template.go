@@ -29,6 +29,7 @@ a`, "stranger")
 	po.GetNC("Hello World!", "Hello Worlds!", 1, "mars")
 	po.GetNDC("moon", "Hi stranger, I'm %s", "Hi strangers, I'm %s", 1, "mars", "Tom!")
 
+	// -a option.
 	_ = "asd"
 	if "6" == "7" {
 		return "8"

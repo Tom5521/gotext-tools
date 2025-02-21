@@ -97,7 +97,8 @@ func (c Compiler) formatEntry(t po.Entry) string {
 	// Add plural forms if present.
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		for i := range nplurals {
+		// for i := 0;i <
+		for i := uint(0); i < nplurals; i++ {
 			if i == 1 {
 				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, c.Config))
 				continue

@@ -14,8 +14,16 @@ import (
 // - The visitor function is called for each node in the AST.
 //
 // This function simplifies AST traversal by allowing users to focus on node-specific processing logic.
-func InspectNode(root ast.Node) func(func(ast.Node) bool) {
-	return func(f func(ast.Node) bool) {
-		ast.Inspect(root, f)
-	}
+func InspectNode(root ast.Node) chan ast.Node {
+	ch := make(chan ast.Node)
+
+	go func() {
+		defer close(ch)
+		ast.Inspect(root, func(n ast.Node) bool {
+			ch <- n
+			return true
+		})
+	}()
+
+	return ch
 }
