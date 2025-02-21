@@ -7,7 +7,6 @@ import (
 
 type Config struct {
 	Logger          *log.Logger
-	Verbose         bool
 	SkipHeader      bool
 	CleanDuplicates bool
 }
@@ -29,10 +28,6 @@ type Option func(*Config)
 
 func WithConfig(cfg Config) Option {
 	return func(c *Config) { *c = cfg }
-}
-
-func WithVerbose(v bool) Option {
-	return func(c *Config) { c.Verbose = v }
 }
 
 func WithSkipHeader(s bool) Option {

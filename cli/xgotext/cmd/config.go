@@ -43,7 +43,6 @@ func initConfig() {
 		Verbose:         verbose,
 	}
 	PoParserCfg = poparse.Config{
-		Logger:  logger,
-		Verbose: verbose,
+		Logger: logger,
 	}
 }

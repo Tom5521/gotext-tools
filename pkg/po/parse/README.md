@@ -1,3 +1,0 @@
-# Parse
-
-![structure](./structure.png)
