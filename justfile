@@ -13,3 +13,6 @@ gen-uml:
   plantuml -theme spacelab ./pkg/go/parse/structure.puml
 gen-parser:
   antlr4 -Dlanguage=Go -package parse ./pkg/po/parse/Po.g4
+clean:
+  rm *.po* *.log
+  rm ./pkg/po/parse/*.interp ./pkg/po/parse/*.tokens
