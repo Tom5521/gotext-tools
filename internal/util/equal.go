@@ -72,7 +72,7 @@ func sliceEqual(v1, v2 reflect.Value) bool {
 	if v1.Len() != v2.Len() {
 		return false
 	}
-	for i := 0; i < v1.Len(); i++ {
+	for i := range ROverNumber(v1.Len()) {
 		if !Equal(v1.Index(i).Interface(), v2.Index(i).Interface()) {
 			return false
 		}
@@ -95,7 +95,7 @@ func mapEqual(v1, v2 reflect.Value) bool {
 }
 
 func structEqual(v1, v2 reflect.Value) bool {
-	for i := 0; i < v1.NumField(); i++ {
+	for i := range ROverNumber(v1.NumField()) {
 		field := v1.Type().Field(i)
 		if field.IsExported() {
 			if !Equal(v1.Field(i).Interface(), v2.Field(i).Interface()) {

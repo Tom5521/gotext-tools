@@ -26,7 +26,7 @@ i`
 	expectedLine := 6
 	index := strings.IndexRune(input, 'g')
 
-	for i := 0; i < 2; i++ {
+	for i := range util.ROverNumber(2) {
 		var line int
 
 		switch i {

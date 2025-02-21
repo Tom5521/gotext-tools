@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
@@ -97,8 +98,8 @@ func (c Compiler) formatEntry(t po.Entry) string {
 	// Add plural forms if present.
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-		// for i := 0;i <
-		for i := uint(0); i < nplurals; i++ {
+
+		for i := range util.ROverNumber(nplurals) {
 			if i == 1 {
 				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, c.Config))
 				continue
