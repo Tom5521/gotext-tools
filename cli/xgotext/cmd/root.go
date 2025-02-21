@@ -89,6 +89,7 @@ Similarly for optional arguments.`,
 				return fmt.Errorf("file %s already exists", outputFile)
 			} else if os.IsNotExist(err) {
 				flags |= os.O_CREATE
+				stat, err = os.Stat(outputFile)
 			} else if err != nil {
 				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
 			}

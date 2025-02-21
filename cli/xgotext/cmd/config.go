@@ -15,12 +15,12 @@ var (
 )
 
 func initConfig() {
-	HeadersCfg = po.HeaderConfig{
-		Nplurals:          nplurals,
-		ProjectIDVersion:  packageVersion,
-		ReportMsgidBugsTo: msgidBugsAddress,
-		Language:          lang,
-	}
+	HeadersCfg = po.DefaultHeaderConfig()
+	HeadersCfg.Nplurals = nplurals
+	HeadersCfg.ProjectIDVersion = packageVersion
+	HeadersCfg.ReportMsgidBugsTo = msgidBugsAddress
+	HeadersCfg.Language = lang
+
 	GoParserCfg = goparse.Config{
 		Exclude:      exclude,
 		ExtractAll:   extractAll,

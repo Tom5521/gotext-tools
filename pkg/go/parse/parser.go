@@ -177,13 +177,13 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 	file = &po.File{}
 	p.errors = nil // Clean errors
 
-	var header po.Header
+	header := po.DefaultHeader()
 	if p.config.Header != nil {
 		header = *p.config.Header
 	}
 
 	if p.config.HeaderConfig != nil {
-		header = p.config.HeaderConfig.ToHeader()
+		header = p.config.HeaderConfig.ToHeaderWithDefaults()
 	}
 
 	if p.config.HeaderOptions != nil {

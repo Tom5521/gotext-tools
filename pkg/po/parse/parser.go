@@ -71,6 +71,8 @@ func (p *Parser) Parse(options ...Option) *po.File {
 	p.applyOptions(p.options...)
 	p.applyOptions(options...)
 
+	p.errors = nil
+
 	is := antlr.NewInputStream(string(p.data))
 
 	errListener := &CustomErrorListener{}
