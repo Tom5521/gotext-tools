@@ -3,12 +3,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"path/filepath"
 
-	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/spf13/cobra"
 )
@@ -26,99 +23,35 @@ Similarly for optional arguments.`,
 		initConfig()
 	},
 	RunE: func(cmd *cobra.Command, inputfiles []string) (err error) {
-		if filesFrom != "" {
-			var files []string
-			files, err = readFilesFrom(filesFrom)
-			if err != nil {
-				return fmt.Errorf("error reading file %s: %w", filesFrom, err)
-			}
-			inputfiles = append(inputfiles, files...)
-		}
-		if excludeFile != "" {
-			var files []string
-			files, err = readFilesFrom(excludeFile)
-			if err != nil {
-				return fmt.Errorf("error reading file %s: %w", excludeFile, err)
-			}
-			exclude = append(exclude, files...)
-		}
-
-		if directory != "" {
-			for i, file := range inputfiles {
-				inputfiles[i] = filepath.Join(directory, file)
-			}
-			for i, file := range exclude {
-				exclude[i] = filepath.Join(directory, file)
-			}
-		}
-
-		p, err := goparse.NewParserFromFiles(
-			inputfiles,
-			goparse.WithConfig(GoParserCfg),
-		)
+		parser, err := processInput(inputfiles)
 		if err != nil {
-			return fmt.Errorf("error parsing files: %w", err)
+			return
 		}
 
-		pofile := p.Parse()
-		if len(p.Errors()) > 0 {
-			return fmt.Errorf("errors in entries parsing (%d): %w", len(p.Errors()), p.Errors()[0])
+		parsedFile := parser.Parse()
+		if len(parser.Errors()) > 0 {
+			return fmt.Errorf(
+				"errors in entries parsing (%d): %w",
+				len(parser.Errors()),
+				parser.Errors()[0],
+			)
 		}
 
-		outputFile := filepath.Join(outputDir, defaultDomain+".pot")
-
-		var out io.Writer
-
-		switch {
-		case output == "-":
-			out = os.Stdout
-		case output != "":
-			if outputDir != "" {
-				output = filepath.Join(outputDir, output)
+		out, err := processOutput()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if out != os.Stdout {
+				out.Close()
 			}
-			outputFile = output
-			fallthrough
-		default:
-			var file *os.File
-			var stat os.FileInfo
-			stat, err = os.Stat(outputFile)
+		}()
 
-			flags := os.O_RDWR
-
-			if os.IsExist(err) && !forcePo && output != "" && !joinExisting {
-				return fmt.Errorf("file %s already exists", outputFile)
-			} else if os.IsNotExist(err) {
-				flags |= os.O_CREATE
-				stat, err = os.Stat(outputFile)
-			} else if err != nil {
-				return fmt.Errorf("error getting file %s information: %w", outputFile, err)
-			}
-
-			file, err = os.OpenFile(outputFile, flags, os.ModePerm)
-			if err != nil {
-				return fmt.Errorf("error opening file %s: %w", outputFile, err)
-			}
-			defer file.Close()
-
-			if joinExisting {
-				return join(p, file)
-			}
-
-			if stat.Size() != 0 {
-				err = file.Truncate(0)
-				if err != nil {
-					return fmt.Errorf("error truncating file %s: %w", outputFile, err)
-				}
-				_, err = file.Seek(0, 0)
-				if err != nil {
-					return fmt.Errorf("error seeking file(%s) offset: %w", outputFile, err)
-				}
-
-			}
-			out = file
+		if joinExisting {
+			return join(parser, out)
 		}
 
-		compiler := compiler.New(pofile, compiler.WithConfig(CompilerCfg))
+		compiler := compiler.New(parsedFile, compiler.WithConfig(CompilerCfg))
 
 		err = compiler.ToWriter(out)
 		if err != nil {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
@@ -34,14 +33,10 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 
 	compiler := compiler.New(base, compiler.WithConfig(CompilerCfg))
 
-	err = rawfile.Truncate(0)
+	// Truncate file.
+	rawfile, err = os.Create(rawfile.Name())
 	if err != nil {
-		return fmt.Errorf("error truncating file %s: %w", rawfile.Name(), err)
-	}
-
-	_, err = rawfile.Seek(0, 0)
-	if err != nil {
-		return fmt.Errorf("error seeking file(%s) offset: %w", rawfile.Name(), err)
+		return err
 	}
 
 	err = compiler.ToWriter(rawfile)

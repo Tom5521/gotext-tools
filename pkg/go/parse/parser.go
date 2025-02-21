@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"slices"
 
 	krfs "github.com/kr/fs"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
@@ -55,7 +54,7 @@ func (p *Parser) appendFiles(files ...string) error {
 	for _, file := range files {
 		walker := krfs.Walk(file)
 		for walker.Step() {
-			if p.shouldSkipFile(walker) {
+			if util.ShouldSkipFile(walker, p.config.Exclude, &p.seen, p.config.Logger) {
 				continue
 			}
 
@@ -141,23 +140,28 @@ func NewParserFromBytes(
 	return p, nil
 }
 
-// NewParserFromFile creates a Parser from an os.File instance.
-func NewParserFromFile(file *os.File, options ...Option) (*Parser, error) {
+func NewParserFromFiles(files []*os.File, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
-	f, err := NewFileFromReader(file, file.Name(), options...)
-	if err != nil {
-		err = fmt.Errorf("error configuring file: %w", err)
-		p.config.Logger.Println("ERROR:", err)
-		return nil, err
+	for _, file := range files {
+		f, err := NewFileFromReader(file, file.Name(), options...)
+		if err != nil {
+			err = fmt.Errorf("error configuring file: %w", err)
+			p.config.Logger.Println("ERROR:", err)
+			return nil, err
+		}
+		p.files = append(p.files, f)
 	}
-
-	p.files = append(p.files, f)
 
 	return p, nil
 }
 
-// NewParserFromFiles initializes a Parser from a list of file paths.
-func NewParserFromFiles(files []string, options ...Option) (*Parser, error) {
+// NewParserFromFile creates a Parser from an os.File instance.
+func NewParserFromFile(file *os.File, options ...Option) (*Parser, error) {
+	return NewParserFromFiles([]*os.File{file}, options...)
+}
+
+// NewParserFromPaths initializes a Parser from a list of file paths.
+func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	err := p.appendFiles(files...)
 	if err != nil {
@@ -224,38 +228,4 @@ func (p Parser) Errors() []error {
 // Files returns the list of files associated with the Parser.
 func (p Parser) Files() []*File {
 	return p.files
-}
-
-// shouldSkipFile determines if a file should be skipped during processing.
-func (p *Parser) shouldSkipFile(w *krfs.Walker) bool {
-	if w.Err() != nil || w.Stat().IsDir() {
-		return true
-	}
-
-	if filepath.Ext(w.Path()) != ".go" {
-		return true
-	}
-
-	abs, err := filepath.Abs(w.Path())
-	if err != nil {
-		return true
-	}
-
-	_, seen := p.seen[abs]
-	if seen {
-		p.config.Logger.Printf("skipping duplicated file: %s", w.Path())
-		return true
-	}
-	p.seen[abs] = true
-
-	return p.isExcludedPath(w.Path())
-}
-
-// isExcludedPath checks if a path is in the exclude list defined in the configuration.
-func (p Parser) isExcludedPath(path string) bool {
-	return slices.ContainsFunc(p.config.Exclude, func(s string) bool {
-		abs1, err1 := filepath.Abs(s)
-		abs2, err2 := filepath.Abs(path)
-		return (abs1 == abs2) && (err1 == nil && err2 == nil)
-	})
 }
