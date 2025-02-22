@@ -45,34 +45,45 @@ func poParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 14, 72, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
+		4, 1, 14, 96, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
 		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 1, 0, 5, 0, 20, 8, 0,
 		10, 0, 12, 0, 23, 9, 0, 1, 1, 5, 1, 26, 8, 1, 10, 1, 12, 1, 29, 9, 1, 1,
-		1, 3, 1, 32, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 38, 8, 1, 11, 1, 12, 1,
-		39, 3, 1, 42, 8, 1, 1, 1, 3, 1, 45, 8, 1, 1, 2, 1, 2, 1, 2, 1, 3, 1, 3,
-		1, 3, 1, 4, 1, 4, 1, 4, 1, 5, 1, 5, 1, 5, 1, 6, 1, 6, 1, 6, 1, 7, 1, 7,
-		3, 7, 64, 8, 7, 4, 7, 66, 8, 7, 11, 7, 12, 7, 67, 1, 8, 1, 8, 1, 8, 0,
-		0, 9, 0, 2, 4, 6, 8, 10, 12, 14, 16, 0, 1, 1, 0, 10, 14, 70, 0, 21, 1,
-		0, 0, 0, 2, 27, 1, 0, 0, 0, 4, 46, 1, 0, 0, 0, 6, 49, 1, 0, 0, 0, 8, 52,
-		1, 0, 0, 0, 10, 55, 1, 0, 0, 0, 12, 58, 1, 0, 0, 0, 14, 65, 1, 0, 0, 0,
-		16, 69, 1, 0, 0, 0, 18, 20, 3, 2, 1, 0, 19, 18, 1, 0, 0, 0, 20, 23, 1,
-		0, 0, 0, 21, 19, 1, 0, 0, 0, 21, 22, 1, 0, 0, 0, 22, 1, 1, 0, 0, 0, 23,
-		21, 1, 0, 0, 0, 24, 26, 3, 16, 8, 0, 25, 24, 1, 0, 0, 0, 26, 29, 1, 0,
-		0, 0, 27, 25, 1, 0, 0, 0, 27, 28, 1, 0, 0, 0, 28, 31, 1, 0, 0, 0, 29, 27,
-		1, 0, 0, 0, 30, 32, 3, 4, 2, 0, 31, 30, 1, 0, 0, 0, 31, 32, 1, 0, 0, 0,
-		32, 33, 1, 0, 0, 0, 33, 41, 3, 6, 3, 0, 34, 42, 3, 8, 4, 0, 35, 37, 3,
-		10, 5, 0, 36, 38, 3, 12, 6, 0, 37, 36, 1, 0, 0, 0, 38, 39, 1, 0, 0, 0,
-		39, 37, 1, 0, 0, 0, 39, 40, 1, 0, 0, 0, 40, 42, 1, 0, 0, 0, 41, 34, 1,
-		0, 0, 0, 41, 35, 1, 0, 0, 0, 42, 44, 1, 0, 0, 0, 43, 45, 5, 4, 0, 0, 44,
-		43, 1, 0, 0, 0, 44, 45, 1, 0, 0, 0, 45, 3, 1, 0, 0, 0, 46, 47, 5, 5, 0,
-		0, 47, 48, 3, 14, 7, 0, 48, 5, 1, 0, 0, 0, 49, 50, 5, 6, 0, 0, 50, 51,
-		3, 14, 7, 0, 51, 7, 1, 0, 0, 0, 52, 53, 5, 7, 0, 0, 53, 54, 3, 14, 7, 0,
-		54, 9, 1, 0, 0, 0, 55, 56, 5, 8, 0, 0, 56, 57, 3, 14, 7, 0, 57, 11, 1,
-		0, 0, 0, 58, 59, 5, 9, 0, 0, 59, 60, 3, 14, 7, 0, 60, 13, 1, 0, 0, 0, 61,
-		63, 5, 3, 0, 0, 62, 64, 5, 4, 0, 0, 63, 62, 1, 0, 0, 0, 63, 64, 1, 0, 0,
-		0, 64, 66, 1, 0, 0, 0, 65, 61, 1, 0, 0, 0, 66, 67, 1, 0, 0, 0, 67, 65,
-		1, 0, 0, 0, 67, 68, 1, 0, 0, 0, 68, 15, 1, 0, 0, 0, 69, 70, 7, 0, 0, 0,
-		70, 17, 1, 0, 0, 0, 8, 21, 27, 31, 39, 41, 44, 63, 67,
+		1, 3, 1, 32, 8, 1, 1, 1, 5, 1, 35, 8, 1, 10, 1, 12, 1, 38, 9, 1, 1, 1,
+		1, 1, 5, 1, 42, 8, 1, 10, 1, 12, 1, 45, 9, 1, 1, 1, 1, 1, 1, 1, 5, 1, 50,
+		8, 1, 10, 1, 12, 1, 53, 9, 1, 1, 1, 4, 1, 56, 8, 1, 11, 1, 12, 1, 57, 3,
+		1, 60, 8, 1, 1, 1, 5, 1, 63, 8, 1, 10, 1, 12, 1, 66, 9, 1, 1, 1, 3, 1,
+		69, 8, 1, 1, 2, 1, 2, 1, 2, 1, 3, 1, 3, 1, 3, 1, 4, 1, 4, 1, 4, 1, 5, 1,
+		5, 1, 5, 1, 6, 1, 6, 1, 6, 1, 7, 1, 7, 3, 7, 88, 8, 7, 4, 7, 90, 8, 7,
+		11, 7, 12, 7, 91, 1, 8, 1, 8, 1, 8, 1, 64, 0, 9, 0, 2, 4, 6, 8, 10, 12,
+		14, 16, 0, 1, 1, 0, 10, 14, 98, 0, 21, 1, 0, 0, 0, 2, 27, 1, 0, 0, 0, 4,
+		70, 1, 0, 0, 0, 6, 73, 1, 0, 0, 0, 8, 76, 1, 0, 0, 0, 10, 79, 1, 0, 0,
+		0, 12, 82, 1, 0, 0, 0, 14, 89, 1, 0, 0, 0, 16, 93, 1, 0, 0, 0, 18, 20,
+		3, 2, 1, 0, 19, 18, 1, 0, 0, 0, 20, 23, 1, 0, 0, 0, 21, 19, 1, 0, 0, 0,
+		21, 22, 1, 0, 0, 0, 22, 1, 1, 0, 0, 0, 23, 21, 1, 0, 0, 0, 24, 26, 3, 16,
+		8, 0, 25, 24, 1, 0, 0, 0, 26, 29, 1, 0, 0, 0, 27, 25, 1, 0, 0, 0, 27, 28,
+		1, 0, 0, 0, 28, 31, 1, 0, 0, 0, 29, 27, 1, 0, 0, 0, 30, 32, 3, 4, 2, 0,
+		31, 30, 1, 0, 0, 0, 31, 32, 1, 0, 0, 0, 32, 36, 1, 0, 0, 0, 33, 35, 3,
+		16, 8, 0, 34, 33, 1, 0, 0, 0, 35, 38, 1, 0, 0, 0, 36, 34, 1, 0, 0, 0, 36,
+		37, 1, 0, 0, 0, 37, 39, 1, 0, 0, 0, 38, 36, 1, 0, 0, 0, 39, 43, 3, 6, 3,
+		0, 40, 42, 3, 16, 8, 0, 41, 40, 1, 0, 0, 0, 42, 45, 1, 0, 0, 0, 43, 41,
+		1, 0, 0, 0, 43, 44, 1, 0, 0, 0, 44, 59, 1, 0, 0, 0, 45, 43, 1, 0, 0, 0,
+		46, 60, 3, 8, 4, 0, 47, 51, 3, 10, 5, 0, 48, 50, 3, 16, 8, 0, 49, 48, 1,
+		0, 0, 0, 50, 53, 1, 0, 0, 0, 51, 49, 1, 0, 0, 0, 51, 52, 1, 0, 0, 0, 52,
+		55, 1, 0, 0, 0, 53, 51, 1, 0, 0, 0, 54, 56, 3, 12, 6, 0, 55, 54, 1, 0,
+		0, 0, 56, 57, 1, 0, 0, 0, 57, 55, 1, 0, 0, 0, 57, 58, 1, 0, 0, 0, 58, 60,
+		1, 0, 0, 0, 59, 46, 1, 0, 0, 0, 59, 47, 1, 0, 0, 0, 60, 64, 1, 0, 0, 0,
+		61, 63, 3, 16, 8, 0, 62, 61, 1, 0, 0, 0, 63, 66, 1, 0, 0, 0, 64, 65, 1,
+		0, 0, 0, 64, 62, 1, 0, 0, 0, 65, 68, 1, 0, 0, 0, 66, 64, 1, 0, 0, 0, 67,
+		69, 5, 4, 0, 0, 68, 67, 1, 0, 0, 0, 68, 69, 1, 0, 0, 0, 69, 3, 1, 0, 0,
+		0, 70, 71, 5, 5, 0, 0, 71, 72, 3, 14, 7, 0, 72, 5, 1, 0, 0, 0, 73, 74,
+		5, 6, 0, 0, 74, 75, 3, 14, 7, 0, 75, 7, 1, 0, 0, 0, 76, 77, 5, 7, 0, 0,
+		77, 78, 3, 14, 7, 0, 78, 9, 1, 0, 0, 0, 79, 80, 5, 8, 0, 0, 80, 81, 3,
+		14, 7, 0, 81, 11, 1, 0, 0, 0, 82, 83, 5, 9, 0, 0, 83, 84, 3, 14, 7, 0,
+		84, 13, 1, 0, 0, 0, 85, 87, 5, 3, 0, 0, 86, 88, 5, 4, 0, 0, 87, 86, 1,
+		0, 0, 0, 87, 88, 1, 0, 0, 0, 88, 90, 1, 0, 0, 0, 89, 85, 1, 0, 0, 0, 90,
+		91, 1, 0, 0, 0, 91, 89, 1, 0, 0, 0, 91, 92, 1, 0, 0, 0, 92, 15, 1, 0, 0,
+		0, 93, 94, 7, 0, 0, 0, 94, 17, 1, 0, 0, 0, 12, 21, 27, 31, 36, 43, 51,
+		57, 59, 64, 68, 87, 91,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -517,26 +528,35 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 	p.EnterRule(localctx, 2, PoParserRULE_entry)
 	var _la int
 
+	var _alt int
+
 	p.EnterOuterAlt(localctx, 1)
 	p.SetState(27)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
-	_la = p.GetTokenStream().LA(1)
+	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 1, p.GetParserRuleContext())
+	if p.HasError() {
+		goto errorExit
+	}
+	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1 {
+			{
+				p.SetState(24)
+				p.Comment()
+			}
 
-	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&31744) != 0 {
-		{
-			p.SetState(24)
-			p.Comment()
 		}
-
 		p.SetState(29)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
 		}
-		_la = p.GetTokenStream().LA(1)
+		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 1, p.GetParserRuleContext())
+		if p.HasError() {
+			goto errorExit
+		}
 	}
 	p.SetState(31)
 	p.GetErrorHandler().Sync(p)
@@ -552,11 +572,51 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 		}
 
 	}
+	p.SetState(36)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_la = p.GetTokenStream().LA(1)
+
+	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&31744) != 0 {
+		{
+			p.SetState(33)
+			p.Comment()
+		}
+
+		p.SetState(38)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_la = p.GetTokenStream().LA(1)
+	}
 	{
-		p.SetState(33)
+		p.SetState(39)
 		p.Msgid()
 	}
-	p.SetState(41)
+	p.SetState(43)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_la = p.GetTokenStream().LA(1)
+
+	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&31744) != 0 {
+		{
+			p.SetState(40)
+			p.Comment()
+		}
+
+		p.SetState(45)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_la = p.GetTokenStream().LA(1)
+	}
+	p.SetState(59)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -565,16 +625,36 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 	switch p.GetTokenStream().LA(1) {
 	case PoParserMSGSTR:
 		{
-			p.SetState(34)
+			p.SetState(46)
 			p.Msgstr()
 		}
 
 	case PoParserPLURAL_MSGID:
 		{
-			p.SetState(35)
+			p.SetState(47)
 			p.Plural_msgid()
 		}
-		p.SetState(37)
+		p.SetState(51)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_la = p.GetTokenStream().LA(1)
+
+		for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&31744) != 0 {
+			{
+				p.SetState(48)
+				p.Comment()
+			}
+
+			p.SetState(53)
+			p.GetErrorHandler().Sync(p)
+			if p.HasError() {
+				goto errorExit
+			}
+			_la = p.GetTokenStream().LA(1)
+		}
+		p.SetState(55)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -583,11 +663,11 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 
 		for ok := true; ok; ok = _la == PoParserPLURAL_MSGSTR {
 			{
-				p.SetState(36)
+				p.SetState(54)
 				p.Plural_msgstr()
 			}
 
-			p.SetState(39)
+			p.SetState(57)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
@@ -599,7 +679,34 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 		p.SetError(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 		goto errorExit
 	}
-	p.SetState(44)
+	p.SetState(64)
+	p.GetErrorHandler().Sync(p)
+	if p.HasError() {
+		goto errorExit
+	}
+	_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 8, p.GetParserRuleContext())
+	if p.HasError() {
+		goto errorExit
+	}
+	for _alt != 1 && _alt != antlr.ATNInvalidAltNumber {
+		if _alt == 1+1 {
+			{
+				p.SetState(61)
+				p.Comment()
+			}
+
+		}
+		p.SetState(66)
+		p.GetErrorHandler().Sync(p)
+		if p.HasError() {
+			goto errorExit
+		}
+		_alt = p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 8, p.GetParserRuleContext())
+		if p.HasError() {
+			goto errorExit
+		}
+	}
+	p.SetState(68)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -608,7 +715,7 @@ func (p *PoParser) Entry() (localctx IEntryContext) {
 
 	if _la == PoParserNL {
 		{
-			p.SetState(43)
+			p.SetState(67)
 			p.Match(PoParserNL)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -723,7 +830,7 @@ func (p *PoParser) Msgctxt() (localctx IMsgctxtContext) {
 	p.EnterRule(localctx, 4, PoParserRULE_msgctxt)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(46)
+		p.SetState(70)
 		p.Match(PoParserMSGCTXT)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -731,7 +838,7 @@ func (p *PoParser) Msgctxt() (localctx IMsgctxtContext) {
 		}
 	}
 	{
-		p.SetState(47)
+		p.SetState(71)
 		p.String_()
 	}
 
@@ -840,7 +947,7 @@ func (p *PoParser) Msgid() (localctx IMsgidContext) {
 	p.EnterRule(localctx, 6, PoParserRULE_msgid)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(49)
+		p.SetState(73)
 		p.Match(PoParserMSGID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -848,7 +955,7 @@ func (p *PoParser) Msgid() (localctx IMsgidContext) {
 		}
 	}
 	{
-		p.SetState(50)
+		p.SetState(74)
 		p.String_()
 	}
 
@@ -957,7 +1064,7 @@ func (p *PoParser) Msgstr() (localctx IMsgstrContext) {
 	p.EnterRule(localctx, 8, PoParserRULE_msgstr)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(52)
+		p.SetState(76)
 		p.Match(PoParserMSGSTR)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -965,7 +1072,7 @@ func (p *PoParser) Msgstr() (localctx IMsgstrContext) {
 		}
 	}
 	{
-		p.SetState(53)
+		p.SetState(77)
 		p.String_()
 	}
 
@@ -1074,7 +1181,7 @@ func (p *PoParser) Plural_msgid() (localctx IPlural_msgidContext) {
 	p.EnterRule(localctx, 10, PoParserRULE_plural_msgid)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(55)
+		p.SetState(79)
 		p.Match(PoParserPLURAL_MSGID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1082,7 +1189,7 @@ func (p *PoParser) Plural_msgid() (localctx IPlural_msgidContext) {
 		}
 	}
 	{
-		p.SetState(56)
+		p.SetState(80)
 		p.String_()
 	}
 
@@ -1191,7 +1298,7 @@ func (p *PoParser) Plural_msgstr() (localctx IPlural_msgstrContext) {
 	p.EnterRule(localctx, 12, PoParserRULE_plural_msgstr)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(58)
+		p.SetState(82)
 		p.Match(PoParserPLURAL_MSGSTR)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1199,7 +1306,7 @@ func (p *PoParser) Plural_msgstr() (localctx IPlural_msgstrContext) {
 		}
 	}
 	{
-		p.SetState(59)
+		p.SetState(83)
 		p.String_()
 	}
 
@@ -1307,7 +1414,7 @@ func (p *PoParser) String_() (localctx IStringContext) {
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(65)
+	p.SetState(89)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -1316,19 +1423,19 @@ func (p *PoParser) String_() (localctx IStringContext) {
 
 	for ok := true; ok; ok = _la == PoParserSTRING {
 		{
-			p.SetState(61)
+			p.SetState(85)
 			p.Match(PoParserSTRING)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
 			}
 		}
-		p.SetState(63)
+		p.SetState(87)
 		p.GetErrorHandler().Sync(p)
 
-		if p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 6, p.GetParserRuleContext()) == 1 {
+		if p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 10, p.GetParserRuleContext()) == 1 {
 			{
-				p.SetState(62)
+				p.SetState(86)
 				p.Match(PoParserNL)
 				if p.HasError() {
 					// Recognition error - abort rule
@@ -1340,7 +1447,7 @@ func (p *PoParser) String_() (localctx IStringContext) {
 			goto errorExit
 		}
 
-		p.SetState(67)
+		p.SetState(91)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -1458,7 +1565,7 @@ func (p *PoParser) Comment() (localctx ICommentContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(69)
+		p.SetState(93)
 		_la = p.GetTokenStream().LA(1)
 
 		if !((int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&31744) != 0) {

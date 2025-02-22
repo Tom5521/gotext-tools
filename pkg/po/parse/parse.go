@@ -10,7 +10,7 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
-var _ PoListener = &Listener{}
+var _ PoListener = (*Listener)(nil)
 
 type Listener struct {
 	*BasePoListener
@@ -19,7 +19,6 @@ type Listener struct {
 	entries po.Entries
 
 	errors []error
-	warns  []string
 }
 
 func (l *Listener) getStrings(strs []antlr.TerminalNode, storange *string) {
@@ -75,7 +74,7 @@ func (l *Listener) EnterPlural_msgstr(ctx *Plural_msgstrContext) {
 	l.entry.Plurals = append(l.entry.Plurals, plural)
 }
 
-func (l *Listener) ExitEntry(ctx *EntryContext) {
+func (l *Listener) ExitEntry(_ *EntryContext) {
 	l.entries = append(l.entries, l.entry)
 	l.entry = po.Entry{}
 }

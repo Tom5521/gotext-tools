@@ -2,14 +2,21 @@ grammar Po;
 
 start: entry*;
 
-entry: 
+entry:
     comment*
     msgctxt?
+    comment*
     msgid
+    comment*
     (
         msgstr
-        | (plural_msgid plural_msgstr+)
+        | (
+            plural_msgid
+            comment*
+            plural_msgstr+
+        )
     )
+    comment*?
     NL?
     ;
 
@@ -21,11 +28,11 @@ msgstr: MSGSTR string;
 plural_msgid: PLURAL_MSGID string;
 plural_msgstr: PLURAL_MSGSTR string;
 string: (STRING '\n'?)+;
-comment: COMMENT
+comment: (COMMENT
     | FLAG_COMMENT
     | EXTRACTED_COMMENT
     | REFERENCE_COMMENT
-    | PREVIOUS_COMMENT
+    | PREVIOUS_COMMENT)
     ;
 
 
