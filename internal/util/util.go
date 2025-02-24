@@ -7,25 +7,6 @@ import (
 	"github.com/kr/pretty"
 )
 
-type Number interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64
-}
-
-func ROverNumber[T Number](x T) chan T {
-	ch := make(chan T)
-
-	go func() {
-		defer close(ch)
-		for i := T(0); i < x; i++ {
-			ch <- i
-		}
-	}()
-
-	return ch
-}
-
 func SafeSliceAccess[T any](slice []T, index int) T {
 	var value T
 

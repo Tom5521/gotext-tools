@@ -1,6 +1,7 @@
 test:
   go test -v ./pkg/po
   go test -v ./pkg/go/parse
+  go test -v ./internal/util
 bench:
   go test -v -bench=. ./pkg/go/parse
 gen-uml:
