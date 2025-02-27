@@ -2,6 +2,12 @@ package po
 
 type HeaderOption func(*HeaderConfig)
 
+func WithHewaderConfig(c HeaderConfig) HeaderOption {
+	return func(hc *HeaderConfig) {
+		*hc = c
+	}
+}
+
 func WithNplurals(n uint) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.Nplurals = n

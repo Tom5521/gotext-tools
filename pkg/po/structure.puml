@@ -10,6 +10,7 @@ namespace po {
         + Solve() Entries
         + FuzzyFind(id string, context string) int
         + FuzzySolve() Entries
+        + Header() Header
 
     }
     class Entry << (S,Aquamarine) >> {
@@ -32,7 +33,6 @@ namespace po {
         + Name string
 
         + Header() Header
-        + Nplurals() uint
         + Set(id string, context string, e Entry) 
         + LoadID(id string, context string) string
 
@@ -40,6 +40,7 @@ namespace po {
     class Header << (S,Aquamarine) >> {
         + Fields []HeaderField
 
+        + Nplurals() uint
         + ToEntry() Entry
         + Register(key string, d ...string) 
         + Load(key string) string

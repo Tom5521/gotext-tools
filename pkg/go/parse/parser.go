@@ -194,6 +194,8 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 		header = po.HeaderConfigFromOptions(p.config.HeaderOptions...).ToHeaderWithDefaults()
 	}
 
+	header.Fields = append(header.Fields, po.HeaderField{Key: "X-Generator", Value: "xgotext"})
+
 	file.Entries = append(file.Entries, header.ToEntry())
 
 	for _, f := range p.files {
