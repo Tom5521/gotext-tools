@@ -12,11 +12,7 @@ func NewFile(name string, entries ...Entry) *File {
 }
 
 func (f File) Header() Header {
-	return GenerateHeader(f.Entries)
-}
-
-func (f File) Nplurals() uint {
-	return GenerateNplurals(f.Header())
+	return f.Entries.Header()
 }
 
 func (f *File) Set(id, context string, e Entry) {

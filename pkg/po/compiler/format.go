@@ -48,7 +48,7 @@ func (c Compiler) formatHeader() string {
 
 func (c Compiler) formatEntry(t po.Entry) string {
 	var builder strings.Builder
-	nplurals := c.File.Nplurals()
+	nplurals := c.File.Header().Nplurals()
 
 	// Helper function to append formatted lines to the builder.
 	fprintfln := func(format string, args ...any) {

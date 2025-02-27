@@ -22,6 +22,26 @@ type Header struct {
 	Fields []HeaderField // A slice storing all registered header fields.
 }
 
+func (h Header) Nplurals() (nplurals uint) {
+	nplurals = 2
+	value := h.Load("Plural-Forms")
+	if value == "" {
+		return
+	}
+	if !npluralsRegex.MatchString(value) {
+		return
+	}
+	matches := npluralsRegex.FindStringSubmatch(value)
+	n, err := strconv.ParseUint(util.SafeSliceAccess(matches, 1), 10, 64)
+	if err != nil {
+		return
+	}
+
+	nplurals = uint(n)
+
+	return
+}
+
 func (h Header) ToEntry() (e Entry) {
 	var b strings.Builder
 
@@ -93,7 +113,7 @@ var (
 	headerRegex   = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
 )
 
-func GenerateHeader(e Entries) (h Header) {
+func (e Entries) Header() (h Header) {
 	i := e.Index("", "")
 	if i == -1 {
 		return
@@ -113,27 +133,6 @@ func GenerateHeader(e Entries) (h Header) {
 			},
 		)
 	}
-
-	return
-}
-
-func GenerateNplurals(header Header) (nplurals uint) {
-	nplurals = 2
-	value := header.Load("Plural-Forms")
-	if value == "" {
-		return
-	}
-	if !npluralsRegex.MatchString(value) {
-		return
-	}
-	matches := npluralsRegex.FindStringSubmatch(value)
-	n, err := strconv.ParseUint(util.SafeSliceAccess(matches, 1), 10, 64)
-	if err != nil {
-		return
-	}
-
-	nplurals = uint(n)
-
 	return
 }
 
