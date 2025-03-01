@@ -25,6 +25,7 @@ namespace po {
         + Str string
         + Locations []Location
 
+        + Hash() uint
         + String() string
 
     }

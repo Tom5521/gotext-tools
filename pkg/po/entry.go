@@ -37,7 +37,7 @@ func (e Entry) Hash() uint {
 
 	if e.Context != "" {
 		b.WriteString(e.Context)
-		b.WriteByte('4')
+		b.WriteByte('4') // EOT byte.
 	}
 	b.WriteString(e.ID)
 

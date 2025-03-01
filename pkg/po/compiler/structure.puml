@@ -1,17 +1,10 @@
 @startuml
 namespace compiler {
-    class Compiler << (S,Aquamarine) >> {
-        + File *po.File
-        + Config Config
-
-        - applyOptions(opts ...Option) 
-        - formatHeader() string
-        - formatEntry(t po.Entry) string
-
-        + ToWriter(w io.Writer, options ...Option) error
-        + ToFile(f string, options ...Option) error
-        + ToString(options ...Option) string
-        + ToBytes(options ...Option) []byte
+    interface Compiler  {
+        + ToWriter( io.Writer,  ...Option) error
+        + ToFile( string,  ...Option) error
+        + ToString( ...Option) string
+        + ToBytes( ...Option) []byte
 
     }
     class Config << (S,Aquamarine) >> {
@@ -32,12 +25,35 @@ namespace compiler {
         + Validate() error
 
     }
+    class MoCompiler << (S,Aquamarine) >> {
+        + File *po.File
+        + Config Config
+
+        - applyOptions(opts ...Option) 
+        - createBinary() 
+
+    }
+    class PoCompiler << (S,Aquamarine) >> {
+        + File *po.File
+        + Config Config
+
+        - applyOptions(opts ...Option) 
+        - formatHeader() string
+        - formatEntry(t po.Entry) string
+
+        + ToWriter(w io.Writer, options ...Option) error
+        + ToFile(f string, options ...Option) error
+        + ToString(options ...Option) string
+        + ToBytes(options ...Option) []byte
+
+    }
     class compiler.LocationMode << (T, #FF7700) >>  {
     }
     class compiler.Option << (T, #FF7700) >>  {
     }
 }
 
+"compiler.Compiler" <|-- "compiler.PoCompiler"
 
 "__builtin__.string" #.. "compiler.LocationMode"
 "compiler.<font color=blue>func</font>(*Config) " #.. "compiler.Option"
