@@ -22,7 +22,7 @@ msgstr ""
 	headerFieldFormat = `"%s: %s\n"`
 )
 
-func (c Compiler) formatHeader() string {
+func (c PoCompiler) formatHeader() string {
 	if c.Config.OmitHeader {
 		return ""
 	}
@@ -46,7 +46,7 @@ func (c Compiler) formatHeader() string {
 	return b.String()
 }
 
-func (c Compiler) formatEntry(t po.Entry) string {
+func (c PoCompiler) formatEntry(t po.Entry) string {
 	var builder strings.Builder
 	nplurals := c.File.Header().Nplurals()
 

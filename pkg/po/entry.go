@@ -1,6 +1,10 @@
 package po
 
-import "github.com/Tom5521/xgotext/internal/util"
+import (
+	"strings"
+
+	"github.com/Tom5521/xgotext/internal/util"
+)
 
 // Location represents the location of a translation string in the source code.
 type Location struct {
@@ -26,6 +30,18 @@ type Entry struct {
 	Plurals           []PluralEntry
 	Str               string
 	Locations         []Location // A list of source code locations for the string.
+}
+
+func (e Entry) Hash() uint {
+	var b strings.Builder
+
+	if e.Context != "" {
+		b.WriteString(e.Context)
+		b.WriteByte('4')
+	}
+	b.WriteString(e.ID)
+
+	return util.PJWHash(b.String())
 }
 
 func (e Entry) String() string {

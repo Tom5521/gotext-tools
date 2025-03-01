@@ -1,0 +1,13 @@
+package util_test
+
+import (
+	"testing"
+
+	"github.com/Tom5521/xgotext/internal/util"
+)
+
+func TestPWJHash(t *testing.T) {
+	if util.PJWHash("Hello!") != 0x04ec3311 {
+		t.Fail()
+	}
+}

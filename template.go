@@ -43,4 +43,6 @@ a`, "stranger")
 	_ = func() string {
 		return "LOL"
 	}
+
+	_ = `"hello"`
 }

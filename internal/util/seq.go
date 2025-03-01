@@ -29,14 +29,23 @@ func ROverSeq[T any](seq Seq[T]) chan T {
 // ROverSeq2 is an adaptation of the range-over-func feature from Go 1.23
 // for earlier versions. It converts a Seq2[K, V] generator into a Go channel.
 // The generator runs in a separate goroutine and sends only the values (not keys) to the channel.
-func ROverSeq2[K, V any](seq2 Seq2[K, V]) chan V {
-	ch := make(chan V)
+func ROverSeq2[K, V any](seq2 Seq2[K, V]) chan struct {
+	K K
+	V V
+} {
+	ch := make(chan struct {
+		K K
+		V V
+	})
 
 	go func() {
 		defer close(ch) // Ensure the channel is closed when the generator completes.
 
-		seq2(func(_ K, v V) bool {
-			ch <- v     // Send only the value to the channel.
+		seq2(func(k K, v V) bool {
+			ch <- struct {
+				K K
+				V V
+			}{k, v} // Send only the value to the channel.
 			return true // Continue the sequence.
 		})
 	}()

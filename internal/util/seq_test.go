@@ -38,11 +38,11 @@ func TestROverSeq2(t *testing.T) {
 
 	expected := map[int]bool{1: true, 2: true, 3: true}
 
-	for v := range util.ROverSeq2(seq2) {
-		if !expected[v] {
-			t.Errorf("Unexpected value: %d", v)
+	for f := range util.ROverSeq2(seq2) {
+		if !expected[f.V] {
+			t.Errorf("Unexpected value: %d", f.V)
 		}
-		delete(expected, v)
+		delete(expected, f.V)
 	}
 
 	if len(expected) > 0 {
