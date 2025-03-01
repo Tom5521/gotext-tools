@@ -2,43 +2,43 @@ package po
 
 type HeaderOption func(*HeaderConfig)
 
-func WithHewaderConfig(c HeaderConfig) HeaderOption {
+func HeaderWithConfig(c HeaderConfig) HeaderOption {
 	return func(hc *HeaderConfig) {
 		*hc = c
 	}
 }
 
-func WithNplurals(n uint) HeaderOption {
+func HeaderWithNplurals(n uint) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.Nplurals = n
 	}
 }
 
-func WithProjectIDVersion(v string) HeaderOption {
+func HeaderWithProjectIDVersion(v string) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.ProjectIDVersion = v
 	}
 }
 
-func WithReportMsgidBugsTo(r string) HeaderOption {
+func HeaderWithReportMsgidBugsTo(r string) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.ReportMsgidBugsTo = r
 	}
 }
 
-func WithLanguage(lang string) HeaderOption {
+func HeaderWithLanguage(lang string) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.Language = lang
 	}
 }
 
-func WithLanguageTeam(team string) HeaderOption {
+func HeaderWithLanguageTeam(team string) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.LanguageTeam = team
 	}
 }
 
-func WithLastTranslator(translator string) HeaderOption {
+func HeaderWithLastTranslator(translator string) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.LastTranslator = translator
 	}
