@@ -7,9 +7,9 @@ import (
 
 var (
 	headerCfg   po.HeaderConfig
-	compilerCfg compiler.Config
+	compilerCfg compiler.PoConfig
 )
 
 func initConfig() {
-	compilerCfg = compiler.Config{}
+	compilerCfg = compiler.PoConfig{}
 }

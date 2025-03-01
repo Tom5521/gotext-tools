@@ -51,7 +51,7 @@ Similarly for optional arguments.`,
 			return join(parser, out)
 		}
 
-		compiler := compiler.NewPo(parsedFile, compiler.WithConfig(CompilerCfg))
+		compiler := compiler.NewPo(parsedFile, compiler.PoWithConfig(CompilerCfg))
 
 		err = compiler.ToWriter(out)
 		if err != nil {

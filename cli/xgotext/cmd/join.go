@@ -31,7 +31,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 
 	po.MergeFiles(false, base, parsed)
 
-	compiler := compiler.NewPo(base, compiler.WithConfig(CompilerCfg))
+	compiler := compiler.NewPo(base, compiler.PoWithConfig(CompilerCfg))
 
 	// Truncate file.
 	rawfile, err = os.Create(rawfile.Name())
