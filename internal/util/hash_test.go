@@ -6,7 +6,7 @@ import (
 	"github.com/Tom5521/xgotext/internal/util"
 )
 
-func TestPWJHash(t *testing.T) {
+func TestPJWHash(t *testing.T) {
 	if util.PJWHash("Hello!") != 0x04ec3311 {
 		t.Fail()
 	}
