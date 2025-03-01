@@ -16,11 +16,11 @@ var _ Compiler = (*PoCompiler)(nil)
 // into different output formats, such as strings, byte slices, or files.
 type PoCompiler struct {
 	File   *po.File // The source file containing translation entries.
-	Config Config   // Configuration settings for compilation.
+	Config PoConfig // Configuration settings for compilation.
 }
 
 // applyOptions applies a set of options to modify the compiler's configuration.
-func (c *PoCompiler) applyOptions(opts ...Option) {
+func (c *PoCompiler) applyOptions(opts ...PoOption) {
 	for _, opt := range opts {
 		opt(&c.Config)
 	}
@@ -28,16 +28,16 @@ func (c *PoCompiler) applyOptions(opts ...Option) {
 
 // NewPo creates a new Compiler instance with the given translation file and options.
 // The provided options override the default configuration.
-func NewPo(file *po.File, options ...Option) PoCompiler {
+func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	return PoCompiler{
 		File:   file,
-		Config: DefaultConfig(options...),
+		Config: DefaultPoConfig(options...),
 	}
 }
 
 // ToWriter writes the compiled translations to an `io.Writer` in the PO file format.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToWriter(w io.Writer, options ...Option) error {
+func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
 	// Apply the provided options, which take precedence over the instance's configuration.
 	c.applyOptions(options...)
 	var err error
@@ -78,7 +78,7 @@ func (c PoCompiler) ToWriter(w io.Writer, options ...Option) error {
 // ToFile writes the compiled translations to a specified file.
 // If `ForcePo` is enabled, the file is created or truncated before writing.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToFile(f string, options ...Option) error {
+func (c PoCompiler) ToFile(f string, options ...PoOption) error {
 	flags := os.O_RDWR
 	if c.Config.ForcePo {
 		flags |= os.O_CREATE
@@ -123,7 +123,7 @@ func (c PoCompiler) ToFile(f string, options ...Option) error {
 
 // ToString compiles the translations and returns the result as a string.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToString(options ...Option) string {
+func (c PoCompiler) ToString(options ...PoOption) string {
 	var b strings.Builder
 
 	// Write the compiled content to the string builder.
@@ -134,7 +134,7 @@ func (c PoCompiler) ToString(options ...Option) string {
 
 // ToBytes compiles the translations and returns the result as a byte slice.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToBytes(options ...Option) []byte {
+func (c PoCompiler) ToBytes(options ...PoOption) []byte {
 	var b bytes.Buffer
 
 	// Write the compiled content to the byte buffer.

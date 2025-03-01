@@ -66,13 +66,13 @@ func (c PoCompiler) formatEntry(t po.Entry) string {
 		fprintfln("#. %s", xcomment)
 	}
 	// Add location comments if not suppressed by the configuration.
-	if !c.Config.NoLocation && c.Config.AddLocation != LocationModeNever {
+	if !c.Config.NoLocation && c.Config.AddLocation != PoLocationModeNever {
 		switch c.Config.AddLocation {
-		case LocationModeFull:
+		case PoLocationModeFull:
 			for _, location := range t.Locations {
 				fprintfln("#: %s:%d", location.File, location.Line)
 			}
-		case LocationModeFile:
+		case PoLocationModeFile:
 			for _, location := range t.Locations {
 				fprintfln("#: %s", location.File)
 			}
@@ -114,7 +114,7 @@ func (c PoCompiler) formatEntry(t po.Entry) string {
 	return builder.String()
 }
 
-func formatPrefixAndSuffix(id string, cfg Config) string {
+func formatPrefixAndSuffix(id string, cfg PoConfig) string {
 	text := `""`
 
 	if cfg.MsgstrPrefix != "" {

@@ -10,7 +10,7 @@ import (
 var (
 	PoParserCfg poparse.Config
 	GoParserCfg goparse.Config
-	CompilerCfg compiler.Config
+	CompilerCfg compiler.PoConfig
 	HeadersCfg  po.HeaderConfig
 )
 
@@ -28,7 +28,7 @@ func initConfig() {
 		Logger:       logger,
 		Verbose:      verbose,
 	}
-	CompilerCfg = compiler.Config{
+	CompilerCfg = compiler.PoConfig{
 		Logger:          logger,
 		ForcePo:         forcePo,
 		OmitHeader:      omitHeader,
@@ -37,7 +37,7 @@ func initConfig() {
 		ForeignUser:     foreignUser,
 		Title:           title,
 		NoLocation:      noLocation,
-		AddLocation:     compiler.LocationMode(addLocation),
+		AddLocation:     compiler.PoLocationMode(addLocation),
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
 		Verbose:         verbose,

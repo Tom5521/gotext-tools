@@ -52,8 +52,7 @@ func makeRevVersions() []byte {
 }
 
 type MoCompiler struct {
-	File   *po.File
-	Config Config
+	File *po.File
 }
 
 func (mc *MoCompiler) applyOptions(opts ...Option) {
