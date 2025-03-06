@@ -21,7 +21,7 @@ namespace po {
         + ID string
         + Context string
         + Plural string
-        + Plurals []PluralEntry
+        + Plurals PluralEntries
         + Str string
         + Locations []Location
 
@@ -70,6 +70,10 @@ namespace po {
         + File string
 
     }
+    class PluralEntries << (S,Aquamarine) >> {
+        + Sort() PluralEntries
+
+    }
     class PluralEntry << (S,Aquamarine) >> {
         + ID int
         + Str string
@@ -79,9 +83,12 @@ namespace po {
     }
     class po.HeaderOption << (T, #FF7700) >>  {
     }
+    class po.PluralEntries << (T, #FF7700) >>  {
+    }
 }
 
 
 "po.<font color=blue>func</font>(*HeaderConfig) " #.. "po.HeaderOption"
 "po.[]Entry" #.. "po.Entries"
+"po.[]PluralEntry" #.. "po.PluralEntries"
 @enduml
