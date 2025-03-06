@@ -25,8 +25,8 @@ var (
 		return littleEndianMagicNumber
 	}()
 	order        = bin.NativeEndian
-	eotSeparator = string([]byte{0x4})
-	nulSeparator = string([]byte{0x0})
+	eotSeparator = "\x04"
+	nulSeparator = "\x00"
 )
 
 const (
@@ -48,11 +48,12 @@ func NewMo(file *po.File, opts ...MoOption) MoCompiler {
 	return c
 }
 
+// Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc MoCompiler) createBinary() ([]byte, error) {
 	entries := mc.File.Entries.CleanDuplicates().Solve()
 
 	var offsets []int
-	var ids, strs strings.Builder
+	var ids, strs string
 	for _, e := range entries {
 		var msgid string
 		var msgstr string
@@ -73,17 +74,17 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 		}
 
 		offsets = append(offsets,
-			ids.Len(),
+			len(ids),
 			len(msgid),
-			strs.Len(),
+			len(strs),
 			len(msgstr),
 		)
-		ids.WriteString(msgid + nulSeparator)
-		strs.WriteString(msgstr + nulSeparator)
+		ids += msgid + nulSeparator
+		strs += msgstr + nulSeparator
 	}
 
 	keystart := 7*4 + 16*len(entries)
-	valuestart := keystart + ids.Len()
+	valuestart := keystart + len(ids)
 
 	var koffsets, voffsets []int
 
@@ -101,12 +102,6 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 	}
 	offsets = append(koffsets, voffsets...)
 
-	// bytes alias
-	bts := make([]byte, len(offsets)*4)
-	for i, v := range offsets {
-		order.AppendUint32(bts[i*4:], uint32(v))
-	}
-
 	var (
 		err  error
 		buf  bytes.Buffer
@@ -117,18 +112,21 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 			7 * 4,
 			7*4 + len(entries)*8,
 			0, keystart,
-			bts,
-			// ids.String(),
-			// strs.String(),
-			[]byte(ids.String()),
-			[]byte(strs.String()),
+			func() (s []uint32) {
+				for _, v := range offsets {
+					s = append(s, uint32(v))
+				}
+				return
+			}(),
+			[]byte(ids),
+			[]byte(strs),
 		}
 	)
 
 	// Fix not fixed-size integers.
 	for i, v := range data {
 		if _, ok := v.(int); ok {
-			data[i] = int32(v.(int))
+			data[i] = uint32(v.(int))
 		}
 	}
 
