@@ -49,7 +49,7 @@ func NewMo(file *po.File, opts ...MoOption) MoCompiler {
 }
 
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
-func (mc MoCompiler) createBinary() ([]byte, error) {
+func (mc MoCompiler) writeTo(writer io.Writer) error {
 	entries := mc.File.Entries.CleanDuplicates().Solve()
 
 	var offsets []int
@@ -90,7 +90,7 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 
 	for i := 0; i < len(offsets); i += 4 {
 		if i+3 >= len(offsets) {
-			return nil, errors.New("not enough values to unpack")
+			return errors.New("not enough values to unpack")
 		}
 		o1 := offsets[i]
 		l1 := offsets[i+1]
@@ -102,26 +102,22 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 	}
 	offsets = append(koffsets, voffsets...)
 
-	var (
-		err  error
-		buf  bytes.Buffer
-		data = []any{
-			magicNumber,
-			0,
-			len(entries),
-			7 * 4,
-			7*4 + len(entries)*8,
-			0, keystart,
-			func() (s []uint32) {
-				for _, v := range offsets {
-					s = append(s, uint32(v))
-				}
-				return
-			}(),
-			[]byte(ids),
-			[]byte(strs),
-		}
-	)
+	data := []any{
+		magicNumber,
+		0,
+		len(entries),
+		7 * 4,
+		7*4 + len(entries)*8,
+		0, keystart,
+		func() (s []uint32) {
+			for _, v := range offsets {
+				s = append(s, uint32(v))
+			}
+			return
+		}(),
+		[]byte(ids),
+		[]byte(strs),
+	}
 
 	// Fix not fixed-size integers.
 	for i, v := range data {
@@ -132,22 +128,17 @@ func (mc MoCompiler) createBinary() ([]byte, error) {
 
 	// Write data.
 	for _, value := range data {
-		err = bin.Write(&buf, order, value)
+		err := bin.Write(writer, order, value)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return buf.Bytes(), nil
+	return nil
 }
 
 func (mc MoCompiler) ToWriter(w io.Writer) error {
-	b, err := mc.createBinary()
-	if err != nil && !mc.Config.IgnoreErrors {
-		return err
-	}
-
-	_, err = w.Write(b)
+	err := mc.writeTo(w)
 	if err != nil && !mc.Config.IgnoreErrors {
 		return err
 	}
@@ -155,44 +146,35 @@ func (mc MoCompiler) ToWriter(w io.Writer) error {
 	return nil
 }
 
-func (c MoCompiler) ToFile(f string) error {
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Opening file...")
+func (mc MoCompiler) ToFile(f string) error {
+	if mc.Config.Verbose {
+		mc.Config.Logger.Println("Opening file...")
 	}
 	// Open the file with the determined flags.
-	file, err := os.OpenFile(f, os.O_RDWR, os.ModePerm)
-	if err != nil && !c.Config.IgnoreErrors {
+	flags := os.O_WRONLY | os.O_TRUNC
+	if mc.Config.Force {
+		flags |= os.O_CREATE
+	}
+	file, err := os.OpenFile(f, flags, os.ModePerm)
+	if err != nil && !mc.Config.IgnoreErrors {
 		err = fmt.Errorf("error opening file: %w", err)
-		c.Config.Logger.Println("ERROR:", err)
+		mc.Config.Logger.Println("ERROR:", err)
 		return err
 	}
 	defer file.Close()
 
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Cleaning file contents...")
-	}
-	file, err = os.Create(file.Name())
-	if err != nil {
-		err = fmt.Errorf("error truncating file: %w", err)
-		c.Config.Logger.Println("ERROR:", err)
-		return err
+	if mc.Config.Verbose {
+		mc.Config.Logger.Println("Cleaning file contents...")
 	}
 
 	// Write compiled translations to the file.
-	return c.ToWriter(file)
-}
-
-func (mc MoCompiler) ToString() string {
-	var b strings.Builder
-
-	bin, _ := mc.createBinary()
-	b.Write(bin)
-
-	return b.String()
+	return mc.ToWriter(file)
 }
 
 func (mc MoCompiler) ToBytes() []byte {
-	b, _ := mc.createBinary()
+	var b bytes.Buffer
 
-	return b
+	mc.writeTo(&b)
+
+	return b.Bytes()
 }

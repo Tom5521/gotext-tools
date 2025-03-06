@@ -3,7 +3,6 @@ package compiler_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"testing"
@@ -15,30 +14,28 @@ import (
 
 func TestMoCompiler(t *testing.T) {
 	e := po.Entries{
-		{ID: "id1", Str: "HELLO"},
-		{ID: "id2", Str: "Hello2"},
+		{Context: "My context :3", ID: "id1", Str: "HELLO"},
+		{ID: "id2", Str: "Hello2", Plural: "helooows", Plurals: po.PluralEntries{po.PluralEntry{ID: 0, Str: "Holanda"}, po.PluralEntry{ID: 1, Str: "Holandas"}}},
 		{ID: "id3", Str: "Hello3"},
 	}
 	c := compiler.NewMo(&po.File{Entries: e})
 
-	var buf bytes.Buffer
-	file, err := os.OpenFile("test.mo", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	var buf, stderr bytes.Buffer
+	cmd := exec.Command("msgunfmt", "-")
+	cmd.Stdin = &buf
+	cmd.Stderr = &stderr
+	cmd.Stdout = os.Stdout
+
+	err := c.ToWriter(&buf)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = c.ToWriter(io.MultiWriter(&buf, file))
+	err = cmd.Run()
 	if err != nil {
 		t.Error(err)
-		return
-	}
-
-	cmd := exec.Command("msgunfmt", "test.mo")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Error(err)
-		fmt.Println(string(out))
+		fmt.Println(stderr.String())
 		pretty.Println("BYTES:\n", buf.Bytes())
 		return
 	}

@@ -71,7 +71,7 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 // If `ForcePo` is enabled, the file is created or truncated before writing.
 // The provided options override the instance's configuration.
 func (c PoCompiler) ToFile(f string) error {
-	flags := os.O_RDWR
+	flags := os.O_WRONLY | os.O_TRUNC
 	if c.Config.ForcePo {
 		flags |= os.O_CREATE
 	}
@@ -79,6 +79,7 @@ func (c PoCompiler) ToFile(f string) error {
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Opening file...")
 	}
+
 	// Open the file with the determined flags.
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !c.Config.IgnoreErrors {
@@ -87,20 +88,6 @@ func (c PoCompiler) ToFile(f string) error {
 		return err
 	}
 	defer file.Close()
-
-	// If `ForcePo` is enabled, truncate and reset the file position.
-	if c.Config.ForcePo {
-		if c.Config.Verbose {
-			c.Config.Logger.Println("Cleaning file contents...")
-		}
-		file, err = os.Create(file.Name())
-		if err != nil {
-			err = fmt.Errorf("error truncating file: %w", err)
-			c.Config.Logger.Println("ERROR:", err)
-			return err
-		}
-
-	}
 
 	// Write compiled translations to the file.
 	return c.ToWriter(file)

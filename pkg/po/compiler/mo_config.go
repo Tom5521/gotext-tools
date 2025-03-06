@@ -7,6 +7,7 @@ import (
 
 type MoConfig struct {
 	Logger       *log.Logger
+	Force        bool
 	Verbose      bool
 	IgnoreErrors bool
 }
@@ -24,6 +25,18 @@ func DefaultMoConfig(opts ...MoOption) MoConfig {
 }
 
 type MoOption func(c *MoConfig)
+
+func MoWithConfig(n MoConfig) MoOption {
+	return func(c *MoConfig) {
+		*c = n
+	}
+}
+
+func MoWithForce(f bool) MoOption {
+	return func(c *MoConfig) {
+		c.Force = f
+	}
+}
 
 func MoWithIgnoreErrors(i bool) MoOption {
 	return func(c *MoConfig) {
