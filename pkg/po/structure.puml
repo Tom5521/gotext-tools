@@ -3,6 +3,7 @@ namespace po {
     class Entries << (S,Aquamarine) >> {
         + Index(id string, context string) int
         + Sort() Entries
+        + SortByFuzzy() Entries
         + SortByFile() Entries
         + SortByID() Entries
         + SortByLine() Entries
@@ -25,7 +26,6 @@ namespace po {
         + Str string
         + Locations []Location
 
-        + Hash() uint
         + String() string
 
     }

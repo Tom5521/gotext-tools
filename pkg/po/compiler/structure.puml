@@ -3,7 +3,6 @@ namespace compiler {
     interface Compiler  {
         + ToWriter( io.Writer) error
         + ToFile( string) error
-        + ToString() string
         + ToBytes() []byte
 
     }
@@ -11,16 +10,16 @@ namespace compiler {
         + File *po.File
         + Config MoConfig
 
-        - createBinary() ([]byte, error)
+        - writeTo(writer io.Writer) error
 
         + ToWriter(w io.Writer) error
         + ToFile(f string) error
-        + ToString() string
         + ToBytes() []byte
 
     }
     class MoConfig << (S,Aquamarine) >> {
         + Logger *log.Logger
+        + Force bool
         + Verbose bool
         + IgnoreErrors bool
 
@@ -52,6 +51,9 @@ namespace compiler {
         + MsgstrSuffix string
         + IgnoreErrors bool
         + Verbose bool
+        + CommentFuzzy bool
+        + HeaderComments bool
+        + HeaderFields bool
 
         + Validate() error
 
@@ -62,12 +64,15 @@ namespace compiler {
     }
     class compiler.PoOption << (T, #FF7700) >>  {
     }
+    class compiler.u32 << (T, #FF7700) >>  {
+    }
 }
 
 "compiler.Compiler" <|-- "compiler.MoCompiler"
 "compiler.Compiler" <|-- "compiler.PoCompiler"
 
 "__builtin__.string" #.. "compiler.PoLocationMode"
+"__builtin__.uint32" #.. "compiler.u32"
 "compiler.<font color=blue>func</font>(*MoConfig) " #.. "compiler.MoOption"
 "compiler.<font color=blue>func</font>(*PoConfig) " #.. "compiler.PoOption"
 @enduml
