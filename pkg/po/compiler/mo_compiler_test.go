@@ -1,9 +1,7 @@
 package compiler_test
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 	"testing"
 
 	"github.com/Tom5521/xgotext/internal/util"
@@ -26,29 +24,9 @@ func TestMoCompiler(t *testing.T) {
 		},
 		{ID: "id3", Str: "Hello3"},
 	}
+
 	c := compiler.NewMo(&po.File{Entries: input})
-
-	var buf, stderr, stdout bytes.Buffer
-	cmd := exec.Command("msgunfmt", "-")
-	cmd.Stdin = &buf
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-
-	err := c.ToWriter(&buf)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	err = cmd.Run()
-	if err != nil {
-		t.Error(err)
-		fmt.Println(stderr.String())
-		pretty.Println("BYTES:\n", buf.Bytes())
-		return
-	}
-
-	parser, err := parse.NewPoFromReader(&stdout, "stdin")
+	parser, err := parse.NewMoFromBytes(c.ToBytes(), "test.mo")
 	if err != nil {
 		t.Error(err)
 		return
