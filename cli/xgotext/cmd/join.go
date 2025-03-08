@@ -10,10 +10,10 @@ import (
 )
 
 func join(newParse *goparse.Parser, rawfile *os.File) error {
-	baseParse, err := poparse.NewParserFromReader(
+	baseParse, err := poparse.NewPoFromReader(
 		rawfile,
 		rawfile.Name(),
-		poparse.WithConfig(PoParserCfg),
+		poparse.PoWithConfig(PoParserCfg),
 	)
 	if err != nil {
 		return err

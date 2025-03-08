@@ -45,7 +45,6 @@ func (h Header) Nplurals() (nplurals uint) {
 func (h Header) ToEntry() (e Entry) {
 	var b strings.Builder
 
-	e.Flags = append(e.Flags, "fuzzy")
 	for _, field := range h.Fields {
 		fmt.Fprintf(&b, "\n%s: %s\n", field.Key, field.Value)
 	}
@@ -64,7 +63,7 @@ type HeaderConfig struct {
 }
 
 func (cfg HeaderConfig) ToHeaderWithDefaults() (h Header) {
-	h = DefaultHeader()
+	h = DefaultTemplateHeader()
 
 	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
 	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
@@ -136,9 +135,9 @@ func (e Entries) Header() (h Header) {
 	return
 }
 
-// DefaultHeader initializes a Header object with commonly used default fields.
+// DefaultTemplateHeader initializes a Header object with commonly used default fields.
 // These fields are typically found in .po files for localization.
-func DefaultHeader() (h Header) {
+func DefaultTemplateHeader() (h Header) {
 	// Register standard header fields with optional default values.
 	h.Register("Project-Id-Version")                                  // No default value.
 	h.Register("Report-Msgid-Bugs-To")                                // No default value.

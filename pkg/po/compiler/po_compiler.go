@@ -19,13 +19,6 @@ type PoCompiler struct {
 	Config PoConfig // Configuration settings for compilation.
 }
 
-// applyOptions applies a set of options to modify the compiler's configuration.
-func (c *PoCompiler) applyOptions(opts ...PoOption) {
-	for _, opt := range opts {
-		opt(&c.Config)
-	}
-}
-
 // NewPo creates a new Compiler instance with the given translation file and options.
 // The provided options override the default configuration.
 func NewPo(file *po.File, options ...PoOption) PoCompiler {
@@ -37,9 +30,8 @@ func NewPo(file *po.File, options ...PoOption) PoCompiler {
 
 // ToWriter writes the compiled translations to an `io.Writer` in the PO file format.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
+func (c PoCompiler) ToWriter(w io.Writer) error {
 	// Apply the provided options, which take precedence over the instance's configuration.
-	c.applyOptions(options...)
 	var err error
 
 	if c.Config.Verbose {
@@ -56,7 +48,7 @@ func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
 		c.Config.Logger.Println("Cleaning duplicates...")
 	}
 	// Remove duplicate entries and write each entry to the writer.
-	entries := c.File.Entries.CleanDuplicates()
+	entries := c.File.Entries.CleanDuplicates().SortByFuzzy()
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing entries...")
 	}
@@ -78,15 +70,16 @@ func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
 // ToFile writes the compiled translations to a specified file.
 // If `ForcePo` is enabled, the file is created or truncated before writing.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToFile(f string, options ...PoOption) error {
-	flags := os.O_RDWR
-	if c.Config.ForcePo {
-		flags |= os.O_CREATE
+func (c PoCompiler) ToFile(f string) error {
+	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+	if !c.Config.ForcePo {
+		flags |= os.O_EXCL
 	}
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Opening file...")
 	}
+
 	// Open the file with the determined flags.
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !c.Config.IgnoreErrors {
@@ -96,49 +89,28 @@ func (c PoCompiler) ToFile(f string, options ...PoOption) error {
 	}
 	defer file.Close()
 
-	// If `ForcePo` is enabled, truncate and reset the file position.
-	if c.Config.ForcePo {
-		if c.Config.Verbose {
-			c.Config.Logger.Println("Cleaning file contents...")
-		}
-		err = file.Truncate(0)
-		if err != nil && !c.Config.IgnoreErrors {
-			err = fmt.Errorf("error truncating file: %w", err)
-			c.Config.Logger.Println("ERROR:", err)
-			return err
-		}
-
-		// Move the file pointer back to the beginning.
-		_, err = file.Seek(0, 0)
-		if err != nil && !c.Config.IgnoreErrors {
-			err = fmt.Errorf("error moving the file pointer back to the beginning: %w", err)
-			c.Config.Logger.Println("ERROR:", err)
-			return err
-		}
-	}
-
 	// Write compiled translations to the file.
-	return c.ToWriter(file, options...)
+	return c.ToWriter(file)
 }
 
 // ToString compiles the translations and returns the result as a string.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToString(options ...PoOption) string {
+func (c PoCompiler) ToString() string {
 	var b strings.Builder
 
 	// Write the compiled content to the string builder.
-	c.ToWriter(&b, options...)
+	c.ToWriter(&b)
 
 	return b.String()
 }
 
 // ToBytes compiles the translations and returns the result as a byte slice.
 // The provided options override the instance's configuration.
-func (c PoCompiler) ToBytes(options ...PoOption) []byte {
+func (c PoCompiler) ToBytes() []byte {
 	var b bytes.Buffer
 
 	// Write the compiled content to the byte buffer.
-	c.ToWriter(&b, options...)
+	c.ToWriter(&b)
 
 	return b.Bytes()
 }

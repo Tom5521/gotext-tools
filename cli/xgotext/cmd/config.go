@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	PoParserCfg poparse.Config
+	PoParserCfg poparse.PoConfig
 	GoParserCfg goparse.Config
 	CompilerCfg compiler.PoConfig
 	HeadersCfg  po.HeaderConfig
@@ -41,8 +41,10 @@ func initConfig() {
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
 		Verbose:         verbose,
+		HeaderComments:  true,
+		HeaderFields:    true,
 	}
-	PoParserCfg = poparse.Config{
+	PoParserCfg = poparse.PoConfig{
 		Logger: logger,
 	}
 }

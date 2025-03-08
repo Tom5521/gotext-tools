@@ -16,9 +16,9 @@ type Listener struct {
 	*BasePoListener
 
 	entry   po.Entry
-	entries po.Entries
+	Entries po.Entries
 
-	errors []error
+	Errors []error
 }
 
 func (l *Listener) getStrings(strs []antlr.TerminalNode, storange *string) {
@@ -27,7 +27,7 @@ func (l *Listener) getStrings(strs []antlr.TerminalNode, storange *string) {
 	for i, str := range strs {
 		s, err := strconv.Unquote(str.GetText())
 		if err != nil {
-			l.errors = append(l.errors, err)
+			l.Errors = append(l.Errors, err)
 		}
 		b.WriteString(s)
 		if i != len(strs)-1 {
@@ -66,7 +66,7 @@ func (l *Listener) EnterPlural_msgstr(ctx *Plural_msgstrContext) {
 	literal = pluralMsgstrRegex.FindStringSubmatch(literal)[1]
 	uintv, err := strconv.Atoi(literal)
 	if err != nil {
-		l.errors = append(l.errors, err)
+		l.Errors = append(l.Errors, err)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (l *Listener) EnterPlural_msgstr(ctx *Plural_msgstrContext) {
 }
 
 func (l *Listener) ExitEntry(_ *EntryContext) {
-	l.entries = append(l.entries, l.entry)
+	l.Entries = append(l.Entries, l.entry)
 	l.entry = po.Entry{}
 }
 
@@ -99,7 +99,7 @@ func (l *Listener) EnterComment(ctx *CommentContext) {
 		if parts[1] != "" {
 			line, err = strconv.Atoi(parts[1])
 			if err != nil {
-				l.errors = append(l.errors, err)
+				l.Errors = append(l.Errors, err)
 				return
 			}
 		}
@@ -124,5 +124,5 @@ func (l *Listener) EnterComment(ctx *CommentContext) {
 }
 
 func (l *Listener) VisitErrorNode(node antlr.ErrorNode) {
-	l.errors = append(l.errors, errors.New(node.GetText()))
+	l.Errors = append(l.Errors, errors.New(node.GetText()))
 }

@@ -2,6 +2,8 @@ test:
   go test -v ./pkg/po
   go test -v ./pkg/go/parse
   go test -v ./internal/util
+  go test -v ./pkg/po/compiler
+  go test -v ./pkg/po/parse
 bench:
   go test -v -bench=. ./pkg/go/parse
 gen-uml:
@@ -13,7 +15,7 @@ gen-uml:
   plantuml -theme spacelab ./pkg/po/structure.puml
   plantuml -theme spacelab ./pkg/go/parse/structure.puml
 gen-parser:
-  antlr4 -Dlanguage=Go -package parse ./pkg/po/parse/Po.g4
+  antlr4 -Dlanguage=Go -package parse ./internal/antlr-po/Po.g4
 clean:
   rm *.po* *.log
-  rm ./pkg/po/parse/*.interp ./pkg/po/parse/*.tokens
+  rm ./internal/antlr-po/*.interp ./internal/antlr-po/*.tokens

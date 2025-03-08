@@ -1,7 +1,7 @@
 package po
 
 import (
-	"strings"
+	"slices"
 
 	"github.com/Tom5521/xgotext/internal/util"
 )
@@ -10,6 +10,16 @@ import (
 type Location struct {
 	Line int    // The line number of the translation.
 	File string // The file name where the translation is located.
+}
+
+type PluralEntries []PluralEntry
+
+func (p PluralEntries) Sort() PluralEntries {
+	slices.SortFunc(p, func(a, b PluralEntry) int {
+		return a.ID - b.ID
+	})
+
+	return p
 }
 
 type PluralEntry struct {
@@ -27,21 +37,9 @@ type Entry struct {
 	ID                string // The original string to be translated.
 	Context           string // The context in which the string is used (optional).
 	Plural            string // The plural form of the string (optional).
-	Plurals           []PluralEntry
+	Plurals           PluralEntries
 	Str               string
 	Locations         []Location // A list of source code locations for the string.
-}
-
-func (e Entry) Hash() uint {
-	var b strings.Builder
-
-	if e.Context != "" {
-		b.WriteString(e.Context)
-		b.WriteByte('4') // EOT byte.
-	}
-	b.WriteString(e.ID)
-
-	return util.PJWHash(b.String())
 }
 
 func (e Entry) String() string {

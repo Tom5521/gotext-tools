@@ -1,69 +1,186 @@
-//go:build experimental
-// +build experimental
-
 package compiler
 
 import (
 	"bytes"
-	"encoding/binary"
-	"unsafe"
+	bin "encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"reflect"
+	"slices"
+	"strings"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
-// var _ Compiler = (*MoCompiler)(nil)
+// Aliase this bc I'm too lazy to write "uint32" every time I want to use it.
+type u32 = uint32
 
 var (
-	isBigEndian = (*(*[2]uint8)(unsafe.Pointer(&[]uint16{1}[0])))[0] == 0
-
-	magicNumber = func() uint32 {
-		if isBigEndian {
-			return bigEndianMagicNumber
+	magicNumber = func() u32 {
+		if util.IsBigEndian {
+			return util.BigEndianMagicNumber
 		}
-		return littleEndianMagicNumber
+		return util.LittleEndianMagicNumber
 	}()
-	endian = binary.NativeEndian
+	order = bin.NativeEndian
 )
 
 const (
-	bigEndianMagicNumber    uint32 = 0xde120495
-	littleEndianMagicNumber uint32 = 0x950412de
-
-	revVersionMajor, revVersionMinor uint16 = 0x0001, 0x0000
+	eot = "\x04"
+	nul = "\x00"
 )
 
-func makeMagicNumber() []byte {
-	b := make([]byte, 4)
-	endian.AppendUint32(b, magicNumber)
-
-	return b
-}
-
-func makeRevVersions() []byte {
-	var buf []byte
-	a, b := make([]byte, 2), make([]byte, 2)
-	endian.AppendUint16(a, revVersionMajor)
-	endian.AppendUint16(b, revVersionMinor)
-
-	buf = append(buf, a...)
-	buf = append(buf, b...)
-
-	return buf
-}
+var _ Compiler = (*MoCompiler)(nil)
 
 type MoCompiler struct {
-	File *po.File
+	File   *po.File
+	Config MoConfig
 }
 
-func (mc *MoCompiler) applyOptions(opts ...Option) {
-	for _, opt := range opts {
-		opt(&mc.Config)
+func NewMo(file *po.File, opts ...MoOption) MoCompiler {
+	c := MoCompiler{
+		File:   file,
+		Config: DefaultMoConfig(opts...),
 	}
+
+	return c
 }
 
-func (mc *MoCompiler) createBinary() {
-	var buf bytes.Buffer
+func cleanEntries(in po.Entries) (out po.Entries) {
+	in = in.Solve()
 
-	buf.Write(makeMagicNumber())
-	buf.Write(makeRevVersions())
+	for _, v := range in {
+		if slices.Contains(v.Flags, "fuzzy") {
+			continue
+		}
+		out = append(out, v)
+	}
+
+	return
+}
+
+// A len() function with fixed-size return.
+func flen(value any) u32 {
+	return u32(reflect.ValueOf(value).Len())
+}
+
+// Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
+func (mc MoCompiler) writeTo(writer io.Writer) error {
+	entries := cleanEntries(mc.File.Entries)
+
+	var offsets []u32
+	var ids, strs string
+	for _, e := range entries {
+		var msgid string
+		var msgstr string
+		if e.Context != "" {
+			msgid = e.Context + eot
+		}
+		if e.Plural != "" {
+			var msgstrs []string
+			plurals := e.Plurals.Sort()
+			for _, plural := range plurals {
+				msgstrs = append(msgstrs, plural.Str)
+			}
+			msgid += e.ID + nul + e.Plural
+			msgstr = strings.Join(msgstrs, nul)
+		} else {
+			msgid += e.ID
+			msgstr = e.Str
+		}
+
+		offsets = append(offsets,
+			flen(ids),
+			flen(msgid),
+			flen(strs),
+			flen(msgstr),
+		)
+		ids += msgid + nul
+		strs += msgstr + nul
+	}
+
+	keystart := 7*4 + 16*flen(entries)
+	valuestart := keystart + flen(ids)
+
+	var koffsets, voffsets []u32
+
+	for i := 0; i < len(offsets); i += 4 {
+		if i+3 >= len(offsets) {
+			return errors.New("not enough values to unpack")
+		}
+		o1 := offsets[i]
+		l1 := offsets[i+1]
+		o2 := offsets[i+2]
+		l2 := offsets[i+3]
+
+		koffsets = append(koffsets, l1, o1+keystart)
+		voffsets = append(voffsets, l2, o2+valuestart)
+	}
+	offsets = append(koffsets, voffsets...)
+
+	data := []any{
+		magicNumber,
+		u32(0),
+		flen(entries),
+		u32(7 * 4),
+		7*4 + flen(entries)*8,
+		u32(0), keystart,
+		offsets,
+		[]byte(ids),
+		[]byte(strs),
+	}
+
+	for _, v := range data {
+		err := bin.Write(writer, order, v)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (mc MoCompiler) ToWriter(w io.Writer) error {
+	err := mc.writeTo(w)
+	if err != nil && !mc.Config.IgnoreErrors {
+		return err
+	}
+
+	return nil
+}
+
+func (mc MoCompiler) ToFile(f string) error {
+	if mc.Config.Verbose {
+		mc.Config.Logger.Println("Opening file...")
+	}
+	// Open the file with the determined flags.
+	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+	if !mc.Config.Force {
+		flags |= os.O_EXCL
+	}
+	file, err := os.OpenFile(f, flags, os.ModePerm)
+	if err != nil && !mc.Config.IgnoreErrors {
+		err = fmt.Errorf("error opening file: %w", err)
+		mc.Config.Logger.Println("ERROR:", err)
+		return err
+	}
+	defer file.Close()
+
+	if mc.Config.Verbose {
+		mc.Config.Logger.Println("Cleaning file contents...")
+	}
+
+	// Write compiled translations to the file.
+	return mc.ToWriter(file)
+}
+
+func (mc MoCompiler) ToBytes() []byte {
+	var b bytes.Buffer
+
+	mc.writeTo(&b)
+
+	return b.Bytes()
 }

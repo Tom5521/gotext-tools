@@ -12,13 +12,11 @@ import (
 type Entries []Entry
 
 func (e Entries) Index(id, context string) int {
-	for i, entry := range e {
-		if entry.ID == id && entry.Context == context {
-			return i
-		}
-	}
-
-	return -1
+	return slices.IndexFunc(e,
+		func(e Entry) bool {
+			return e.ID == id && e.Context == context
+		},
+	)
 }
 
 // Sort organizes the entries by grouping them by file and sorting them by line.
@@ -52,14 +50,31 @@ func (e Entries) Sort() Entries {
 		sortedEntries = append(sortedEntries, groupsMap[file]...)
 	}
 
-	return sortedEntries
+	return sortedEntries.SortByFuzzy()
+}
+
+func (e Entries) SortByFuzzy() Entries {
+	contains := slices.Contains[[]string]
+	slices.SortFunc(e, func(a, b Entry) int {
+		aContains := contains(a.Flags, "fuzzy")
+		bContains := contains(b.Flags, "fuzzy")
+
+		switch {
+		case aContains == bContains:
+			return 0
+		case aContains && !bContains:
+			return 1
+		default:
+			return -1
+		}
+	})
+
+	return e
 }
 
 // SortByFile sorts the entries by the file name of the first location.
 func (e Entries) SortByFile() Entries {
-	sorted := make(Entries, len(e))
-	copy(sorted, e)
-	slices.SortFunc(sorted, func(a, b Entry) int {
+	slices.SortFunc(e, func(a, b Entry) int {
 		if len(a.Locations) == 0 {
 			return 1
 		}
@@ -68,24 +83,20 @@ func (e Entries) SortByFile() Entries {
 		}
 		return strings.Compare(a.Locations[0].File, b.Locations[0].File)
 	})
-	return sorted
+	return e
 }
 
 // SortByID sorts the entries by their ID.
 func (e Entries) SortByID() Entries {
-	sorted := make(Entries, len(e))
-	copy(sorted, e)
-	slices.SortFunc(sorted, func(a, b Entry) int {
+	slices.SortFunc(e, func(a, b Entry) int {
 		return strings.Compare(a.ID, b.ID)
 	})
-	return sorted
+	return e
 }
 
 // SortByLine sorts the entries by line number in their first location.
 func (e Entries) SortByLine() Entries {
-	sorted := make(Entries, len(e))
-	copy(sorted, e)
-	slices.SortFunc(sorted, func(a, b Entry) int {
+	slices.SortFunc(e, func(a, b Entry) int {
 		if len(a.Locations) == 0 {
 			return 1
 		}
@@ -94,7 +105,7 @@ func (e Entries) SortByLine() Entries {
 		}
 		return a.Locations[0].Line - b.Locations[0].Line
 	})
-	return sorted
+	return e
 }
 
 // CleanDuplicates removes duplicate entries with the same ID and context, merging their locations.

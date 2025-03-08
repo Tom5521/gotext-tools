@@ -1,13 +1,43 @@
 @startuml
 namespace compiler {
     interface Compiler  {
-        + ToWriter( io.Writer,  ...Option) error
-        + ToFile( string,  ...Option) error
-        + ToString( ...Option) string
-        + ToBytes( ...Option) []byte
+        + ToWriter( io.Writer) error
+        + ToFile( string) error
+        + ToBytes() []byte
 
     }
-    class Config << (S,Aquamarine) >> {
+    class MoCompiler << (S,Aquamarine) >> {
+        + File *po.File
+        + Config MoConfig
+
+        - writeTo(writer io.Writer) error
+
+        + ToWriter(w io.Writer) error
+        + ToFile(f string) error
+        + ToBytes() []byte
+
+    }
+    class MoConfig << (S,Aquamarine) >> {
+        + Logger *log.Logger
+        + Force bool
+        + Verbose bool
+        + IgnoreErrors bool
+
+    }
+    class PoCompiler << (S,Aquamarine) >> {
+        + File *po.File
+        + Config PoConfig
+
+        - formatHeader() string
+        - formatEntry(t po.Entry) string
+
+        + ToWriter(w io.Writer) error
+        + ToFile(f string) error
+        + ToString() string
+        + ToBytes() []byte
+
+    }
+    class PoConfig << (S,Aquamarine) >> {
         + Logger *log.Logger
         + ForcePo bool
         + OmitHeader bool
@@ -16,45 +46,33 @@ namespace compiler {
         + ForeignUser bool
         + Title string
         + NoLocation bool
-        + AddLocation LocationMode
+        + AddLocation PoLocationMode
         + MsgstrPrefix string
         + MsgstrSuffix string
         + IgnoreErrors bool
         + Verbose bool
+        + CommentFuzzy bool
+        + HeaderComments bool
+        + HeaderFields bool
 
         + Validate() error
 
     }
-    class MoCompiler << (S,Aquamarine) >> {
-        + File *po.File
-        + Config Config
-
-        - applyOptions(opts ...Option) 
-        - createBinary() 
-
+    class compiler.MoOption << (T, #FF7700) >>  {
     }
-    class PoCompiler << (S,Aquamarine) >> {
-        + File *po.File
-        + Config Config
-
-        - applyOptions(opts ...Option) 
-        - formatHeader() string
-        - formatEntry(t po.Entry) string
-
-        + ToWriter(w io.Writer, options ...Option) error
-        + ToFile(f string, options ...Option) error
-        + ToString(options ...Option) string
-        + ToBytes(options ...Option) []byte
-
+    class compiler.PoLocationMode << (T, #FF7700) >>  {
     }
-    class compiler.LocationMode << (T, #FF7700) >>  {
+    class compiler.PoOption << (T, #FF7700) >>  {
     }
-    class compiler.Option << (T, #FF7700) >>  {
+    class compiler.u32 << (T, #FF7700) >>  {
     }
 }
 
+"compiler.Compiler" <|-- "compiler.MoCompiler"
 "compiler.Compiler" <|-- "compiler.PoCompiler"
 
-"__builtin__.string" #.. "compiler.LocationMode"
-"compiler.<font color=blue>func</font>(*Config) " #.. "compiler.Option"
+"__builtin__.string" #.. "compiler.PoLocationMode"
+"__builtin__.uint32" #.. "compiler.u32"
+"compiler.<font color=blue>func</font>(*MoConfig) " #.. "compiler.MoOption"
+"compiler.<font color=blue>func</font>(*PoConfig) " #.. "compiler.PoOption"
 @enduml
