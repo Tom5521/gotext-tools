@@ -128,6 +128,10 @@ func (e Entries) Solve() Entries {
 	seenID := make(map[string]int)
 
 	for _, translation := range e {
+		if slices.Contains(translation.Flags, "fuzzy") {
+			translation.Comment = true
+		}
+
 		idIndex, ok := seenID[translation.ID]
 		if ok {
 			if translation.Context == cleaned[idIndex].Context {

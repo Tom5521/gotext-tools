@@ -45,7 +45,6 @@ func (h Header) Nplurals() (nplurals uint) {
 func (h Header) ToEntry() (e Entry) {
 	var b strings.Builder
 
-	e.Flags = append(e.Flags, "fuzzy")
 	for _, field := range h.Fields {
 		fmt.Fprintf(&b, "\n%s: %s\n", field.Key, field.Value)
 	}

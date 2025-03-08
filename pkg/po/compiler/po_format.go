@@ -52,7 +52,11 @@ func (c PoCompiler) formatEntry(t po.Entry) string {
 
 	// Helper function to append formatted lines to the builder.
 	fprintfln := func(format string, args ...any) {
-		fmt.Fprintf(&builder, format+"\n", args...)
+		var prefix string
+		if t.Comment {
+			prefix = "# "
+		}
+		fmt.Fprintf(&builder, prefix+format+"\n", args...)
 	}
 
 	id := formatString(t.ID)

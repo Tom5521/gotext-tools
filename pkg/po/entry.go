@@ -2,7 +2,6 @@ package po
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
 )
@@ -16,13 +15,11 @@ type Location struct {
 type PluralEntries []PluralEntry
 
 func (p PluralEntries) Sort() PluralEntries {
-	var entries PluralEntries
-	copy(entries, p)
-	slices.SortFunc(entries, func(a, b PluralEntry) int {
+	slices.SortFunc(p, func(a, b PluralEntry) int {
 		return a.ID - b.ID
 	})
 
-	return entries
+	return p
 }
 
 type PluralEntry struct {
@@ -33,6 +30,10 @@ type PluralEntry struct {
 // Entry represents a translatable string, including its context, plural forms,
 // and source code locations.
 type Entry struct {
+	// If true, the entry will be fully commented when compiled,
+	// when sorting entries, they are sent to the end,
+	// In comparisons, it will be skipped.
+	Comment           bool // TODO: Implement this.
 	Flags             []string
 	Comments          []string
 	ExtractedComments []string
@@ -43,18 +44,6 @@ type Entry struct {
 	Plurals           PluralEntries
 	Str               string
 	Locations         []Location // A list of source code locations for the string.
-}
-
-func (e Entry) Hash() uint {
-	var b strings.Builder
-
-	if e.Context != "" {
-		b.WriteString(e.Context)
-		b.WriteByte('4') // EOT byte.
-	}
-	b.WriteString(e.ID)
-
-	return util.PJWHash(b.String())
 }
 
 func (e Entry) String() string {

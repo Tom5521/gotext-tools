@@ -1,4 +1,4 @@
-// Code generated from ./pkg/po/parse/Po.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./internal/antlr-po/Po.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parse // Po
 import "github.com/antlr4-go/antlr/v4"

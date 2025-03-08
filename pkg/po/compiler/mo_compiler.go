@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"unsafe"
 
@@ -48,9 +49,22 @@ func NewMo(file *po.File, opts ...MoOption) MoCompiler {
 	return c
 }
 
+func cleanEntries(in po.Entries) (out po.Entries) {
+	in = in.Solve()
+
+	for _, v := range in {
+		if slices.Contains(v.Flags, "fuzzy") {
+			continue
+		}
+		out = append(out, v)
+	}
+
+	return
+}
+
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc MoCompiler) writeTo(writer io.Writer) error {
-	entries := mc.File.Entries.CleanDuplicates().Solve()
+	entries := cleanEntries(mc.File.Entries)
 
 	var offsets []int
 	var ids, strs string
