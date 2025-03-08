@@ -21,6 +21,9 @@ type PoConfig struct {
 	MsgstrSuffix    string         // Suffix added to all translation strings.
 	IgnoreErrors    bool           // If true, allows compilation to proceed despite non-critical errors.
 	Verbose         bool
+	CommentFuzzy    bool
+	HeaderComments  bool
+	HeaderFields    bool
 }
 
 type PoLocationMode string
@@ -33,9 +36,11 @@ const (
 
 func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
-		Logger:      log.New(io.Discard, "", 0),
-		PackageName: "PACKAGE NAME",
-		AddLocation: PoLocationModeFull,
+		Logger:         log.New(io.Discard, "", 0),
+		PackageName:    "PACKAGE NAME",
+		AddLocation:    PoLocationModeFull,
+		HeaderComments: true,
+		HeaderFields:   true,
 	}
 
 	for _, opt := range opts {
@@ -56,6 +61,24 @@ func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func PoWithHeaderFields(w bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.HeaderFields = w
+	}
+}
+
+func PoWithHeaderComments(hc bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.HeaderComments = hc
+	}
+}
+
+func PoWithCommentFuzzy(c bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.CommentFuzzy = c
+	}
+}
 
 func PoWithVerbose(v bool) PoOption {
 	return func(c *PoConfig) {

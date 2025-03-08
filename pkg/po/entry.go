@@ -30,10 +30,6 @@ type PluralEntry struct {
 // Entry represents a translatable string, including its context, plural forms,
 // and source code locations.
 type Entry struct {
-	// If true, the entry will be fully commented when compiled,
-	// when sorting entries, they are sent to the end,
-	// In comparisons, it will be skipped.
-	Comment           bool // TODO: Implement this.
 	Flags             []string
 	Comments          []string
 	ExtractedComments []string

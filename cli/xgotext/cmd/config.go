@@ -41,6 +41,8 @@ func initConfig() {
 		MsgstrPrefix:    msgstrPrefix,
 		MsgstrSuffix:    msgstrSuffix,
 		Verbose:         verbose,
+		HeaderComments:  true,
+		HeaderFields:    true,
 	}
 	PoParserCfg = poparse.PoConfig{
 		Logger: logger,

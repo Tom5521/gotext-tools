@@ -7,33 +7,33 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
-	"unsafe"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
-var _ Compiler = (*MoCompiler)(nil)
+// Aliase this bc I'm too lazy to write "uint32" every time I want to use it.
+type u32 = uint32
 
 var (
-	isBigEndian = (*(*[2]uint8)(unsafe.Pointer(&[]uint16{1}[0])))[0] == 0
-
-	magicNumber = func() uint32 {
-		if isBigEndian {
-			return bigEndianMagicNumber
+	magicNumber = func() u32 {
+		if util.IsBigEndian {
+			return util.BigEndianMagicNumber
 		}
-		return littleEndianMagicNumber
+		return util.LittleEndianMagicNumber
 	}()
-	order        = bin.NativeEndian
-	eotSeparator = "\x04"
-	nulSeparator = "\x00"
+	order = bin.NativeEndian
 )
 
 const (
-	bigEndianMagicNumber    uint32 = 0xde120495
-	littleEndianMagicNumber uint32 = 0x950412de
+	eot = "\x04"
+	nul = "\x00"
 )
+
+var _ Compiler = (*MoCompiler)(nil)
 
 type MoCompiler struct {
 	File   *po.File
@@ -62,17 +62,22 @@ func cleanEntries(in po.Entries) (out po.Entries) {
 	return
 }
 
+// A len() function with fixed-size return.
+func flen(value any) u32 {
+	return u32(reflect.ValueOf(value).Len())
+}
+
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc MoCompiler) writeTo(writer io.Writer) error {
 	entries := cleanEntries(mc.File.Entries)
 
-	var offsets []int
+	var offsets []u32
 	var ids, strs string
 	for _, e := range entries {
 		var msgid string
 		var msgstr string
 		if e.Context != "" {
-			msgid = e.Context + eotSeparator
+			msgid = e.Context + eot
 		}
 		if e.Plural != "" {
 			var msgstrs []string
@@ -80,27 +85,27 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 			for _, plural := range plurals {
 				msgstrs = append(msgstrs, plural.Str)
 			}
-			msgid += e.ID + nulSeparator + e.Plural
-			msgstr = strings.Join(msgstrs, nulSeparator)
+			msgid += e.ID + nul + e.Plural
+			msgstr = strings.Join(msgstrs, nul)
 		} else {
 			msgid += e.ID
 			msgstr = e.Str
 		}
 
 		offsets = append(offsets,
-			len(ids),
-			len(msgid),
-			len(strs),
-			len(msgstr),
+			flen(ids),
+			flen(msgid),
+			flen(strs),
+			flen(msgstr),
 		)
-		ids += msgid + nulSeparator
-		strs += msgstr + nulSeparator
+		ids += msgid + nul
+		strs += msgstr + nul
 	}
 
-	keystart := 7*4 + 16*len(entries)
-	valuestart := keystart + len(ids)
+	keystart := 7*4 + 16*flen(entries)
+	valuestart := keystart + flen(ids)
 
-	var koffsets, voffsets []int
+	var koffsets, voffsets []u32
 
 	for i := 0; i < len(offsets); i += 4 {
 		if i+3 >= len(offsets) {
@@ -118,31 +123,18 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 
 	data := []any{
 		magicNumber,
-		0,
-		len(entries),
-		7 * 4,
-		7*4 + len(entries)*8,
-		0, keystart,
-		func() (s []uint32) {
-			for _, v := range offsets {
-				s = append(s, uint32(v))
-			}
-			return
-		}(),
+		u32(0),
+		flen(entries),
+		u32(7 * 4),
+		7*4 + flen(entries)*8,
+		u32(0), keystart,
+		offsets,
 		[]byte(ids),
 		[]byte(strs),
 	}
 
-	// Fix not fixed-size integers.
-	for i, v := range data {
-		if _, ok := v.(int); ok {
-			data[i] = uint32(v.(int))
-		}
-	}
-
-	// Write data.
-	for _, value := range data {
-		err := bin.Write(writer, order, value)
+	for _, v := range data {
+		err := bin.Write(writer, order, v)
 		if err != nil {
 			return err
 		}
@@ -165,9 +157,9 @@ func (mc MoCompiler) ToFile(f string) error {
 		mc.Config.Logger.Println("Opening file...")
 	}
 	// Open the file with the determined flags.
-	flags := os.O_WRONLY | os.O_TRUNC
-	if mc.Config.Force {
-		flags |= os.O_CREATE
+	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+	if !mc.Config.Force {
+		flags |= os.O_EXCL
 	}
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !mc.Config.IgnoreErrors {

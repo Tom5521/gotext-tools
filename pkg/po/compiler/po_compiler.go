@@ -48,7 +48,7 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		c.Config.Logger.Println("Cleaning duplicates...")
 	}
 	// Remove duplicate entries and write each entry to the writer.
-	entries := c.File.Entries.CleanDuplicates()
+	entries := c.File.Entries.CleanDuplicates().SortByFuzzy()
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing entries...")
 	}
@@ -71,9 +71,9 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 // If `ForcePo` is enabled, the file is created or truncated before writing.
 // The provided options override the instance's configuration.
 func (c PoCompiler) ToFile(f string) error {
-	flags := os.O_WRONLY | os.O_TRUNC
-	if c.Config.ForcePo {
-		flags |= os.O_CREATE
+	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+	if !c.Config.ForcePo {
+		flags |= os.O_EXCL
 	}
 
 	if c.Config.Verbose {

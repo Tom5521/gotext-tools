@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
@@ -15,8 +16,8 @@ const (
 	headerFormat           = `# %s
 %s
 #
-#, fuzzy
-msgid ""
+` + headerEntry
+	headerEntry = `msgid ""
 msgstr ""
 `
 	headerFieldFormat = `"%s: %s\n"`
@@ -29,17 +30,23 @@ func (c PoCompiler) formatHeader() string {
 	var b strings.Builder
 	header := c.File.Header()
 
-	copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
-	if c.Config.ForeignUser {
-		copyright = foreignCopyrightFormat
+	if c.Config.HeaderComments {
+		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
+		if c.Config.ForeignUser {
+			copyright = foreignCopyrightFormat
+		}
+
+		fmt.Fprintf(&b, headerFormat, c.Config.Title, copyright)
+	} else {
+		fmt.Fprint(&b, headerEntry)
 	}
 
-	fmt.Fprintf(&b, headerFormat, c.Config.Title, copyright)
-
-	for i, field := range header.Fields {
-		fmt.Fprintf(&b, headerFieldFormat, field.Key, field.Value)
-		if i != len(header.Fields) {
-			b.WriteByte('\n')
+	if c.Config.HeaderFields {
+		for i, field := range header.Fields {
+			fmt.Fprintf(&b, headerFieldFormat, field.Key, field.Value)
+			if i != len(header.Fields) {
+				b.WriteByte('\n')
+			}
 		}
 	}
 
@@ -52,11 +59,11 @@ func (c PoCompiler) formatEntry(t po.Entry) string {
 
 	// Helper function to append formatted lines to the builder.
 	fprintfln := func(format string, args ...any) {
-		var prefix string
-		if t.Comment {
-			prefix = "# "
+		var comment string
+		if c.Config.CommentFuzzy && slices.Contains(t.Flags, "fuzzy") {
+			comment = "# "
 		}
-		fmt.Fprintf(&builder, prefix+format+"\n", args...)
+		fmt.Fprintf(&builder, comment+format+"\n", args...)
 	}
 
 	id := formatString(t.ID)

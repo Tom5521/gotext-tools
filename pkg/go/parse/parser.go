@@ -181,7 +181,7 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 	file = &po.File{}
 	p.errors = nil // Clean errors
 
-	header := po.DefaultHeader()
+	header := po.DefaultTemplateHeader()
 	if p.config.Header != nil {
 		header = *p.config.Header
 	}

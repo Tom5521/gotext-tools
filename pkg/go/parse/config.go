@@ -48,7 +48,7 @@ type Config struct {
 func DefaultConfig(opts ...Option) Config {
 	c := Config{
 		Header: func() *po.Header {
-			h := po.DefaultHeader()
+			h := po.DefaultTemplateHeader()
 			return &h
 		}(),
 		Logger:          log.New(io.Discard, "", 0),

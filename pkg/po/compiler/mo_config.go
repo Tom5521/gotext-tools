@@ -10,6 +10,7 @@ type MoConfig struct {
 	Force        bool
 	Verbose      bool
 	IgnoreErrors bool
+	// HashTable    bool // TODO: Implement this.
 }
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
@@ -31,6 +32,12 @@ func MoWithConfig(n MoConfig) MoOption {
 		*c = n
 	}
 }
+
+// func MoWithHashTable(h bool) MoOption {
+// 	return func(c *MoConfig) {
+// 		c.HashTable = h
+// 	}
+// }
 
 func MoWithForce(f bool) MoOption {
 	return func(c *MoConfig) {

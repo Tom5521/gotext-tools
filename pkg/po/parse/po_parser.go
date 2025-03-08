@@ -64,6 +64,14 @@ func NewPoFromBytes(data []byte, name string, options ...PoOption) (*PoParser, e
 	return p, nil
 }
 
+// Return the first error in the stack.
+func (p PoParser) Error() error {
+	if len(p.errors) == 0 {
+		return nil
+	}
+	return p.errors[0]
+}
+
 func (p PoParser) Errors() []error {
 	return p.errors
 }
