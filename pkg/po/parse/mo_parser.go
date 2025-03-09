@@ -2,13 +2,20 @@ package parse
 
 import (
 	"bytes"
-	"encoding/binary"
+	bin "encoding/binary"
 	"errors"
 	"io"
 	"os"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
+)
+
+type (
+	u32 = uint32
+	u16 = uint16
+	i64 = int64
+	i32 = int32
 )
 
 var (
@@ -59,7 +66,7 @@ func (m MoParser) Errors() []error {
 	return m.errors
 }
 
-func (m *MoParser) genBasics() (reader io.ReadSeeker, order binary.ByteOrder, err error) {
+func (m *MoParser) genBasics() (reader io.ReadSeeker, order bin.ByteOrder, err error) {
 	if b, ok := m.data.(io.ReadSeeker); ok {
 		reader = b
 	} else {
@@ -73,14 +80,14 @@ func (m *MoParser) genBasics() (reader io.ReadSeeker, order binary.ByteOrder, er
 	}
 
 	var magicNumber uint32
-	if err = binary.Read(reader, binary.LittleEndian, &magicNumber); err != nil {
+	if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
 		return nil, nil, err
 	}
 	switch magicNumber {
 	case util.LittleEndianMagicNumber:
-		order = binary.LittleEndian
+		order = bin.LittleEndian
 	case util.BigEndianMagicNumber:
-		order = binary.BigEndian
+		order = bin.BigEndian
 	default:
 		m.errors = append(m.errors, errors.New("invalid magic number"))
 		return
@@ -89,30 +96,25 @@ func (m *MoParser) genBasics() (reader io.ReadSeeker, order binary.ByteOrder, er
 	return
 }
 
-func (m *MoParser) Parse() (file *po.File) {
-	type (
-		u32 = uint32
-		u16 = uint16
-		i64 = int64
-		i32 = int32
-	)
+type moHeader struct {
+	MajorVersion u16
+	MinorVersion u16
+	MsgIDCount   u32
+	MsgIDOffset  u32
+	MsgStrOffset u32
+	HashSize     u32
+	HashOffset   u32
+}
 
+func (m *MoParser) Parse() (file *po.File) {
 	r, bo, err := m.genBasics()
 	if err != nil {
 		m.errors = append(m.errors, err)
 		return
 	}
 
-	var header struct {
-		MajorVersion u16
-		MinorVersion u16
-		MsgIDCount   u32
-		MsgIDOffset  u32
-		MsgStrOffset u32
-		HashSize     u32
-		HashOffset   u32
-	}
-	if err = binary.Read(r, bo, &header); err != nil {
+	var header moHeader
+	if err = bin.Read(r, bo, &header); err != nil {
 		m.errors = append(m.errors, err)
 		return
 	}
@@ -132,11 +134,11 @@ func (m *MoParser) Parse() (file *po.File) {
 		return
 	}
 	for i := range util.ROverNumber(header.MsgIDCount) {
-		if err = binary.Read(r, bo, &msgIDLen[i]); err != nil {
+		if err = bin.Read(r, bo, &msgIDLen[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
 		}
-		if err = binary.Read(r, bo, &msgIDStart[i]); err != nil {
+		if err = bin.Read(r, bo, &msgIDStart[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
 		}
@@ -149,17 +151,38 @@ func (m *MoParser) Parse() (file *po.File) {
 		return
 	}
 	for i := range util.ROverNumber(header.MsgIDCount) {
-		if err = binary.Read(r, bo, &msgStrLen[i]); err != nil {
+		if err = bin.Read(r, bo, &msgStrLen[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
 		}
-		if err = binary.Read(r, bo, &msgStrStart[i]); err != nil {
+		if err = bin.Read(r, bo, &msgStrStart[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
 		}
 	}
 
-	var entries po.Entries
+	file = &po.File{
+		Name: m.filename,
+		Entries: m.makeEntries(
+			r,
+			header,
+			msgIDStart,
+			msgIDLen,
+			msgStrStart,
+			msgStrLen,
+		),
+	}
+
+	return
+}
+
+func (m *MoParser) makeEntries(
+	r io.ReadSeeker,
+	header moHeader,
+	msgIDStart, msgIDLen []u32,
+	msgStrStart, msgStrLen []i32,
+) (entries po.Entries) {
+	var err error
 	for i := range util.ROverNumber(header.MsgIDCount) {
 		if _, err = r.Seek(i64(msgIDStart[i]), 0); err != nil {
 			m.errors = append(m.errors, err)
@@ -183,11 +206,6 @@ func (m *MoParser) Parse() (file *po.File) {
 		}
 
 		entries = append(entries, makeEntry(msgIDData, msgStrData))
-	}
-
-	file = &po.File{
-		Name:    m.filename,
-		Entries: entries,
 	}
 
 	return
