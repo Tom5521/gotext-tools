@@ -19,3 +19,5 @@ gen-parser:
 clean:
   rm *.po* *.log
   rm ./internal/antlr-po/*.interp ./internal/antlr-po/*.tokens
+gen-diff:
+  git diff --staged > diff.log

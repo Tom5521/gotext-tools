@@ -12,15 +12,11 @@ import (
 
 var _ Compiler = (*PoCompiler)(nil)
 
-// PoCompiler is responsible for compiling translations from a `types.File`
-// into different output formats, such as strings, byte slices, or files.
 type PoCompiler struct {
 	File   *po.File // The source file containing translation entries.
 	Config PoConfig // Configuration settings for compilation.
 }
 
-// NewPo creates a new Compiler instance with the given translation file and options.
-// The provided options override the default configuration.
 func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	return PoCompiler{
 		File:   file,
@@ -28,22 +24,19 @@ func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	}
 }
 
-// ToWriter writes the compiled translations to an `io.Writer` in the PO file format.
-// The provided options override the instance's configuration.
 func (c PoCompiler) ToWriter(w io.Writer) error {
-	// Apply the provided options, which take precedence over the instance's configuration.
 	var err error
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing header...")
 	}
 	// Write the PO file header.
-	_, err = fmt.Fprintln(w, c.formatHeader())
+	err = c.writeHeader(w)
 	if err != nil && !c.Config.IgnoreErrors {
 		err = fmt.Errorf("error writing header format: %w", err)
 		c.Config.Logger.Println("ERROR:", err)
-		return err
 	}
+
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Cleaning duplicates...")
 	}
@@ -56,8 +49,7 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		if e.ID == "" {
 			continue
 		}
-
-		_, err = fmt.Fprintln(w, c.formatEntry(e))
+		err = c.writeEntry(w, e)
 		if err != nil && !c.Config.IgnoreErrors {
 			err = fmt.Errorf("error writing entry[%d]: %w", i, err)
 			c.Config.Logger.Println("ERROR:", err)
@@ -67,9 +59,6 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 	return nil
 }
 
-// ToFile writes the compiled translations to a specified file.
-// If `ForcePo` is enabled, the file is created or truncated before writing.
-// The provided options override the instance's configuration.
 func (c PoCompiler) ToFile(f string) error {
 	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 	if !c.Config.ForcePo {
@@ -93,8 +82,6 @@ func (c PoCompiler) ToFile(f string) error {
 	return c.ToWriter(file)
 }
 
-// ToString compiles the translations and returns the result as a string.
-// The provided options override the instance's configuration.
 func (c PoCompiler) ToString() string {
 	var b strings.Builder
 
@@ -104,8 +91,6 @@ func (c PoCompiler) ToString() string {
 	return b.String()
 }
 
-// ToBytes compiles the translations and returns the result as a byte slice.
-// The provided options override the instance's configuration.
 func (c PoCompiler) ToBytes() []byte {
 	var b bytes.Buffer
 
