@@ -26,6 +26,12 @@ type PoConfig struct {
 	HeaderFields    bool
 }
 
+func (c *PoConfig) ApplyOptions(opts ...PoOption) {
+	for _, po := range opts {
+		po(c)
+	}
+}
+
 type PoLocationMode string
 
 const (
@@ -53,9 +59,7 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
 	var config PoConfig
 
-	for _, opt := range opts {
-		opt(&config)
-	}
+	config.ApplyOptions(opts...)
 
 	return config
 }

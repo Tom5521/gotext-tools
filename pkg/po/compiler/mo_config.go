@@ -13,14 +13,18 @@ type MoConfig struct {
 	// HashTable    bool // TODO: Implement this.
 }
 
+func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
+	for _, opt := range opts {
+		opt(mc)
+	}
+}
+
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
 		Logger: log.New(io.Discard, "", 0),
 	}
 
-	for _, opt := range opts {
-		opt(&c)
-	}
+	c.ApplyOptions(opts...)
 
 	return c
 }
