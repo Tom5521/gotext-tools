@@ -15,7 +15,7 @@ type PoParser struct {
 	config  PoConfig
 	options []PoOption
 
-	data     []byte
+	data     string
 	filename string
 
 	errors []error
@@ -33,7 +33,7 @@ func NewPo(path string, options ...PoOption) (*PoParser, error) {
 		return nil, err
 	}
 
-	return NewPoFromBytes(file, path, options...)
+	return NewPoFromBytes(file, path, options...), nil
 }
 
 func NewPoFromReader(r io.Reader, name string, options ...PoOption) (*PoParser, error) {
@@ -42,26 +42,24 @@ func NewPoFromReader(r io.Reader, name string, options ...PoOption) (*PoParser, 
 		return nil, err
 	}
 
-	return NewPoFromBytes(data, name, options...)
+	return NewPoFromBytes(data, name, options...), nil
 }
 
 func NewPoFromFile(f *os.File, options ...PoOption) (*PoParser, error) {
 	return NewPoFromReader(f, f.Name(), options...)
 }
 
-func NewPoFromString(s, name string, options ...PoOption) (*PoParser, error) {
-	return NewPoFromBytes([]byte(s), name, options...)
-}
-
-func NewPoFromBytes(data []byte, name string, options ...PoOption) (*PoParser, error) {
-	p := &PoParser{
+func NewPoFromString(s, name string, options ...PoOption) *PoParser {
+	return &PoParser{
 		options:  options,
 		config:   DefaultPoConfig(),
-		data:     data,
+		data:     s,
 		filename: name,
 	}
+}
 
-	return p, nil
+func NewPoFromBytes(data []byte, name string, options ...PoOption) *PoParser {
+	return NewPoFromString(string(data), name, options...)
 }
 
 // Return the first error in the stack.
@@ -82,7 +80,7 @@ func (p *PoParser) Parse(options ...PoOption) *po.File {
 
 	p.errors = nil
 
-	is := antlr.NewInputStream(string(p.data))
+	is := antlr.NewInputStream(p.data)
 
 	errListener := &parser.CustomErrorListener{}
 	lexer := parser.NewPoLexer(is)

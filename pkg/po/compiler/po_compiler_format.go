@@ -109,33 +109,25 @@ func (c PoCompiler) formatEntry(t po.Entry) string {
 	// Add plural forms if present.
 	if t.Plural != "" {
 		fprintfln("msgid_plural %s", plural)
-
-		for i := range util.ROverNumber(nplurals) {
-			if i == 1 {
-				fprintfln("msgstr[%d] %s", i, formatPrefixAndSuffix(t.Plural, c.Config))
-				continue
+		if len(t.Plurals) == 0 {
+			for i := range util.ROverNumber(nplurals) {
+				fprintfln(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config))
 			}
-			fprintfln(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config))
+		} else {
+			for _, pe := range t.Plurals {
+				fprintfln("msgstr[%d] %s", pe.ID, formatPrefixAndSuffix(pe.Str, c.Config))
+			}
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		fprintfln(`msgstr %s`, formatPrefixAndSuffix(t.ID, c.Config))
+		fprintfln(`msgstr %s`, formatPrefixAndSuffix(t.Str, c.Config))
 	}
 
 	return builder.String()
 }
 
 func formatPrefixAndSuffix(id string, cfg PoConfig) string {
-	text := `""`
-
-	if cfg.MsgstrPrefix != "" {
-		text = formatString(cfg.MsgstrPrefix + id)
-	}
-	if cfg.MsgstrSuffix != "" {
-		text = formatString(id + cfg.MsgstrSuffix)
-	}
-
-	return text
+	return formatString(cfg.MsgstrPrefix + id + cfg.MsgstrSuffix)
 }
 
 // formatString applies formatting rules to a string to make it compatible
