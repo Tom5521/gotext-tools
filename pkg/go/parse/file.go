@@ -47,16 +47,27 @@ type File struct {
 	config     Config
 	options    []Option
 	seenTokens map[ast.Node]bool
-	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
-	content    io.Reader // The raw content of the file as a byte slice.
-	bytes      []byte
-	path       string // The path to the file.
-	pkgName    string // The name of the package declared in the file.
-	hasGotext  bool   // Indicates if the file imports the desired "gotext" package.
+	file       *ast.File     // The parsed abstract syntax tree (AST) of the file.
+	content    *bytes.Reader // The raw content of the file as a byte slice.
+	path       string        // The path to the file.
+	pkgName    string        // The name of the package declared in the file.
+	hasGotext  bool          // Indicates if the file imports the desired "gotext" package.
 }
 
 func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
-	return NewFile(bytes.NewReader(b), name, options...)
+	file := &File{
+		content: bytes.NewReader(b),
+		path:    name,
+		options: options,
+		pkgName: DefaultPackageName,
+	}
+
+	if err := file.parse(); err != nil {
+		return nil, err
+	}
+
+	file.determinePackageInfo()
+	return file, nil
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
@@ -77,20 +88,7 @@ func NewFile(b io.Reader, name string, options ...Option) (*File, error) {
 		return nil, err
 	}
 
-	file := &File{
-		content: bytes.NewReader(bytedata),
-		bytes:   bytedata,
-		path:    name,
-		options: options,
-		pkgName: DefaultPackageName,
-	}
-
-	if err := file.parse(); err != nil {
-		return nil, err
-	}
-
-	file.determinePackageInfo()
-	return file, nil
+	return NewFileFromBytes(bytedata, name, options...)
 }
 
 // parse parses the file content into an AST.

@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"io"
 	"strings"
 
 	"github.com/kr/pretty"
@@ -83,4 +84,28 @@ func FindLine[T ~int, B []rune | []byte | string](content B, index T) int {
 	default:
 		return bytes.Count(c.([]byte)[:index], []byte{'\n'}) + 1
 	}
+}
+
+func FindLineFromReader[T ~int](r *bytes.Reader, index T) int {
+	r.Seek(0, 0)
+
+	var (
+		pos   T
+		count int
+	)
+
+	b, err := r.ReadByte()
+	for err != io.EOF {
+		if b == '\n' {
+			count++
+		}
+		if pos == index {
+			break
+		}
+
+		b, err = r.ReadByte()
+		pos++
+	}
+
+	return count + 1
 }

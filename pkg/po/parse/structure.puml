@@ -1,0 +1,64 @@
+@startuml
+namespace parse {
+    class MoParser << (S,Aquamarine) >> {
+        - data io.Reader
+        - filename string
+        - errors []error
+
+        - genBasics() (io.ReadSeeker, binary.ByteOrder, error)
+        - makeEntries(r io.ReadSeeker, header moHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
+
+        + Error() error
+        + Errors() []error
+        + Parse() *po.File
+
+    }
+    class PoConfig << (S,Aquamarine) >> {
+        + Logger *log.Logger
+        + SkipHeader bool
+        + CleanDuplicates bool
+
+    }
+    class PoParser << (S,Aquamarine) >> {
+        - config PoConfig
+        - options []PoOption
+        - data string
+        - filename string
+        - errors []error
+
+        - applyOptions(opts ...PoOption) 
+
+        + Error() error
+        + Errors() []error
+        + Parse(options ...PoOption) *po.File
+
+    }
+    class moHeader << (S,Aquamarine) >> {
+        + MajorVersion u16
+        + MinorVersion u16
+        + MsgIDCount u32
+        + MsgIDOffset u32
+        + MsgStrOffset u32
+        + HashSize u32
+        + HashOffset u32
+
+    }
+    class parse.PoOption << (T, #FF7700) >>  {
+    }
+    class parse.i32 << (T, #FF7700) >>  {
+    }
+    class parse.i64 << (T, #FF7700) >>  {
+    }
+    class parse.u16 << (T, #FF7700) >>  {
+    }
+    class parse.u32 << (T, #FF7700) >>  {
+    }
+}
+
+
+"__builtin__.int32" #.. "parse.i32"
+"__builtin__.int64" #.. "parse.i64"
+"__builtin__.uint16" #.. "parse.u16"
+"__builtin__.uint32" #.. "parse.u32"
+"parse.<font color=blue>func</font>(*PoConfig) " #.. "parse.PoOption"
+@enduml

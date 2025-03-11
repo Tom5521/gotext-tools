@@ -23,13 +23,15 @@ namespace compiler {
         + Verbose bool
         + IgnoreErrors bool
 
+        + ApplyOptions(opts ...MoOption) 
+
     }
     class PoCompiler << (S,Aquamarine) >> {
         + File *po.File
         + Config PoConfig
 
-        - formatHeader() string
-        - formatEntry(t po.Entry) string
+        - writeHeader(w io.Writer) error
+        - writeEntry(w io.Writer, t po.Entry) error
 
         + ToWriter(w io.Writer) error
         + ToFile(f string) error
@@ -55,6 +57,7 @@ namespace compiler {
         + HeaderComments bool
         + HeaderFields bool
 
+        + ApplyOptions(opts ...PoOption) 
         + Validate() error
 
     }
