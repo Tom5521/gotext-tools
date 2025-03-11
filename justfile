@@ -17,7 +17,7 @@ gen-uml:
 gen-parser:
   antlr4 -Dlanguage=Go -package parse ./internal/antlr-po/Po.g4
 clean:
-  rm *.po* *.log
-  rm ./internal/antlr-po/*.interp ./internal/antlr-po/*.tokens
+  -rm *.po* *.log
+  -rm ./internal/antlr-po/*.interp ./internal/antlr-po/*.tokens
 gen-diff:
   git diff --staged > diff.log

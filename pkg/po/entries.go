@@ -42,7 +42,7 @@ func (e Entries) Sort() Entries {
 	for file := range groupsMap {
 		fileKeys = append(fileKeys, file)
 	}
-	slices.SortFunc(fileKeys, strings.Compare)
+	slices.Sort(fileKeys)
 
 	// Concatenate groups into a single sorted list.
 	var sortedEntries Entries
@@ -132,8 +132,7 @@ func (e Entries) CleanDuplicates() Entries {
 
 // Solve processes a list of translation entries and merges those with the same ID and context,
 // keeping the most complete translation. If two entries have the same ID and context, the one
-// with a non-empty translation string is retained. Additionally, if the entries are similar but not
-// identical, the resulting entry is marked as "fuzzy". The locations of the merged entries are combined.
+// with a non-empty translation string is retained. Additionally, if the entries are similar but not.
 func (e Entries) Solve() Entries {
 	var cleaned Entries
 	seenID := make(map[string]int)
