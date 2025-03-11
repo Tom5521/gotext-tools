@@ -129,7 +129,7 @@ func NewParserFromBytes(
 	options ...Option,
 ) (*Parser, error) {
 	p := baseParser(options...)
-	f, err := NewFile(b, name, options...)
+	f, err := NewFileFromBytes(b, name, options...)
 	if err != nil {
 		err = fmt.Errorf("error configuring file: %w", err)
 		p.config.Logger.Println("ERROR:", err)
@@ -143,7 +143,7 @@ func NewParserFromBytes(
 func NewParserFromFiles(files []*os.File, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	for _, file := range files {
-		f, err := NewFileFromReader(file, file.Name(), options...)
+		f, err := NewFile(file, file.Name(), options...)
 		if err != nil {
 			err = fmt.Errorf("error configuring file: %w", err)
 			p.config.Logger.Println("ERROR:", err)

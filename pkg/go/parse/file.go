@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -47,21 +48,15 @@ type File struct {
 	options    []Option
 	seenTokens map[ast.Node]bool
 	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
-	content    []byte    // The raw content of the file as a byte slice.
-	path       string    // The path to the file.
-	pkgName    string    // The name of the package declared in the file.
-	hasGotext  bool      // Indicates if the file imports the desired "gotext" package.
+	content    io.Reader // The raw content of the file as a byte slice.
+	bytes      []byte
+	path       string // The path to the file.
+	pkgName    string // The name of the package declared in the file.
+	hasGotext  bool   // Indicates if the file imports the desired "gotext" package.
 }
 
-// NewFileFromReader creates a new File instance by reading content from an io.Reader.
-// The content is read into memory and processed according to the provided configuration.
-func NewFileFromReader(r io.Reader, name string, options ...Option) (*File, error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read content: %w", err)
-	}
-
-	return NewFile(content, name, options...)
+func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
+	return NewFile(bytes.NewReader(b), name, options...)
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
@@ -72,13 +67,19 @@ func NewFileFromPath(path string, options ...Option) (*File, error) {
 	}
 	defer file.Close()
 
-	return NewFileFromReader(file, path, options...)
+	return NewFile(file, path, options...)
 }
 
 // NewFile creates a new File instance from raw byte data.
-func NewFile(b []byte, name string, options ...Option) (*File, error) {
+func NewFile(b io.Reader, name string, options ...Option) (*File, error) {
+	bytedata, err := io.ReadAll(b)
+	if err != nil {
+		return nil, err
+	}
+
 	file := &File{
-		content: b,
+		content: bytes.NewReader(bytedata),
+		bytes:   bytedata,
 		path:    name,
 		options: options,
 		pkgName: DefaultPackageName,
