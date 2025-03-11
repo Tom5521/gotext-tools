@@ -200,7 +200,7 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 
 	for _, f := range p.files {
 		if p.config.Verbose {
-			p.config.Logger.Println("Parsing", f.path, "...")
+			p.config.Logger.Println("Parsing", f.name, "...")
 		}
 		entries, e := f.Entries()
 		if len(e) > 0 {
@@ -208,7 +208,7 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 			for _, err := range e {
 				p.config.Logger.Println(
 					"ERROR:",
-					fmt.Errorf("error parsing file %s: %w", f.path, err),
+					fmt.Errorf("error parsing file %s: %w", f.name, err),
 				)
 			}
 			continue
@@ -221,6 +221,14 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 	}
 
 	return
+}
+
+func (p Parser) Error() error {
+	if len(p.errors) == 0 {
+		return nil
+	}
+
+	return p.errors[0]
 }
 
 func (p Parser) Errors() []error {

@@ -133,7 +133,8 @@ func (m *MoParser) Parse() (file *po.File) {
 		m.errors = append(m.errors, err)
 		return
 	}
-	for i := range util.ROverNumber(header.MsgIDCount) {
+
+	for i := u32(0); i < header.MsgIDCount; i++ {
 		if err = bin.Read(r, bo, &msgIDLen[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
@@ -150,7 +151,8 @@ func (m *MoParser) Parse() (file *po.File) {
 		m.errors = append(m.errors, err)
 		return
 	}
-	for i := range util.ROverNumber(header.MsgIDCount) {
+
+	for i := u32(0); i < header.MsgIDCount; i++ {
 		if err = bin.Read(r, bo, &msgStrLen[i]); err != nil {
 			m.errors = append(m.errors, err)
 			return
@@ -183,7 +185,7 @@ func (m *MoParser) makeEntries(
 	msgStrStart, msgStrLen []i32,
 ) (entries po.Entries) {
 	var err error
-	for i := range util.ROverNumber(header.MsgIDCount) {
+	for i := u32(0); i < header.MsgIDCount; i++ {
 		if _, err = r.Seek(i64(msgIDStart[i]), 0); err != nil {
 			m.errors = append(m.errors, err)
 			return

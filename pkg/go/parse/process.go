@@ -65,8 +65,8 @@ func (f *File) basicLitToEntry(n *ast.BasicLit) (po.Entry, error) {
 	return po.Entry{
 		ID: str,
 		Locations: []po.Location{{
-			Line: util.FindLineFromReader(f.content, n.Pos()),
-			File: f.path,
+			Line: util.FindLineFromReader(f.reader, n.Pos()),
+			File: f.name,
 		}},
 	}, nil
 }
@@ -168,8 +168,8 @@ func (f *File) processPoCall(
 			entry.ID = arg.str
 			entry.Locations = append(entry.Locations,
 				po.Location{
-					File: f.path,
-					Line: util.FindLineFromReader(f.content, arg.pos),
+					File: f.name,
+					Line: util.FindLineFromReader(f.reader, arg.pos),
 				},
 			)
 			fallthrough

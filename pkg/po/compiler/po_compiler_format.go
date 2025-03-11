@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
@@ -151,7 +150,7 @@ func (c PoCompiler) writeEntry(w io.Writer, t po.Entry) (err error) {
 			return err
 		}
 		if len(t.Plurals) == 0 {
-			for i := range util.ROverNumber(nplurals) {
+			for i := uint(0); i < nplurals; i++ {
 				if err = write(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config)); err != nil {
 					return err
 				}

@@ -47,17 +47,37 @@ type File struct {
 	config     Config
 	options    []Option
 	seenTokens map[ast.Node]bool
-	file       *ast.File     // The parsed abstract syntax tree (AST) of the file.
-	content    *bytes.Reader // The raw content of the file as a byte slice.
-	path       string        // The path to the file.
-	pkgName    string        // The name of the package declared in the file.
-	hasGotext  bool          // Indicates if the file imports the desired "gotext" package.
+	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
+	reader     *bytes.Reader
+	name       string // The path to the file.
+	pkgName    string // The name of the package declared in the file.
+	hasGotext  bool   // Indicates if the file imports the desired "gotext" package.
+}
+
+func (f *File) Reset(d io.Reader, name string, options ...Option) error {
+	f.seenTokens = nil
+	f.options = options
+
+	b, err := io.ReadAll(d)
+	if err != nil {
+		return err
+	}
+	f.reader = bytes.NewReader(b)
+	f.name = name
+
+	if err = f.parse(); err != nil {
+		return err
+	}
+
+	f.determinePackageInfo()
+
+	return nil
 }
 
 func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
 	file := &File{
-		content: bytes.NewReader(b),
-		path:    name,
+		reader:  bytes.NewReader(b),
+		name:    name,
 		options: options,
 		pkgName: DefaultPackageName,
 	}
@@ -93,11 +113,11 @@ func NewFile(b io.Reader, name string, options ...Option) (*File, error) {
 
 // parse parses the file content into an AST.
 func (f *File) parse() error {
-	parsedFile, err := parser.ParseFile(token.NewFileSet(), f.path, f.content, 0)
+	var err error
+	f.file, err = parser.ParseFile(token.NewFileSet(), f.name, f.reader, 0)
 	if err != nil {
 		return fmt.Errorf("failed to parse the file: %w", err)
 	}
-	f.file = parsedFile
 	return nil
 }
 
@@ -133,11 +153,12 @@ func (f *File) Entries() (po.Entries, []error) {
 		return entries, errors
 	}
 
-	for n := range InspectNode(f.file) {
+	ast.Inspect(f.file, func(n ast.Node) bool {
 		t, e := f.processNode(n)
 		entries = append(entries, t...)
 		errors = append(errors, e...)
-	}
+		return true
+	})
 
 	return entries, errors
 }
