@@ -66,6 +66,7 @@ func BenchmarkMoCompiler(b *testing.B) {
 
 	comp := compiler.NewMo(&po.File{Entries: input})
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		comp.ToBytes()
 	}

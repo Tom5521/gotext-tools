@@ -149,6 +149,7 @@ func main(){
 		{name: "extract-all", options: []parse.Option{parse.WithExtractAll(true)}},
 	}
 
+	b.ResetTimer()
 	for _, t := range tests {
 		b.Run(t.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {

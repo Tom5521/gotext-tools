@@ -80,6 +80,7 @@ func BenchmarkParseMo(b *testing.B) {
 		return
 	}
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		parser.Parse()
 		b.StopTimer()

@@ -62,6 +62,7 @@ func BenchmarkPoCompiler(b *testing.B) {
 
 	comp := compiler.NewPo(&po.File{Entries: input})
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		comp.ToBytes()
 	}
