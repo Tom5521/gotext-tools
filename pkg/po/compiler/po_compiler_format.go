@@ -1,8 +1,8 @@
 package compiler
 
 import (
+	"bufio"
 	"fmt"
-	"io"
 	"slices"
 	"strings"
 
@@ -23,11 +23,10 @@ msgstr ""
 	headerFieldFormat = `"%s: %s\n"`
 )
 
-func (c PoCompiler) writeHeader(w io.Writer) (err error) {
+func (c PoCompiler) writeHeader(w *bufio.Writer) {
 	if c.Config.OmitHeader {
-		return nil
+		return
 	}
-	header := c.File.Header()
 
 	if c.Config.HeaderComments {
 		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
@@ -35,145 +34,93 @@ func (c PoCompiler) writeHeader(w io.Writer) (err error) {
 			copyright = foreignCopyrightFormat
 		}
 
-		_, err = fmt.Fprintf(w, headerFormat, c.Config.Title, copyright)
+		fmt.Fprintf(w, headerFormat, c.Config.Title, copyright)
 	} else {
-		_, err = fmt.Fprint(w, headerEntry)
-	}
-
-	if err != nil {
-		return
+		fmt.Fprint(w, headerEntry)
 	}
 
 	if c.Config.HeaderFields {
-		for i, field := range header.Fields {
-			_, err = fmt.Fprintf(w, headerFieldFormat, field.Key, field.Value)
-			if err != nil {
-				return
-			}
+		for i, field := range c.header.Fields {
+			fmt.Fprintf(w, headerFieldFormat, field.Key, field.Value)
 
-			if i != len(header.Fields) {
-				_, err = fmt.Fprint(w, "\n")
-				if err != nil {
-					return
-				}
+			if i != len(c.header.Fields) {
+				fmt.Fprint(w, "\n")
 			}
 		}
 	}
 
-	if _, err = fmt.Fprintln(w); err != nil {
-		return err
-	}
-
-	return
+	fmt.Fprintln(w)
 }
 
-func (c PoCompiler) writeEntry(w io.Writer, t po.Entry) (err error) {
-	nplurals := c.File.Header().Nplurals()
-
+func (c PoCompiler) writeEntry(w *bufio.Writer, t po.Entry) {
 	// Helper function to append formatted lines to the builder.
-	fprintfln := func(format string, args ...any) error {
+	write := func(format string, args ...any) {
 		var comment string
 		if c.Config.CommentFuzzy && slices.Contains(t.Flags, "fuzzy") {
 			comment = "# "
 		}
-		_, err = fmt.Fprintf(w, comment+format+"\n", args...)
-		return err
+		fmt.Fprintf(w, comment+format+"\n", args...)
 	}
 
 	id := formatString(t.ID)
 	context := formatString(t.Context)
 	plural := formatString(t.Plural)
 
-	// Helper function to handle repeated error checking.
-	write := func(format string, args ...any) error {
-		if err = fprintfln(format, args...); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	for _, comment := range t.Comments {
-		if err = write("# %s", comment); err != nil {
-			return err
-		}
+		write("# %s", comment)
 	}
 	for _, xcomment := range t.ExtractedComments {
-		if err = write("#. %s", xcomment); err != nil {
-			return err
-		}
+		write("#. %s", xcomment)
 	}
 	// Add location comments if not suppressed by the configuration.
 	if !c.Config.NoLocation && c.Config.AddLocation != PoLocationModeNever {
 		switch c.Config.AddLocation {
 		case PoLocationModeFull:
 			for _, location := range t.Locations {
-				if err = write("#: %s:%d", location.File, location.Line); err != nil {
-					return err
-				}
+				write("#: %s:%d", location.File, location.Line)
 			}
 		case PoLocationModeFile:
 			for _, location := range t.Locations {
-				if err = write("#: %s", location.File); err != nil {
-					return err
-				}
+				write("#: %s", location.File)
 			}
 		}
 	}
 
 	for _, flag := range t.Flags {
-		if err = write("#, %s", flag); err != nil {
-			return err
-		}
+		write("#, %s", flag)
 	}
 
 	for _, previous := range t.Previous {
-		if err = write("#| %s", previous); err != nil {
-			return err
-		}
+		write("#| %s", previous)
 	}
 
 	// Add context if available.
 	if t.Context != "" {
-		if err = write("msgctxt %s", context); err != nil {
-			return err
-		}
+		write("msgctxt %s", context)
 	}
 
 	// Add singular form.
-	if err = write("msgid %s", id); err != nil {
-		return err
-	}
+	write("msgid %s", id)
 
 	// Add plural forms if present.
 	if t.Plural != "" {
-		if err = write("msgid_plural %s", plural); err != nil {
-			return err
-		}
+		write("msgid_plural %s", plural)
+
 		if len(t.Plurals) == 0 {
-			for i := uint(0); i < nplurals; i++ {
-				if err = write(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config)); err != nil {
-					return err
-				}
+			for i := uint(0); i < c.nplurals; i++ {
+				write(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config))
 			}
 		} else {
 			for _, pe := range t.Plurals {
-				if err := write("msgstr[%d] %s", pe.ID, formatPrefixAndSuffix(pe.Str, c.Config)); err != nil {
-					return err
-				}
+				write("msgstr[%d] %s", pe.ID, formatPrefixAndSuffix(pe.Str, c.Config))
 			}
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		if err = write(`msgstr %s`, formatPrefixAndSuffix(t.Str, c.Config)); err != nil {
-			return err
-		}
+		write(`msgstr %s`, formatPrefixAndSuffix(t.Str, c.Config))
 	}
 
-	if _, err = fmt.Fprintln(w); err != nil {
-		return err
-	}
-
-	return
+	fmt.Fprintln(w)
 }
 
 func formatPrefixAndSuffix(id string, cfg PoConfig) string {

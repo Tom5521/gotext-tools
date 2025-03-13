@@ -1,10 +1,12 @@
 package compiler
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/Tom5521/xgotext/pkg/po"
@@ -15,6 +17,9 @@ var _ Compiler = (*PoCompiler)(nil)
 type PoCompiler struct {
 	File   *po.File // The source file containing translation entries.
 	Config PoConfig // Configuration settings for compilation.
+
+	nplurals uint
+	header   po.Header
 }
 
 func NewPo(file *po.File, options ...PoOption) PoCompiler {
@@ -24,18 +29,20 @@ func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	}
 }
 
-func (c PoCompiler) ToWriter(w io.Writer) error {
-	var err error
+func (c *PoCompiler) init() {
+	c.header = c.File.Header()
+	c.nplurals = c.header.Nplurals()
+}
+
+func (c *PoCompiler) ToWriter(w io.Writer) error {
+	c.init()
+	buf := bufio.NewWriter(w)
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing header...")
 	}
-	// Write the PO file header.
-	err = c.writeHeader(w)
-	if err != nil && !c.Config.IgnoreErrors {
-		err = fmt.Errorf("error writing header format: %w", err)
-		c.Config.Logger.Println("ERROR:", err)
-	}
+
+	c.writeHeader(buf)
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Cleaning duplicates...")
@@ -45,17 +52,20 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing entries...")
 	}
-	for i, e := range entries {
-		if e.ID == "" {
-			continue
-		}
-		err = c.writeEntry(w, e)
-		if err != nil && !c.Config.IgnoreErrors {
-			err = fmt.Errorf("error writing entry[%d]: %w", i, err)
-			c.Config.Logger.Println("ERROR:", err)
-			return err
-		}
+
+	entries = slices.DeleteFunc(entries, func(e po.Entry) bool {
+		return e.Context == "" && e.ID == ""
+	})
+
+	for _, e := range entries {
+		c.writeEntry(buf, e)
 	}
+
+	err := buf.Flush()
+	if err != nil && !c.Config.IgnoreErrors {
+		return err
+	}
+
 	return nil
 }
 

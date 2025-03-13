@@ -151,11 +151,14 @@ func main(){
 
 	for _, t := range tests {
 		b.Run(t.name, func(b *testing.B) {
-			for range b.N {
+			for i := 0; i < b.N; i++ {
 				parser.Parse(t.options...)
-				if len(parser.Errors()) > 0 {
-					b.Error(parser.Errors()[0])
+				b.StopTimer()
+				if parser.Error() != nil {
+					b.Error(parser.Error())
+					b.Skip(parser.Error())
 				}
+				b.StartTimer()
 			}
 		})
 	}

@@ -1,14 +1,13 @@
 package compiler
 
 import (
+	"bufio"
 	"bytes"
 	bin "encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
-	"slices"
 	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
@@ -49,19 +48,6 @@ func NewMo(file *po.File, opts ...MoOption) MoCompiler {
 	return c
 }
 
-func cleanEntries(in po.Entries) (out po.Entries) {
-	in = in.Solve()
-
-	for _, v := range in {
-		if slices.Contains(v.Flags, "fuzzy") {
-			continue
-		}
-		out = append(out, v)
-	}
-
-	return
-}
-
 // A len() function with fixed-size return.
 func flen(value any) u32 {
 	return u32(reflect.ValueOf(value).Len())
@@ -69,7 +55,7 @@ func flen(value any) u32 {
 
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc MoCompiler) writeTo(writer io.Writer) error {
-	entries := cleanEntries(mc.File.Entries)
+	entries := mc.File.Entries.FuzzySolve().CleanFuzzy()
 
 	var offsets []u32
 	var ids, strs string
@@ -108,9 +94,6 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 	var koffsets, voffsets []u32
 
 	for i := 0; i < len(offsets); i += 4 {
-		if i+3 >= len(offsets) {
-			return errors.New("not enough values to unpack")
-		}
 		o1 := offsets[i]
 		l1 := offsets[i+1]
 		o2 := offsets[i+2]
@@ -144,7 +127,14 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 }
 
 func (mc MoCompiler) ToWriter(w io.Writer) error {
-	err := mc.writeTo(w)
+	buf := bufio.NewWriter(w)
+	err := mc.writeTo(buf)
+
+	if err != nil && !mc.Config.IgnoreErrors {
+		return err
+	}
+
+	err = buf.Flush()
 	if err != nil && !mc.Config.IgnoreErrors {
 		return err
 	}

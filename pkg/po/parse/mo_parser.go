@@ -24,7 +24,7 @@ var (
 )
 
 type MoParser struct {
-	data     io.Reader
+	data     []byte
 	filename string
 	errors   []error
 }
@@ -34,12 +34,17 @@ func NewMo(path string) (*MoParser, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	return NewMoFromReader(f, path)
 }
 
 func NewMoFromReader(r io.Reader, name string) (*MoParser, error) {
-	return &MoParser{data: r, filename: name}, nil
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	return &MoParser{data: b, filename: name}, nil
 }
 
 func NewMoFromFile(f *os.File) (*MoParser, error) {
@@ -48,7 +53,7 @@ func NewMoFromFile(f *os.File) (*MoParser, error) {
 
 func NewMoFromBytes(b []byte, name string) (*MoParser, error) {
 	return &MoParser{
-		data:     bytes.NewReader(b),
+		data:     b,
 		filename: name,
 	}, nil
 }
@@ -66,18 +71,8 @@ func (m MoParser) Errors() []error {
 	return m.errors
 }
 
-func (m *MoParser) genBasics() (reader io.ReadSeeker, order bin.ByteOrder, err error) {
-	if b, ok := m.data.(io.ReadSeeker); ok {
-		reader = b
-	} else {
-		var bytedata []byte
-		bytedata, err = io.ReadAll(m.data)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		reader = bytes.NewReader(bytedata)
-	}
+func (m *MoParser) genBasics() (reader *bytes.Reader, order bin.ByteOrder, err error) {
+	reader = bytes.NewReader(m.data)
 
 	var magicNumber uint32
 	if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
@@ -129,10 +124,7 @@ func (m *MoParser) Parse() (file *po.File) {
 
 	msgIDStart := make([]u32, header.MsgIDCount)
 	msgIDLen := make([]u32, header.MsgIDCount)
-	if _, err = r.Seek(i64(header.MsgIDOffset), 0); err != nil {
-		m.errors = append(m.errors, err)
-		return
-	}
+	r.Seek(i64(header.MsgIDOffset), 0)
 
 	for i := u32(0); i < header.MsgIDCount; i++ {
 		if err = bin.Read(r, bo, &msgIDLen[i]); err != nil {
@@ -147,10 +139,7 @@ func (m *MoParser) Parse() (file *po.File) {
 
 	msgStrStart := make([]i32, header.MsgIDCount)
 	msgStrLen := make([]i32, header.MsgIDCount)
-	if _, err = r.Seek(i64(header.MsgStrOffset), 0); err != nil {
-		m.errors = append(m.errors, err)
-		return
-	}
+	r.Seek(i64(header.MsgStrOffset), 0)
 
 	for i := u32(0); i < header.MsgIDCount; i++ {
 		if err = bin.Read(r, bo, &msgStrLen[i]); err != nil {
@@ -184,28 +173,13 @@ func (m *MoParser) makeEntries(
 	msgIDStart, msgIDLen []u32,
 	msgStrStart, msgStrLen []i32,
 ) (entries po.Entries) {
-	var err error
 	for i := u32(0); i < header.MsgIDCount; i++ {
-		if _, err = r.Seek(i64(msgIDStart[i]), 0); err != nil {
-			m.errors = append(m.errors, err)
-			return
-		}
+		r.Seek(i64(msgIDStart[i]), 0)
 		msgIDData := make([]byte, msgIDLen[i])
-		if _, err = r.Read(msgIDData); err != nil {
-			m.errors = append(m.errors, err)
-			return
-		}
-
-		if _, err = r.Seek(i64(msgStrStart[i]), 0); err != nil {
-			m.errors = append(m.errors, err)
-			return
-		}
-
+		r.Read(msgIDData)
+		r.Seek(i64(msgStrStart[i]), 0)
 		msgStrData := make([]byte, msgStrLen[i])
-		if _, err = r.Read(msgStrData); err != nil {
-			m.errors = append(m.errors, err)
-			return
-		}
+		r.Read(msgStrData)
 
 		entries = append(entries, makeEntry(msgIDData, msgStrData))
 	}

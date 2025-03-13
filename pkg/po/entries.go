@@ -160,6 +160,13 @@ func (e Entries) Solve() Entries {
 	return cleaned
 }
 
+func (e Entries) CleanFuzzy() Entries {
+	e = slices.DeleteFunc(e, func(e Entry) bool {
+		return slices.Contains(e.Flags, "fuzzy")
+	})
+	return e
+}
+
 func (e Entries) FuzzyFind(id, context string) int {
 	for i, entry := range e {
 		if fuzzy.Ratio(entry.ID, id) >= 80 && entry.Context == context {

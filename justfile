@@ -6,6 +6,8 @@ test:
   go test -v ./pkg/po/parse
 bench:
   go test -v -bench=. ./pkg/go/parse
+  go test -v -bench=. ./pkg/po/parse
+  go test -v -bench=. ./pkg/po/compiler
 gen-uml:
   goplantuml ./pkg/go/parse > ./pkg/go/parse/structure.puml
   goplantuml ./pkg/po/compiler/ > ./pkg/po/compiler/structure.puml

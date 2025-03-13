@@ -1,6 +1,7 @@
 package parse_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -51,5 +52,42 @@ func TestMoParse(t *testing.T) {
 			fmt.Println(d)
 		}
 		return
+	}
+}
+
+func BenchmarkParseMo(b *testing.B) {
+	entries := po.Entries{
+		{
+			ID:      "Apple",
+			Context: "USA",
+			Plural:  "Apples",
+			Plurals: po.PluralEntries{
+				{0, "Manzana"},
+				{1, "Manzanas"},
+			},
+		},
+		{ID: "Hi", Str: "Hola", Context: "casual"},
+		{ID: "", Str: ""},
+		{ID: "How are you?", Str: "Como estás?"},
+	}
+
+	compiled := compiler.NewMo(&po.File{Entries: entries}).ToBytes()
+
+	reader := bytes.NewReader(compiled)
+	parser, err := parse.NewMoFromReader(reader, "test.mo")
+	if err != nil {
+		b.Error(err)
+		return
+	}
+
+	for i := 0; i < b.N; i++ {
+		parser.Parse()
+		b.StopTimer()
+		if parser.Error() != nil {
+			b.Error(parser.Error())
+			b.Skip(parser.Error())
+		}
+		reader.Reset(compiled)
+		b.StartTimer()
 	}
 }
