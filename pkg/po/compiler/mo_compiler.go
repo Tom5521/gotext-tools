@@ -170,7 +170,7 @@ func (mc MoCompiler) ToFile(f string) error {
 func (mc MoCompiler) ToBytes() []byte {
 	var b bytes.Buffer
 
-	mc.writeTo(&b)
+	mc.ToWriter(&b)
 
 	return b.Bytes()
 }
