@@ -16,8 +16,8 @@ namespace parse {
         - options []Option
         - seenTokens <font color=blue>map</font>[ast.Node]bool
         - file *ast.File
-        - content []byte
-        - path string
+        - reader *bytes.Reader
+        - name string
         - pkgName string
         - hasGotext bool
 
@@ -30,6 +30,7 @@ namespace parse {
         - processPoCall(call *ast.CallExpr) (po.Entry, bool, error)
         - processNode(n ast.Node) (po.Entries, []error)
 
+        + Reset(d io.Reader, name string, options ...Option) error
         + Entries() (po.Entries, []error)
 
     }
@@ -44,6 +45,7 @@ namespace parse {
         - appendFiles(files ...string) error
 
         + Parse(options ...Option) *po.File
+        + Error() error
         + Errors() []error
         + Files() []*File
 

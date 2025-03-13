@@ -1,11 +1,11 @@
 @startuml
 namespace parse {
     class MoParser << (S,Aquamarine) >> {
-        - data io.Reader
+        - data []byte
         - filename string
         - errors []error
 
-        - genBasics() (io.ReadSeeker, binary.ByteOrder, error)
+        - genBasics() (*bytes.Reader, binary.ByteOrder, error)
         - makeEntries(r io.ReadSeeker, header moHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
 
         + Error() error

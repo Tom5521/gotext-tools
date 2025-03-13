@@ -9,6 +9,7 @@ namespace po {
         + SortByLine() Entries
         + CleanDuplicates() Entries
         + Solve() Entries
+        + CleanFuzzy() Entries
         + FuzzyFind(id string, context string) int
         + FuzzySolve() Entries
         + Header() Header

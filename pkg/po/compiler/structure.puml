@@ -27,11 +27,15 @@ namespace compiler {
 
     }
     class PoCompiler << (S,Aquamarine) >> {
+        - nplurals uint
+        - header po.Header
+
         + File *po.File
         + Config PoConfig
 
-        - writeHeader(w io.Writer) error
-        - writeEntry(w io.Writer, t po.Entry) error
+        - init() 
+        - writeHeader(w *bufio.Writer) 
+        - writeEntry(w *bufio.Writer, t po.Entry) 
 
         + ToWriter(w io.Writer) error
         + ToFile(f string) error
