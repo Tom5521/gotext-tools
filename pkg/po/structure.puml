@@ -27,6 +27,10 @@ namespace po {
         + Str string
         + Locations Locations
 
+        + Equal(x Entry) bool
+        + IsPlural() bool
+        + HasContext() bool
+        + IsFuzzy() bool
         + String() string
 
     }

@@ -1,9 +1,8 @@
 package compiler
 
 import (
-	"bufio"
 	"fmt"
-	"slices"
+	"io"
 	"strings"
 
 	"github.com/Tom5521/xgotext/pkg/po"
@@ -23,7 +22,7 @@ msgstr ""
 	headerFieldFormat = `"%s: %s\n"`
 )
 
-func (c PoCompiler) writeHeader(w *bufio.Writer) {
+func (c PoCompiler) writeHeader(w io.Writer) {
 	if c.Config.OmitHeader {
 		return
 	}
@@ -52,50 +51,100 @@ func (c PoCompiler) writeHeader(w *bufio.Writer) {
 	fmt.Fprintln(w)
 }
 
-func (c PoCompiler) writeEntry(w *bufio.Writer, t po.Entry) {
-	// Helper function to append formatted lines to the builder.
+func (c PoCompiler) fprintfln(w io.Writer, e po.Entry, format string, args ...any) {
+	str := fmt.Sprintf(format, args...)
+	if c.Config.CommentFuzzy && e.IsFuzzy() && !strings.HasPrefix(str, "#") {
+		str = "# " + str
+	}
+	fmt.Fprintln(w, str)
+}
+
+func (c PoCompiler) writeComment(w io.Writer, e po.Entry) {
 	write := func(format string, args ...any) {
-		var comment string
-		if c.Config.CommentFuzzy && slices.Contains(t.Flags, "fuzzy") {
-			comment = "# "
-		}
-		fmt.Fprintf(w, comment+format+"\n", args...)
+		c.fprintfln(w, e, format, args...)
 	}
 
-	id := formatString(t.ID)
-	context := formatString(t.Context)
-	plural := formatString(t.Plural)
-
-	for _, comment := range t.Comments {
+	for _, comment := range e.Comments {
 		write("# %s", comment)
 	}
-	for _, xcomment := range t.ExtractedComments {
+	for _, xcomment := range e.ExtractedComments {
 		write("#. %s", xcomment)
 	}
 	// Add location comments if not suppressed by the configuration.
 	if !c.Config.NoLocation && c.Config.AddLocation != PoLocationModeNever {
 		switch c.Config.AddLocation {
 		case PoLocationModeFull:
-			for _, location := range t.Locations {
+			for _, location := range e.Locations {
 				write("#: %s:%d", location.File, location.Line)
 			}
 		case PoLocationModeFile:
-			for _, location := range t.Locations {
+			for _, location := range e.Locations {
 				write("#: %s", location.File)
 			}
 		}
 	}
 
-	for _, flag := range t.Flags {
+	for _, flag := range e.Flags {
 		write("#, %s", flag)
 	}
 
-	for _, previous := range t.Previous {
+	for _, previous := range e.Previous {
 		write("#| %s", previous)
 	}
+}
+
+func (c PoCompiler) formatMultiline(str string) string {
+	var builder strings.Builder
+
+	if c.Config.WordWrap {
+		lines := strings.Split(str, "\n")
+		for i, line := range lines {
+			fmt.Fprintf(&builder, "%q", line)
+			if i != len(lines)-1 {
+				builder.WriteByte('\n')
+			}
+		}
+	} else {
+		builder.Grow(len(str) * 2)
+
+		builder.WriteRune('"')
+
+		for _, char := range str {
+			if char == '\n' {
+				builder.WriteString("\\n")
+				continue
+			}
+			builder.WriteRune(char)
+		}
+
+		builder.WriteRune('"')
+	}
+
+	return builder.String()
+}
+
+func (c PoCompiler) formatMsgstr(i string) string {
+	return c.formatMultiline(c.formatPrefixAndSuffix(fixSpecialChars(i)))
+}
+
+func (c PoCompiler) formatMsgid(i string) string {
+	return c.formatMultiline(fixSpecialChars(i))
+}
+
+func (c PoCompiler) writeEntry(w io.Writer, e po.Entry) {
+	// Helper function to append formatted lines to the builder.
+	write := func(format string, args ...any) {
+		c.fprintfln(w, e, format, args...)
+	}
+
+	c.writeComment(w, e)
+
+	id := c.formatMsgid(e.ID)
+	context := c.formatMsgid(e.Context)
+	plural := c.formatMsgid(e.Plural)
 
 	// Add context if available.
-	if t.Context != "" {
+	if e.HasContext() {
 		write("msgctxt %s", context)
 	}
 
@@ -103,68 +152,28 @@ func (c PoCompiler) writeEntry(w *bufio.Writer, t po.Entry) {
 	write("msgid %s", id)
 
 	// Add plural forms if present.
-	if t.Plural != "" {
+	if e.IsPlural() {
 		write("msgid_plural %s", plural)
 
-		if len(t.Plurals) == 0 {
+		if len(e.Plurals) == 0 {
 			for i := uint(0); i < c.nplurals; i++ {
-				write(`msgstr[%d] %s`, i, formatPrefixAndSuffix(t.ID, c.Config))
+				write(`msgstr[%d] %s`, i, c.formatMsgstr(e.ID))
 			}
 		} else {
-			for _, pe := range t.Plurals {
-				write("msgstr[%d] %s", pe.ID, formatPrefixAndSuffix(pe.Str, c.Config))
+			for _, pe := range e.Plurals {
+				write("msgstr[%d] %s", pe.ID, c.formatMsgstr(pe.Str))
 			}
 		}
 	} else {
 		// Add empty msgstr for singular strings.
-		write(`msgstr %s`, formatPrefixAndSuffix(t.Str, c.Config))
+		write(`msgstr %s`, c.formatMsgstr(e.Str))
 	}
 
 	fmt.Fprintln(w)
 }
 
-func formatPrefixAndSuffix(id string, cfg PoConfig) string {
-	return formatString(cfg.MsgstrPrefix + id + cfg.MsgstrSuffix)
-}
-
-// formatString applies formatting rules to a string to make it compatible
-// with PO file syntax. It escapes special characters and handles multiline strings.
-//
-// Parameters:
-//   - str: The input string.
-//
-// Returns:
-//   - The formatted string.
-func formatString(str string) string {
-	str = fixSpecialChars(str)
-	return formatMultiline(str)
-}
-
-// formatMultiline formats a string as a PO-compatible multiline string.
-// Line breaks are escaped with `\n`.
-//
-// Parameters:
-//   - str: The input string.
-//
-// Returns:
-//   - A multiline-formatted string.
-func formatMultiline(str string) string {
-	var builder strings.Builder
-	builder.Grow(len(str) * 2)
-
-	builder.WriteRune('"')
-
-	for _, char := range str {
-		if char == '\n' {
-			builder.WriteString("\\n")
-			continue
-		}
-		builder.WriteRune(char)
-	}
-
-	builder.WriteRune('"')
-
-	return builder.String()
+func (c PoCompiler) formatPrefixAndSuffix(id string) string {
+	return fixSpecialChars(c.Config.MsgstrPrefix + id + c.Config.MsgstrSuffix)
 }
 
 // fixSpecialChars escapes special characters (`"` and `\`) in a string.

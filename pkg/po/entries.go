@@ -54,10 +54,9 @@ func (e Entries) Sort() Entries {
 }
 
 func (e Entries) SortByFuzzy() Entries {
-	contains := slices.Contains[[]string]
 	slices.SortFunc(e, func(a, b Entry) int {
-		aContains := contains(a.Flags, "fuzzy")
-		bContains := contains(b.Flags, "fuzzy")
+		aContains := a.IsFuzzy()
+		bContains := b.IsFuzzy()
 
 		switch {
 		case aContains == bContains:
@@ -162,7 +161,7 @@ func (e Entries) Solve() Entries {
 
 func (e Entries) CleanFuzzy() Entries {
 	e = slices.DeleteFunc(e, func(e Entry) bool {
-		return slices.Contains(e.Flags, "fuzzy")
+		return e.IsFuzzy()
 	})
 	return e
 }
@@ -208,7 +207,7 @@ func (e Entries) FuzzySolve() (cleaned Entries) {
 			continue
 		}
 		entry := group.Solve()[0]
-		if !slices.Contains(entry.Flags, "fuzzy") {
+		if !entry.IsFuzzy() {
 			entry.Flags = append(entry.Flags, "fuzzy")
 		}
 		cleaned = append(cleaned, entry)

@@ -24,6 +24,7 @@ type PoConfig struct {
 	CommentFuzzy    bool
 	HeaderComments  bool
 	HeaderFields    bool
+	WordWrap        bool
 }
 
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {
@@ -65,6 +66,12 @@ func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func PoWithWordWrap(w bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.WordWrap = w
+	}
+}
 
 func PoWithHeaderFields(w bool) PoOption {
 	return func(pc *PoConfig) {

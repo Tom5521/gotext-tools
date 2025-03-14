@@ -62,10 +62,10 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 	for _, e := range entries {
 		var msgid string
 		var msgstr string
-		if e.Context != "" {
+		if e.HasContext() {
 			msgid = e.Context + eot
 		}
-		if e.Plural != "" {
+		if e.IsPlural() {
 			var msgstrs []string
 			plurals := e.Plurals.Sort()
 			for _, plural := range plurals {
@@ -118,7 +118,7 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 
 	for _, v := range data {
 		err := bin.Write(writer, order, v)
-		if err != nil {
+		if err != nil && !mc.Config.IgnoreErrors {
 			return err
 		}
 	}

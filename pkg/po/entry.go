@@ -92,6 +92,22 @@ type Entry struct {
 	Locations Locations // A list of source code locations for the string.
 }
 
+func (e Entry) Equal(x Entry) bool {
+	return util.Equal(e, x)
+}
+
+func (e Entry) IsPlural() bool {
+	return e.Plural != ""
+}
+
+func (e Entry) HasContext() bool {
+	return e.Context != ""
+}
+
+func (e Entry) IsFuzzy() bool {
+	return slices.Contains(e.Flags, "fuzzy")
+}
+
 func (e Entry) String() string {
 	return util.Format(e)
 }

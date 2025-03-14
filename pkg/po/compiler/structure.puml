@@ -34,8 +34,14 @@ namespace compiler {
         + Config PoConfig
 
         - init() 
-        - writeHeader(w *bufio.Writer) 
-        - writeEntry(w *bufio.Writer, t po.Entry) 
+        - writeHeader(w io.Writer) 
+        - fprintfln(w io.Writer, e po.Entry, format string, args ...any) 
+        - writeComment(w io.Writer, e po.Entry) 
+        - formatMultiline(str string) string
+        - formatMsgstr(i string) string
+        - formatMsgid(i string) string
+        - writeEntry(w io.Writer, e po.Entry) 
+        - formatPrefixAndSuffix(id string) string
 
         + ToWriter(w io.Writer) error
         + ToFile(f string) error
@@ -60,6 +66,7 @@ namespace compiler {
         + CommentFuzzy bool
         + HeaderComments bool
         + HeaderFields bool
+        + WordWrap bool
 
         + ApplyOptions(opts ...PoOption) 
         + Validate() error
