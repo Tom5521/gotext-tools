@@ -30,7 +30,9 @@ type PoConfig struct {
 }
 
 func (c *PoConfig) RestoreLastCfg() {
-	*c = c.lastCfg.(PoConfig)
+	if c.lastCfg != nil {
+		*c = c.lastCfg.(PoConfig)
+	}
 }
 
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {

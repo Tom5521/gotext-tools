@@ -24,7 +24,9 @@ func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 }
 
 func (mc *MoConfig) RestoreLastCfg() {
-	*mc = mc.lastCfg.(MoConfig)
+	if mc.lastCfg != nil {
+		*mc = mc.lastCfg.(MoConfig)
+	}
 }
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {

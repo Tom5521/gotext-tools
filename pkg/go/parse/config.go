@@ -22,7 +22,9 @@ type Config struct {
 }
 
 func (c *Config) RestoreLastCfg() {
-	*c = c.lastCfg.(Config)
+	if c.lastCfg != nil {
+		*c = c.lastCfg.(Config)
+	}
 }
 
 func (c *Config) ApplyOptions(opts ...Option) {
