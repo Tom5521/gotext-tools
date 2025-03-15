@@ -67,11 +67,8 @@ func (p PoParser) Errors() []error {
 }
 
 func (p *PoParser) Parse(options ...PoOption) *po.File {
-	originalCfg := p.Config
 	p.Config.ApplyOptions(options...)
-	defer func() {
-		p.Config = originalCfg
-	}()
+	defer p.Config.RestoreLastCfg()
 
 	p.errors = nil
 

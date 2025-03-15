@@ -8,6 +8,8 @@ import (
 )
 
 type Config struct {
+	lastCfg any // Any type to not refer itself.
+
 	Exclude         []string
 	ExtractAll      bool
 	NoHeader        bool
@@ -19,7 +21,13 @@ type Config struct {
 	CleanDuplicates bool
 }
 
+func (c *Config) RestoreLastCfg() {
+	*c = c.lastCfg.(Config)
+}
+
 func (c *Config) ApplyOptions(opts ...Option) {
+	c.lastCfg = *c
+
 	for _, opt := range opts {
 		opt(c)
 	}

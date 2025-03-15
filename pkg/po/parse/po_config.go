@@ -6,12 +6,21 @@ import (
 )
 
 type PoConfig struct {
+	lastCfg any // Any type to not refer itself.
+
 	Logger          *log.Logger
 	SkipHeader      bool
 	CleanDuplicates bool
 }
 
+func (p *PoConfig) RestoreLastCfg() {
+	if p.lastCfg != nil {
+		*p = p.lastCfg.(PoConfig)
+	}
+}
+
 func (p *PoConfig) ApplyOptions(opts ...PoOption) {
+	p.lastCfg = *p
 	for _, opt := range opts {
 		opt(p)
 	}

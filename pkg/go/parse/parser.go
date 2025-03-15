@@ -146,9 +146,8 @@ func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 
 // Parse processes all files associated with the Parser and extracts translations.
 func (p *Parser) Parse(options ...Option) (file *po.File) {
-	originalCfg := p.Config
 	p.Config.ApplyOptions(options...)
-	defer func() { p.Config = originalCfg }()
+	defer p.Config.RestoreLastCfg()
 
 	file = new(po.File)
 	p.errors = nil // Clean errors

@@ -6,6 +6,8 @@ import (
 )
 
 type MoConfig struct {
+	lastCfg any // Any type to not refer itself.
+
 	Logger       *log.Logger
 	Force        bool
 	Verbose      bool
@@ -14,9 +16,15 @@ type MoConfig struct {
 }
 
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
+	mc.lastCfg = *mc
+
 	for _, opt := range opts {
 		opt(mc)
 	}
+}
+
+func (mc *MoConfig) RestoreLastCfg() {
+	*mc = mc.lastCfg.(MoConfig)
 }
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
