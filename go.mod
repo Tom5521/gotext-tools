@@ -1,6 +1,6 @@
 module github.com/Tom5521/xgotext
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
@@ -15,5 +15,5 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
+	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
 )
