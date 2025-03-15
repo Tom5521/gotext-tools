@@ -13,58 +13,29 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
-// Parser represents a parser for processing Go source files and extracting translation entries.
-//
-// ### Attributes:
-// - `config`: Configuration settings for the parser (e.g., exclude paths, verbose logging).
-// - `options`: Additional options to customize the parser behavior.
-// - `files`: A list of `File` objects representing the Go source files to be processed.
-// - `seen`: Tracks already processed files to avoid duplicate processing.
-// - `errors`: Stores errors encountered during parsing.
-//
-// ### Responsibilities:
-// - Manage the parsing process, including file handling, configuration, and error reporting.
-// - Traverse ASTs to extract translation entries and generate compatible PO file data.
-//
-// ### Methods:
-// - `NewParser`: Initializes a parser for a directory of Go files.
-// - `NewParserFromReader`: Creates a parser from an `io.Reader` (e.g., file or memory buffer).
-// - `NewParserFromString`: Creates a parser from a string containing Go source code.
-// - `NewParserFromBytes`: Creates a parser from raw byte data.
-// - `NewParserFromFiles`: Initializes a parser for a list of file paths.
-// - `Parse`: Processes all files in the parser, extracting translations and generating entries.
-// - `Errors`: Returns any errors encountered during parsing.
-// - `Files`: Returns the list of files associated with the parser.
 type Parser struct {
-	config  Config // Configuration settings for parsing.
-	options []Option
-	files   []*File         // List of parsed files.
-	seen    map[string]bool // Tracks already processed files to avoid duplication.
+	Config Config          // Configuration settings for parsing.
+	files  []*File         // List of parsed files.
+	seen   map[string]bool // Tracks already processed files to avoid duplication.
 
 	errors []error
-}
-
-func (p *Parser) applyOptions(options ...Option) {
-	for _, opt := range options {
-		opt(&p.config)
-	}
 }
 
 func (p *Parser) appendFiles(files ...string) error {
 	for _, file := range files {
 		walker := krfs.Walk(file)
 		for walker.Step() {
-			if util.ShouldSkipFile(walker, p.config.Exclude, &p.seen, p.config.Logger) {
+			if util.ShouldSkipFile(walker, p.Config.Exclude, &p.seen, p.Config.Logger) {
 				continue
 			}
 
-			if p.config.Verbose {
-				p.config.Logger.Println("Reading", walker.Path(), "...")
+			if p.Config.Verbose {
+				p.Config.Logger.Println("Reading", walker.Path(), "...")
 			}
-			f, err := NewFileFromPath(walker.Path(), p.options...)
+			f, err := NewFileFromPath(walker.Path(), &p.Config)
 			if err != nil {
 				err = fmt.Errorf("error reading file %s: %w", walker.Path(), err)
-				p.config.Logger.Println("ERROR:", err.Error())
+				p.Config.Logger.Println("ERROR:", err.Error())
 				return err
 			}
 			p.files = append(p.files, f)
@@ -80,7 +51,7 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 	err := p.appendFiles(path)
 	if err != nil {
 		err = fmt.Errorf("error parsing files: %w", err)
-		p.config.Logger.Println("ERROR:", err)
+		p.Config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 
@@ -90,9 +61,8 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 // baseParser creates a base Parser instance with the provided configuration.
 func baseParser(options ...Option) *Parser {
 	p := &Parser{
-		options: options,
-		config:  DefaultConfig(options...),
-		seen:    make(map[string]bool),
+		Config: DefaultConfig(options...),
+		seen:   make(map[string]bool),
 	}
 
 	return p
@@ -129,10 +99,10 @@ func NewParserFromBytes(
 	options ...Option,
 ) (*Parser, error) {
 	p := baseParser(options...)
-	f, err := NewFileFromBytes(b, name, options...)
+	f, err := NewFileFromBytes(b, name, &p.Config)
 	if err != nil {
 		err = fmt.Errorf("error configuring file: %w", err)
-		p.config.Logger.Println("ERROR:", err)
+		p.Config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 	p.files = append(p.files, f)
@@ -143,12 +113,13 @@ func NewParserFromBytes(
 func NewParserFromFiles(files []*os.File, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	for _, file := range files {
-		f, err := NewFile(file, file.Name(), options...)
+		f, err := NewFile(file, file.Name(), &p.Config)
 		if err != nil {
 			err = fmt.Errorf("error configuring file: %w", err)
-			p.config.Logger.Println("ERROR:", err)
+			p.Config.Logger.Println("ERROR:", err)
 			return nil, err
 		}
+		f.config = &p.Config
 		p.files = append(p.files, f)
 	}
 
@@ -166,7 +137,7 @@ func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 	err := p.appendFiles(files...)
 	if err != nil {
 		err = fmt.Errorf("error parsing files: %w", err)
-		p.config.Logger.Println("ERROR:", err)
+		p.Config.Logger.Println("ERROR:", err)
 		return nil, err
 	}
 
@@ -175,38 +146,41 @@ func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 
 // Parse processes all files associated with the Parser and extracts translations.
 func (p *Parser) Parse(options ...Option) (file *po.File) {
-	p.applyOptions(p.options...)
-	p.applyOptions(options...)
-	defer p.applyOptions(p.options...) // Reset default settings.
-	file = &po.File{}
+	originalCfg := p.Config
+	p.Config.ApplyOptions(options...)
+	defer func() { p.Config = originalCfg }()
+
+	file = new(po.File)
 	p.errors = nil // Clean errors
 
-	header := po.DefaultTemplateHeader()
-	if p.config.Header != nil {
-		header = *p.config.Header
+	if !p.Config.NoHeader {
+		header := po.DefaultTemplateHeader()
+		if p.Config.Header != nil {
+			header = *p.Config.Header
+		}
+
+		if p.Config.HeaderConfig != nil {
+			header = p.Config.HeaderConfig.ToHeaderWithDefaults()
+		}
+
+		if p.Config.HeaderOptions != nil {
+			header = po.HeaderConfigFromOptions(p.Config.HeaderOptions...).ToHeaderWithDefaults()
+		}
+
+		header.Fields = append(header.Fields, po.HeaderField{Key: "X-Generator", Value: "xgotext"})
+
+		file.Entries = append(file.Entries, header.ToEntry())
 	}
-
-	if p.config.HeaderConfig != nil {
-		header = p.config.HeaderConfig.ToHeaderWithDefaults()
-	}
-
-	if p.config.HeaderOptions != nil {
-		header = po.HeaderConfigFromOptions(p.config.HeaderOptions...).ToHeaderWithDefaults()
-	}
-
-	header.Fields = append(header.Fields, po.HeaderField{Key: "X-Generator", Value: "xgotext"})
-
-	file.Entries = append(file.Entries, header.ToEntry())
 
 	for _, f := range p.files {
-		if p.config.Verbose {
-			p.config.Logger.Println("Parsing", f.name, "...")
+		if p.Config.Verbose {
+			p.Config.Logger.Println("Parsing", f.name, "...")
 		}
-		entries, e := f.Entries()
-		if len(e) > 0 {
-			p.errors = append(p.errors, e...)
-			for _, err := range e {
-				p.config.Logger.Println(
+		entries := f.Entries()
+		if err := f.Error(); err != nil {
+			p.errors = append(p.errors, f.Errors()...)
+			for _, err := range f.Errors() {
+				p.Config.Logger.Println(
 					"ERROR:",
 					fmt.Errorf("error parsing file %s: %w", f.name, err),
 				)
@@ -216,7 +190,7 @@ func (p *Parser) Parse(options ...Option) (file *po.File) {
 		file.Entries = append(file.Entries, entries...)
 	}
 
-	if p.config.CleanDuplicates {
+	if p.Config.CleanDuplicates {
 		file.Entries = file.Entries.CleanDuplicates()
 	}
 

@@ -1,5 +1,7 @@
 package po
 
+import "github.com/Tom5521/xgotext/internal/util"
+
 type File struct {
 	Entries Entries
 	Name    string
@@ -9,6 +11,10 @@ func NewFile(name string, entries ...Entry) *File {
 	f := &File{Name: name, Entries: entries}
 
 	return f
+}
+
+func (f File) Equal(f2 File) bool {
+	return util.Equal(f, f2)
 }
 
 func (f File) Header() Header {

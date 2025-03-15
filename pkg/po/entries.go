@@ -5,11 +5,16 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
 // Entries represents a collection of Entry objects.
 type Entries []Entry
+
+func (e Entries) Equal(e2 Entries) bool {
+	return util.Equal(e, e2)
+}
 
 func (e Entries) Index(id, context string) int {
 	return slices.IndexFunc(e,

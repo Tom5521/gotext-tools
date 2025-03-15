@@ -50,9 +50,7 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 		HeaderFields:   true,
 	}
 
-	for _, opt := range opts {
-		opt(&c)
-	}
+	c.ApplyOptions(opts...)
 
 	return c
 }

@@ -20,52 +20,44 @@ const (
 	WantedImport = `"github.com/leonelquinteros/gotext"`
 )
 
-// File represents a Go source file that is being processed by the parser.
+// File represents the parser of an individual go file,
+// I do it this way to keep track of the location and name of each file.
 //
-// ### Attributes:
-// - `config`: The parser configuration options (e.g., to enable verbose logging or extract all strings).
-// - `file`: The parsed AST (abstract syntax tree) representation of the Go source file.
-// - `content`: The raw content of the source file as a byte slice.
-// - `path`: The file path of the Go source file.
-// - `pkgName`: The name of the package declared in the file. Defaults to "gotext" unless overridden.
-// - `hasGotext`: Indicates whether the file imports the "gotext" package (required for translation extraction).
-// - `seenTokens`: Tracks processed AST nodes to avoid duplicate entries.
-//
-// ### Responsibilities:
-// - Parse the Go source file into an AST.
-// - Extract translation entries and their metadata (e.g., locations in the source file).
-// - Check if the file imports the "gotext" library and determine the package alias if used.
-//
-// ### Methods:
-// - `NewFileFromReader`: Creates a `File` instance from an `io.Reader`.
-// - `NewFileFromPath`: Creates a `File` instance from a file path.
-// - `NewFileFromBytes`: Creates a `File` instance from raw byte data.
-// - `Entries`: Extracts all translation entries from the file.
-// - `parse`: Parses the file content into an AST.
-// - `determinePackageInfo`: Extracts package-related metadata, such as the package name and `gotext` import.
+// It does not generate Header, it only extracts the entries according to the configuration.
 type File struct {
-	config     Config
-	options    []Option
+	config     *Config
 	seenTokens map[ast.Node]bool
 	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
 	reader     *bytes.Reader
 	name       string // The path to the file.
 	pkgName    string // The name of the package declared in the file.
 	hasGotext  bool   // Indicates if the file imports the desired "gotext" package.
+
+	errors []error
 }
 
-func (f *File) Reset(d io.Reader, name string, options ...Option) error {
+func (f *File) Reset(d io.Reader, name string, config *Config) error {
 	f.seenTokens = nil
-	f.options = options
+	f.errors = nil
 
-	b, err := io.ReadAll(d)
-	if err != nil {
-		return err
+	if r, ok := d.(*bytes.Reader); ok {
+		f.reader = r
+	} else {
+		b, err := io.ReadAll(d)
+		if err != nil {
+			return err
+		}
+		f.reader = bytes.NewReader(b)
 	}
-	f.reader = bytes.NewReader(b)
 	f.name = name
 
-	if err = f.parse(); err != nil {
+	if config != nil {
+		f.config = config
+	} else {
+		f.config = &[]Config{DefaultConfig()}[0]
+	}
+
+	if err := f.parse(); err != nil {
 		return err
 	}
 
@@ -74,12 +66,12 @@ func (f *File) Reset(d io.Reader, name string, options ...Option) error {
 	return nil
 }
 
-func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
+func NewFileFromBytes(b []byte, name string, config *Config) (*File, error) {
 	file := &File{
 		reader:  bytes.NewReader(b),
 		name:    name,
-		options: options,
 		pkgName: DefaultPackageName,
+		config:  config,
 	}
 
 	if err := file.parse(); err != nil {
@@ -91,24 +83,24 @@ func NewFileFromBytes(b []byte, name string, options ...Option) (*File, error) {
 }
 
 // NewFileFromPath creates a new File instance by reading content from a file on disk.
-func NewFileFromPath(path string, options ...Option) (*File, error) {
+func NewFileFromPath(path string, config *Config) (*File, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
-	return NewFile(file, path, options...)
+	return NewFile(file, path, config)
 }
 
 // NewFile creates a new File instance from raw byte data.
-func NewFile(b io.Reader, name string, options ...Option) (*File, error) {
+func NewFile(b io.Reader, name string, config *Config) (*File, error) {
 	bytedata, err := io.ReadAll(b)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFileFromBytes(bytedata, name, options...)
+	return NewFileFromBytes(bytedata, name, config)
 }
 
 // parse parses the file content into an AST.
@@ -135,30 +127,36 @@ func (f *File) determinePackageInfo() {
 	}
 }
 
-// Entries returns all translations found in the file.
-func (f *File) Entries() (po.Entries, []error) {
-	f.seenTokens = make(map[ast.Node]bool)
-	for _, opt := range f.options {
-		opt(&f.config)
+func (f *File) Errors() []error {
+	return f.errors
+}
+
+func (f *File) Error() error {
+	if len(f.errors) == 0 {
+		return nil
 	}
 
-	defer func() {
-		f.seenTokens = nil
-	}()
+	return f.errors[0]
+}
+
+// Entries returns all translations found in the file.
+func (f *File) Entries() po.Entries {
+	// Reset fields.
+	f.seenTokens = make(map[ast.Node]bool)
+	f.errors = nil
 
 	var entries po.Entries
-	var errors []error
 
 	if !f.hasGotext && !f.config.ExtractAll {
-		return entries, errors
+		return entries
 	}
 
 	ast.Inspect(f.file, func(n ast.Node) bool {
 		t, e := f.processNode(n)
 		entries = append(entries, t...)
-		errors = append(errors, e...)
+		f.errors = append(f.errors, e...)
 		return true
 	})
 
-	return entries, errors
+	return entries
 }

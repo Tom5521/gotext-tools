@@ -3,7 +3,6 @@ package parse_test
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/kr/pretty"
@@ -28,17 +27,17 @@ func main(){
 			},
 		},
 	}
-	parser, err := parse.NewParserFromString(input, "test.go")
+	parser, err := parse.NewParserFromString(input, "test.go", parse.WithNoHeader(true))
 	if err != nil {
 		t.Error(err)
 	}
 
 	file := parser.Parse()
-	if len(parser.Errors()) > 0 {
-		t.Error(parser.Errors()[0])
+	if err = parser.Error(); err != nil {
+		t.Error(err)
 	}
 
-	if !po.EqualEntries(file.Entries[1:], expected) {
+	if !file.Entries.Equal(expected) {
 		t.Log("Unexpected entries slice")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)
@@ -68,7 +67,7 @@ func main(){
 		t.Error(err)
 	}
 
-	file := parser.Parse()
+	file := parser.Parse(parse.WithNoHeader(true))
 	if len(parser.Errors()) > 0 {
 		t.Error(parser.Errors()[0])
 	}
@@ -112,7 +111,7 @@ func main(){
 		},
 	}
 
-	if !util.Equal(file.Entries[1:], expected) {
+	if !file.Entries.Equal(expected) {
 		t.Error("Unexpected translation")
 		t.Log("got:", file.Entries)
 		t.Log("expected:", expected)
