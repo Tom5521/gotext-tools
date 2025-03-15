@@ -11,6 +11,12 @@ type PoConfig struct {
 	CleanDuplicates bool
 }
 
+func (p *PoConfig) ApplyOptions(opts ...PoOption) {
+	for _, opt := range opts {
+		opt(p)
+	}
+}
+
 func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
 		Logger:          log.New(io.Discard, "", 0),

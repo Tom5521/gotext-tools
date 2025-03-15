@@ -12,19 +12,12 @@ import (
 )
 
 type PoParser struct {
-	config  PoConfig
-	options []PoOption
+	Config PoConfig
 
 	data     string
 	filename string
 
 	errors []error
-}
-
-func (p *PoParser) applyOptions(opts ...PoOption) {
-	for _, opt := range opts {
-		opt(&p.config)
-	}
 }
 
 func NewPo(path string, options ...PoOption) (*PoParser, error) {
@@ -51,8 +44,7 @@ func NewPoFromFile(f *os.File, options ...PoOption) (*PoParser, error) {
 
 func NewPoFromString(s, name string, options ...PoOption) *PoParser {
 	return &PoParser{
-		options:  options,
-		config:   DefaultPoConfig(),
+		Config:   DefaultPoConfig(options...),
 		data:     s,
 		filename: name,
 	}
@@ -75,8 +67,11 @@ func (p PoParser) Errors() []error {
 }
 
 func (p *PoParser) Parse(options ...PoOption) *po.File {
-	p.applyOptions(p.options...)
-	p.applyOptions(options...)
+	originalCfg := p.Config
+	p.Config.ApplyOptions(options...)
+	defer func() {
+		p.Config = originalCfg
+	}()
 
 	p.errors = nil
 
@@ -108,16 +103,16 @@ func (p *PoParser) Parse(options ...PoOption) *po.File {
 	}
 
 	for _, err := range p.errors {
-		p.config.Logger.Println("ERROR:", err)
+		p.Config.Logger.Println("ERROR:", err)
 	}
 
-	if p.config.SkipHeader {
+	if p.Config.SkipHeader {
 		i := listener.Entries.Index("", "")
 		if i != -1 {
 			listener.Entries = slices.Delete(listener.Entries, i, i+1)
 		}
 	}
-	if p.config.CleanDuplicates {
+	if p.Config.CleanDuplicates {
 		listener.Entries = listener.Entries.CleanDuplicates()
 	}
 
