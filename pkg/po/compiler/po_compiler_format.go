@@ -124,11 +124,11 @@ func (c PoCompiler) formatMultiline(str string) string {
 }
 
 func (c PoCompiler) formatMsgstr(i string) string {
-	return c.formatMultiline(c.formatPrefixAndSuffix(fixSpecialChars(i)))
+	return c.formatMultiline(c.formatPrefixAndSuffix(i))
 }
 
 func (c PoCompiler) formatMsgid(i string) string {
-	return c.formatMultiline(fixSpecialChars(i))
+	return c.formatMultiline(i)
 }
 
 func (c PoCompiler) writeEntry(w io.Writer, e po.Entry) {
@@ -173,26 +173,5 @@ func (c PoCompiler) writeEntry(w io.Writer, e po.Entry) {
 }
 
 func (c PoCompiler) formatPrefixAndSuffix(id string) string {
-	return fixSpecialChars(c.Config.MsgstrPrefix + id + c.Config.MsgstrSuffix)
-}
-
-// fixSpecialChars escapes special characters (`"` and `\`) in a string.
-//
-// Parameters:
-//   - str: The input string.
-//
-// Returns:
-//   - The string with escaped special characters.
-func fixSpecialChars(str string) string {
-	var builder strings.Builder
-	builder.Grow(len(str) * 2)
-
-	for _, char := range str {
-		if char == '"' || char == '\\' {
-			builder.WriteRune('\\')
-		}
-		builder.WriteRune(char)
-	}
-
-	return builder.String()
+	return c.Config.MsgstrPrefix + id + c.Config.MsgstrSuffix
 }

@@ -43,6 +43,7 @@ func initConfig() {
 		Verbose:         verbose,
 		HeaderComments:  true,
 		HeaderFields:    true,
+		WordWrap:        wordWrap,
 	}
 	PoParserCfg = poparse.PoConfig{
 		Logger: logger,

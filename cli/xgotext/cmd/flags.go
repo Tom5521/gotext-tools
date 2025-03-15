@@ -34,6 +34,7 @@ var (
 	copyrightHolder string
 	msgstrPrefix    string
 	msgstrSuffix    string
+	wordWrap        bool
 
 	// Other.
 	defaultDomain string
@@ -198,4 +199,5 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 		"",
 		`Use string (or "" if not specified) as suffix for msgstr values.`,
 	)
+	flag.BoolVar(&wordWrap, "word-wrap", false, "Applies word wrapping to strings.")
 }
