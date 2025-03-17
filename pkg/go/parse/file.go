@@ -26,7 +26,7 @@ const (
 // It does not generate Header, it only extracts the entries according to the configuration.
 type File struct {
 	config     *Config
-	seenTokens map[ast.Node]bool
+	seenTokens map[token.Pos]bool
 	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
 	reader     *bytes.Reader
 	name       string // The path to the file.
@@ -142,7 +142,7 @@ func (f *File) Error() error {
 // Entries returns all translations found in the file.
 func (f *File) Entries() po.Entries {
 	// Reset fields.
-	f.seenTokens = make(map[ast.Node]bool)
+	f.seenTokens = make(map[token.Pos]bool)
 	f.errors = nil
 
 	var entries po.Entries

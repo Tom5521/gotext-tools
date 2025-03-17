@@ -78,7 +78,7 @@ func (f *File) processGeneric(exprs ...ast.Expr) (po.Entries, []error) {
 
 	for _, expr := range exprs {
 		if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
-			if f.seenTokens[lit] {
+			if f.seenTokens[lit.Pos()] {
 				continue
 			}
 
@@ -93,7 +93,7 @@ func (f *File) processGeneric(exprs ...ast.Expr) (po.Entries, []error) {
 			}
 
 			entries = append(entries, entry)
-			f.seenTokens[lit] = true
+			f.seenTokens[lit.Pos()] = true
 		}
 	}
 
@@ -133,7 +133,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 	pos := lit.Pos()
 
-	f.seenTokens[lit] = true
+	f.seenTokens[lit.Pos()] = true
 
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil {
