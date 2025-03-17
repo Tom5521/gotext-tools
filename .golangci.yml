@@ -145,11 +145,6 @@ linters-settings:
     # database/sql is always checked
     # Default: []
     packages: [github.com/jmoiron/sqlx]
-  tenv:
-    # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
-    # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
-    # Default: false
-    all: true
 linters:
   disable-all: true
   enable:
