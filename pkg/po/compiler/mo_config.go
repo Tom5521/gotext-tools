@@ -6,8 +6,6 @@ import (
 )
 
 type MoConfig struct {
-	lastCfg any // Any type to not refer itself.
-
 	Logger       *log.Logger
 	Force        bool
 	Verbose      bool
@@ -16,16 +14,8 @@ type MoConfig struct {
 }
 
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
-	mc.lastCfg = *mc
-
 	for _, opt := range opts {
 		opt(mc)
-	}
-}
-
-func (mc *MoConfig) RestoreLastCfg() {
-	if mc.lastCfg != nil {
-		*mc = mc.lastCfg.(MoConfig)
 	}
 }
 
@@ -47,6 +37,7 @@ func MoWithConfig(n MoConfig) MoOption {
 	}
 }
 
+// TODO: Finish this.
 // func MoWithHashTable(h bool) MoOption {
 // 	return func(c *MoConfig) {
 // 		c.HashTable = h

@@ -32,6 +32,8 @@ const (
 	nul = "\x00"
 )
 
+var _ Compiler[MoOption] = (*MoCompiler)(nil)
+
 type MoCompiler struct {
 	File   *po.File
 	Config MoConfig
@@ -126,7 +128,6 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 
 func (mc MoCompiler) ToWriter(w io.Writer, options ...MoOption) error {
 	mc.Config.ApplyOptions(options...)
-	defer mc.Config.RestoreLastCfg()
 
 	buf := bufio.NewWriter(w)
 	err := mc.writeTo(buf)
@@ -145,7 +146,6 @@ func (mc MoCompiler) ToWriter(w io.Writer, options ...MoOption) error {
 
 func (mc MoCompiler) ToFile(f string, options ...MoOption) error {
 	mc.Config.ApplyOptions(options...)
-	defer mc.Config.RestoreLastCfg()
 
 	if mc.Config.Verbose {
 		mc.Config.Logger.Println("Opening file...")
@@ -173,7 +173,6 @@ func (mc MoCompiler) ToFile(f string, options ...MoOption) error {
 
 func (mc MoCompiler) ToBytes(options ...MoOption) []byte {
 	mc.Config.ApplyOptions(options...)
-	defer mc.Config.RestoreLastCfg()
 
 	var b bytes.Buffer
 

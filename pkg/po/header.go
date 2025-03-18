@@ -22,6 +22,15 @@ type Header struct {
 	Fields []HeaderField // A slice storing all registered header fields.
 }
 
+func NewHeader(options ...HeaderOption) Header {
+	h := HeaderConfig{}
+	for _, opt := range options {
+		opt(&h)
+	}
+
+	return h.ToHeader()
+}
+
 func (h Header) Nplurals() (nplurals uint) {
 	nplurals = 2
 	value := h.Load("Plural-Forms")
