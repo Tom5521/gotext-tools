@@ -12,7 +12,7 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
-var _ Compiler[PoOption] = (*PoCompiler)(nil)
+var _ po.Compiler = (*PoCompiler)(nil)
 
 type PoCompiler struct {
 	File   *po.File // The source file containing translation entries.
@@ -29,13 +29,36 @@ func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	}
 }
 
+func (c *PoCompiler) SetFile(f *po.File) {
+	c.File = f
+}
+
+func (c PoCompiler) ToWriterWithOptions(w io.Writer, opts ...PoOption) error {
+	c.Config.ApplyOptions(opts...)
+	return c.ToWriter(w)
+}
+
+func (c PoCompiler) ToStringWithOptions(opts ...PoOption) string {
+	c.Config.ApplyOptions(opts...)
+	return c.ToString()
+}
+
+func (c PoCompiler) ToFileWithOptions(f string, opts ...PoOption) error {
+	c.Config.ApplyOptions(opts...)
+	return c.ToFile(f)
+}
+
+func (c PoCompiler) ToBytesWithOptions(opts ...PoOption) []byte {
+	c.Config.ApplyOptions(opts...)
+	return c.ToBytes()
+}
+
 func (c *PoCompiler) init() {
 	c.header = c.File.Header()
 	c.nplurals = c.header.Nplurals()
 }
 
-func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
-	c.Config.ApplyOptions(options...)
+func (c PoCompiler) ToWriter(w io.Writer) error {
 	c.init()
 
 	buf := bufio.NewWriter(w)
@@ -71,9 +94,7 @@ func (c PoCompiler) ToWriter(w io.Writer, options ...PoOption) error {
 	return nil
 }
 
-func (c PoCompiler) ToFile(f string, options ...PoOption) error {
-	c.Config.ApplyOptions(options...)
-
+func (c PoCompiler) ToFile(f string) error {
 	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 	if !c.Config.ForcePo {
 		flags |= os.O_EXCL
@@ -96,9 +117,7 @@ func (c PoCompiler) ToFile(f string, options ...PoOption) error {
 	return c.ToWriter(file)
 }
 
-func (c PoCompiler) ToString(options ...PoOption) string {
-	c.Config.ApplyOptions(options...)
-
+func (c PoCompiler) ToString() string {
 	var b strings.Builder
 
 	// Write the compiled content to the string builder.
@@ -107,9 +126,7 @@ func (c PoCompiler) ToString(options ...PoOption) string {
 	return b.String()
 }
 
-func (c PoCompiler) ToBytes(options ...PoOption) []byte {
-	c.Config.ApplyOptions(options...)
-
+func (c PoCompiler) ToBytes() []byte {
 	var b bytes.Buffer
 
 	// Write the compiled content to the byte buffer.

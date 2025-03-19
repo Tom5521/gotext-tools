@@ -13,6 +13,8 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po"
 )
 
+var _ po.Parser = (*Parser)(nil)
+
 type Parser struct {
 	Config Config          // Configuration settings for parsing.
 	files  []*File         // List of parsed files.
@@ -144,11 +146,14 @@ func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 	return p, nil
 }
 
-// Parse processes all files associated with the Parser and extracts translations.
-func (p *Parser) Parse(options ...Option) (file *po.File) {
+func (p *Parser) ParseWithOptions(options ...Option) *po.File {
 	p.Config.ApplyOptions(options...)
 	defer p.Config.RestoreLastCfg()
+	return p.Parse()
+}
 
+// Parse processes all files associated with the Parser and extracts translations.
+func (p *Parser) Parse() (file *po.File) {
 	file = new(po.File)
 	p.errors = nil // Clean errors
 

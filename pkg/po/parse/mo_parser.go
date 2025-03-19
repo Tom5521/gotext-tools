@@ -23,6 +23,8 @@ var (
 	nul = []byte{0}
 )
 
+var _ po.Parser = (*MoParser)(nil)
+
 type MoParser struct {
 	data     []byte
 	filename string

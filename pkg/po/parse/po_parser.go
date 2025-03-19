@@ -12,6 +12,8 @@ import (
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
+var _ po.Parser = (*PoParser)(nil)
+
 type PoParser struct {
 	Config PoConfig
 
@@ -119,10 +121,14 @@ func parseComments(entry *po.Entry, tks []lexer.Token) (err error) {
 	return nil
 }
 
-func (p *PoParser) Parse(options ...PoOption) *po.File {
-	p.Config.ApplyOptions(options...)
+func (p *PoParser) ParseWithOptions(opts ...PoOption) *po.File {
+	p.Config.ApplyOptions(opts...)
 	defer p.Config.RestoreLastCfg()
 
+	return p.Parse()
+}
+
+func (p *PoParser) Parse() *po.File {
 	var entries po.Entries
 	p.errors = nil
 
@@ -144,7 +150,8 @@ mainLoop:
 
 		// Parse plurals
 		for _, pe := range e.Plurals {
-			id, err := strconv.Atoi(pluralIDRegex.FindString(pe.ID))
+			var id int
+			id, err = strconv.Atoi(pluralIDRegex.FindString(pe.ID))
 			if err != nil {
 				p.Config.Logger.Println("ERROR:", err)
 				p.errors = append(p.errors, err)

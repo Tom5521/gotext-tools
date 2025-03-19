@@ -32,9 +32,7 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 		CleanDuplicates: true,
 	}
 
-	for _, o := range opts {
-		o(&c)
-	}
+	c.ApplyOptions(opts...)
 
 	return c
 }

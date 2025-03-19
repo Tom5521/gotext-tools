@@ -32,7 +32,7 @@ const (
 	nul = "\x00"
 )
 
-var _ Compiler[MoOption] = (*MoCompiler)(nil)
+var _ po.Compiler = (*MoCompiler)(nil)
 
 type MoCompiler struct {
 	File   *po.File
@@ -46,6 +46,25 @@ func NewMo(file *po.File, opts ...MoOption) MoCompiler {
 	}
 
 	return c
+}
+
+func (mc *MoCompiler) SetFile(f *po.File) {
+	mc.File = f
+}
+
+func (mc MoCompiler) ToWriterWithOptions(w io.Writer, opts ...MoOption) error {
+	mc.Config.ApplyOptions(opts...)
+	return mc.ToWriter(w)
+}
+
+func (mc MoCompiler) ToBytesWithOptions(options ...MoOption) []byte {
+	mc.Config.ApplyOptions(options...)
+	return mc.ToBytes()
+}
+
+func (mc MoCompiler) ToFileWithOptions(f string, options ...MoOption) error {
+	mc.Config.ApplyOptions(options...)
+	return mc.ToFile(f)
 }
 
 // A len() function with fixed-size return.
@@ -126,9 +145,7 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 	return nil
 }
 
-func (mc MoCompiler) ToWriter(w io.Writer, options ...MoOption) error {
-	mc.Config.ApplyOptions(options...)
-
+func (mc MoCompiler) ToWriter(w io.Writer) error {
 	buf := bufio.NewWriter(w)
 	err := mc.writeTo(buf)
 
@@ -144,9 +161,7 @@ func (mc MoCompiler) ToWriter(w io.Writer, options ...MoOption) error {
 	return nil
 }
 
-func (mc MoCompiler) ToFile(f string, options ...MoOption) error {
-	mc.Config.ApplyOptions(options...)
-
+func (mc MoCompiler) ToFile(f string) error {
 	if mc.Config.Verbose {
 		mc.Config.Logger.Println("Opening file...")
 	}
@@ -171,9 +186,7 @@ func (mc MoCompiler) ToFile(f string, options ...MoOption) error {
 	return mc.ToWriter(file)
 }
 
-func (mc MoCompiler) ToBytes(options ...MoOption) []byte {
-	mc.Config.ApplyOptions(options...)
-
+func (mc MoCompiler) ToBytes() []byte {
 	var b bytes.Buffer
 
 	mc.ToWriter(&b)

@@ -67,7 +67,7 @@ func main(){
 		t.Error(err)
 	}
 
-	file := parser.Parse(parse.WithNoHeader(true))
+	file := parser.ParseWithOptions(parse.WithNoHeader(true))
 	if len(parser.Errors()) > 0 {
 		t.Error(parser.Errors()[0])
 	}
@@ -152,7 +152,7 @@ func main(){
 	for _, t := range tests {
 		b.Run(t.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				parser.Parse(t.options...)
+				parser.ParseWithOptions(t.options...)
 				b.StopTimer()
 				if parser.Error() != nil {
 					b.Error(parser.Error())
