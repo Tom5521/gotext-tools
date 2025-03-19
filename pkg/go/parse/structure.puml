@@ -1,8 +1,11 @@
 @startuml
 namespace parse {
     class Config << (S,Aquamarine) >> {
+        - lastCfg any
+
         + Exclude []string
         + ExtractAll bool
+        + NoHeader bool
         + HeaderConfig *po.HeaderConfig
         + HeaderOptions []po.HeaderOption
         + Header *po.Header
@@ -10,16 +13,19 @@ namespace parse {
         + Verbose bool
         + CleanDuplicates bool
 
+        + RestoreLastCfg() 
+        + ApplyOptions(opts ...Option) 
+
     }
     class File << (S,Aquamarine) >> {
-        - config Config
-        - options []Option
-        - seenTokens <font color=blue>map</font>[ast.Node]bool
+        - config *Config
+        - seenTokens <font color=blue>map</font>[token.Pos]bool
         - file *ast.File
         - reader *bytes.Reader
         - name string
         - pkgName string
         - hasGotext bool
+        - errors []error
 
         - parse() error
         - determinePackageInfo() 
@@ -30,18 +36,19 @@ namespace parse {
         - processPoCall(call *ast.CallExpr) (po.Entry, bool, error)
         - processNode(n ast.Node) (po.Entries, []error)
 
-        + Reset(d io.Reader, name string, options ...Option) error
-        + Entries() (po.Entries, []error)
+        + Reset(d io.Reader, name string, config *Config) error
+        + Errors() []error
+        + Error() error
+        + Entries() po.Entries
 
     }
     class Parser << (S,Aquamarine) >> {
-        - config Config
-        - options []Option
         - files []*File
         - seen <font color=blue>map</font>[string]bool
         - errors []error
 
-        - applyOptions(options ...Option) 
+        + Config Config
+
         - appendFiles(files ...string) error
 
         + Parse(options ...Option) *po.File

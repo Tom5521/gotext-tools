@@ -14,23 +14,35 @@ namespace parse {
 
     }
     class PoConfig << (S,Aquamarine) >> {
+        - lastCfg any
+
         + Logger *log.Logger
         + SkipHeader bool
         + CleanDuplicates bool
 
+        + RestoreLastCfg() 
+        + ApplyOptions(opts ...PoOption) 
+
     }
     class PoParser << (S,Aquamarine) >> {
-        - config PoConfig
-        - options []PoOption
-        - data string
+        - data []byte
         - filename string
         - errors []error
 
-        - applyOptions(opts ...PoOption) 
+        + Config PoConfig
 
         + Error() error
         + Errors() []error
         + Parse(options ...PoOption) *po.File
+
+    }
+    class entry << (S,Aquamarine) >> {
+        + Tokens []lexer.Token
+        + Context []string
+        + ID []string
+        + Str []string
+        + MsgidPlural []string
+        + Plurals []pluralEntries
 
     }
     class moHeader << (S,Aquamarine) >> {
@@ -52,6 +64,16 @@ namespace parse {
     class parse.u16 << (T, #FF7700) >>  {
     }
     class parse.u32 << (T, #FF7700) >>  {
+    }
+    class pluralEntries << (S,Aquamarine) >> {
+        + ID string
+        + Str []string
+
+    }
+    class poFile << (S,Aquamarine) >> {
+        + Pos lexer.Position
+        + Entries []entry
+
     }
 }
 

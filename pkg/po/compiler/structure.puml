@@ -1,9 +1,9 @@
 @startuml
 namespace compiler {
     interface Compiler  {
-        + ToWriter( io.Writer) error
-        + ToFile( string) error
-        + ToBytes() []byte
+        + ToWriter(w io.Writer, options ...Option) error
+        + ToBytes(options ...Option) []byte
+        + ToFile(file string, options ...Option) error
 
     }
     class MoCompiler << (S,Aquamarine) >> {
@@ -12,9 +12,9 @@ namespace compiler {
 
         - writeTo(writer io.Writer) error
 
-        + ToWriter(w io.Writer) error
-        + ToFile(f string) error
-        + ToBytes() []byte
+        + ToWriter(w io.Writer, options ...MoOption) error
+        + ToFile(f string, options ...MoOption) error
+        + ToBytes(options ...MoOption) []byte
 
     }
     class MoConfig << (S,Aquamarine) >> {
@@ -43,10 +43,10 @@ namespace compiler {
         - writeEntry(w io.Writer, e po.Entry) 
         - formatPrefixAndSuffix(id string) string
 
-        + ToWriter(w io.Writer) error
-        + ToFile(f string) error
-        + ToString() string
-        + ToBytes() []byte
+        + ToWriter(w io.Writer, options ...PoOption) error
+        + ToFile(f string, options ...PoOption) error
+        + ToString(options ...PoOption) string
+        + ToBytes(options ...PoOption) []byte
 
     }
     class PoConfig << (S,Aquamarine) >> {
@@ -82,8 +82,6 @@ namespace compiler {
     }
 }
 
-"compiler.Compiler" <|-- "compiler.MoCompiler"
-"compiler.Compiler" <|-- "compiler.PoCompiler"
 
 "__builtin__.string" #.. "compiler.PoLocationMode"
 "__builtin__.uint32" #.. "compiler.u32"

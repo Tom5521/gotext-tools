@@ -1,6 +1,7 @@
 @startuml
 namespace po {
     class Entries << (S,Aquamarine) >> {
+        + Equal(e2 Entries) bool
         + Index(id string, context string) int
         + Sort() Entries
         + SortByFuzzy() Entries
@@ -38,6 +39,7 @@ namespace po {
         + Entries Entries
         + Name string
 
+        + Equal(f2 File) bool
         + Header() Header
         + Set(id string, context string, e Entry) 
         + LoadID(id string, context string) string
@@ -74,20 +76,26 @@ namespace po {
         + Line int
         + File string
 
+        + Equal(l2 Location) bool
+
     }
     class Locations << (S,Aquamarine) >> {
+        + Equal(l2 Locations) bool
         + Sort() Locations
         + SortByLine() Locations
         + SortByFile() Locations
 
     }
     class PluralEntries << (S,Aquamarine) >> {
+        + Equal(p2 PluralEntries) bool
         + Sort() PluralEntries
 
     }
     class PluralEntry << (S,Aquamarine) >> {
         + ID int
         + Str string
+
+        + Equal(p2 PluralEntry) bool
 
     }
     class po.Entries << (T, #FF7700) >>  {
