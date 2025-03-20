@@ -13,16 +13,16 @@ type (
 	entry struct {
 		Tokens []lexer.Token
 
-		Context     []string        `(MSGCTXT @STRING+)?`
-		ID          []string        `MSGID @STRING+(`
-		Str         []string        `MSGSTR @STRING+|`
-		MsgidPlural []string        `(PLURAL_MSGID @STRING+`
+		Context     []string        `(Msgctxt @String+)?`
+		ID          []string        `Msgid @String+`
+		Str         []string        `(Msgstr @String+`
+		MsgidPlural []string        `| (Msgid Plural @String+`
 		Plurals     []pluralEntries `@@*))`
 	}
 
 	pluralEntries struct {
-		ID  string   `@PLURAL_MSGSTR`
-		Str []string `@STRING+`
+		ID  int      `Msgstr LB @Integer RB`
+		Str []string `@String+`
 	}
 )
 
@@ -30,30 +30,24 @@ var (
 	tokens  = poLexer.Symbols()
 	poLexer = lexer.MustSimple(
 		[]lexer.SimpleRule{
-			{Name: "WS", Pattern: "[\t\r\n ]+"},
-			{Name: "STRING", Pattern: `"(\\"|[^"])*"`},
-			{Name: "MSGCTXT", Pattern: "msgctxt"},
-			{Name: "MSGID", Pattern: "msgid[^_]"},
-			{Name: "MSGSTR", Pattern: `msgstr[^[]`},
-			{Name: "PLURAL_MSGID", Pattern: "msgid_plural"},
-			{Name: "PLURAL_MSGSTR", Pattern: `msgstr\[\d+\]`},
-			{Name: "COMMENT", Pattern: "# *[^\n]*"},
-			{Name: "FLAG_COMMENT", Pattern: "#,[^\n]*"},
-			{Name: "EXTRACTED_COMMENT", Pattern: "#\\.[^\n]*"},
-			{Name: "PREVIOUS_COMMENT", Pattern: "#\\|[^\n]*"},
-			{Name: "REFERENCE_COMMENT", Pattern: "#:[^\n]*"},
+			{Name: "WS", Pattern: `\s+`},
+			{Name: "Integer", Pattern: `\d+`},
+			{Name: "LB", Pattern: `\[`},
+			{Name: "RB", Pattern: `\]`},
+			{Name: "String", Pattern: `"(\\"|[^"])*"`},
+			{Name: "Msgctxt", Pattern: "msgctxt"},
+			{Name: "Msgid", Pattern: "msgid"},
+			{Name: "Msgstr", Pattern: "msgstr"},
+			{Name: "Plural", Pattern: "_plural"},
+			{Name: "Comment", Pattern: "#[^\n]*"},
 		},
 	)
 	poParser = participle.MustBuild[poFile](
 		participle.Lexer(poLexer),
-		participle.Unquote("STRING"),
+		participle.Unquote("String"),
 		participle.Elide(
 			"WS",
-			"COMMENT",
-			"FLAG_COMMENT",
-			"EXTRACTED_COMMENT",
-			"PREVIOUS_COMMENT",
-			"REFERENCE_COMMENT",
+			"Comment",
 		),
 	)
 )

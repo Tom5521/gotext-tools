@@ -70,7 +70,6 @@ func (p PoParser) Errors() []error {
 }
 
 var (
-	pluralIDRegex  = regexp.MustCompile(`\d+`)
 	locationRegex  = regexp.MustCompile(`#: *(.*)`)
 	generalRegex   = regexp.MustCompile(`# *(.*)`)
 	extractedRegex = regexp.MustCompile(`#\. *(.*)`)
@@ -80,24 +79,11 @@ var (
 
 func parseComments(entry *po.Entry, tks []lexer.Token) (err error) {
 	for _, t := range tks {
-		switch t.Type {
-		case tokens["COMMENT"]:
-			entry.Comments = append(entry.Comments,
-				generalRegex.FindStringSubmatch(t.String())[1],
-			)
-		case tokens["FLAG_COMMENT"]:
-			entry.Flags = append(entry.Flags,
-				flagRegex.FindStringSubmatch(t.String())[1],
-			)
-		case tokens["EXTRACTED_COMMENT"]:
-			entry.ExtractedComments = append(entry.ExtractedComments,
-				extractedRegex.FindStringSubmatch(t.String())[1],
-			)
-		case tokens["PREVIOUS_COMMENT"]:
-			entry.Previous = append(entry.Previous,
-				previousRegex.FindStringSubmatch(t.String())[1],
-			)
-		case tokens["REFERENCE_COMMENT"]:
+		if t.Type != tokens["Comment"] {
+			continue
+		}
+		switch {
+		case locationRegex.MatchString(t.String()):
 			matches := locationRegex.FindStringSubmatch(t.String())
 			parts := strings.SplitN(matches[1], ":", 2)
 			line := -1
@@ -113,8 +99,22 @@ func parseComments(entry *po.Entry, tks []lexer.Token) (err error) {
 				File: parts[0],
 			}
 			entry.Locations = append(entry.Locations, loc)
+		case extractedRegex.MatchString(t.String()):
+			entry.ExtractedComments = append(entry.ExtractedComments,
+				extractedRegex.FindStringSubmatch(t.String())[1],
+			)
+		case flagRegex.MatchString(t.String()):
+			entry.Flags = append(entry.Flags,
+				flagRegex.FindStringSubmatch(t.String())[1],
+			)
+		case previousRegex.MatchString(t.String()):
+			entry.Previous = append(entry.Previous,
+				previousRegex.FindStringSubmatch(t.String())[1],
+			)
 		default:
-			continue
+			entry.Comments = append(entry.Comments,
+				generalRegex.FindStringSubmatch(t.String())[1],
+			)
 		}
 	}
 
@@ -139,7 +139,6 @@ func (p *PoParser) Parse() *po.File {
 		return nil
 	}
 
-mainLoop:
 	for _, e := range pFile.Entries {
 		newEntry := po.Entry{
 			Context: strings.Join(e.Context, "\n"),
@@ -150,16 +149,8 @@ mainLoop:
 
 		// Parse plurals
 		for _, pe := range e.Plurals {
-			var id int
-			id, err = strconv.Atoi(pluralIDRegex.FindString(pe.ID))
-			if err != nil {
-				p.Config.Logger.Println("ERROR:", err)
-				p.errors = append(p.errors, err)
-				continue mainLoop
-			}
-
 			np := po.PluralEntry{
-				ID:  id,
+				ID:  pe.ID,
 				Str: strings.Join(pe.Str, "\n"),
 			}
 
