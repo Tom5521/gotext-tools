@@ -1,20 +1,18 @@
 @startuml
 namespace compiler {
-    interface Compiler  {
-        + ToWriter(w io.Writer, options ...Option) error
-        + ToBytes(options ...Option) []byte
-        + ToFile(file string, options ...Option) error
-
-    }
     class MoCompiler << (S,Aquamarine) >> {
         + File *po.File
         + Config MoConfig
 
         - writeTo(writer io.Writer) error
 
-        + ToWriter(w io.Writer, options ...MoOption) error
-        + ToFile(f string, options ...MoOption) error
-        + ToBytes(options ...MoOption) []byte
+        + SetFile(f *po.File) 
+        + ToWriterWithOptions(w io.Writer, opts ...MoOption) error
+        + ToBytesWithOptions(options ...MoOption) []byte
+        + ToFileWithOptions(f string, options ...MoOption) error
+        + ToWriter(w io.Writer) error
+        + ToFile(f string) error
+        + ToBytes() []byte
 
     }
     class MoConfig << (S,Aquamarine) >> {
@@ -43,10 +41,15 @@ namespace compiler {
         - writeEntry(w io.Writer, e po.Entry) 
         - formatPrefixAndSuffix(id string) string
 
-        + ToWriter(w io.Writer, options ...PoOption) error
-        + ToFile(f string, options ...PoOption) error
-        + ToString(options ...PoOption) string
-        + ToBytes(options ...PoOption) []byte
+        + SetFile(f *po.File) 
+        + ToWriterWithOptions(w io.Writer, opts ...PoOption) error
+        + ToStringWithOptions(opts ...PoOption) string
+        + ToFileWithOptions(f string, opts ...PoOption) error
+        + ToBytesWithOptions(opts ...PoOption) []byte
+        + ToWriter(w io.Writer) error
+        + ToFile(f string) error
+        + ToString() string
+        + ToBytes() []byte
 
     }
     class PoConfig << (S,Aquamarine) >> {

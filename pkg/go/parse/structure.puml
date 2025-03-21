@@ -51,7 +51,8 @@ namespace parse {
 
         - appendFiles(files ...string) error
 
-        + Parse(options ...Option) *po.File
+        + ParseWithOptions(options ...Option) *po.File
+        + Parse() *po.File
         + Error() error
         + Errors() []error
         + Files() []*File

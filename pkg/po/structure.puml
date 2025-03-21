@@ -1,5 +1,11 @@
 @startuml
 namespace po {
+    interface Compiler  {
+        + SetFile( *File) 
+        + ToWriter( io.Writer) error
+        + ToBytes() []byte
+
+    }
     class Entries << (S,Aquamarine) >> {
         + Equal(e2 Entries) bool
         + Index(id string, context string) int
@@ -84,6 +90,12 @@ namespace po {
         + Sort() Locations
         + SortByLine() Locations
         + SortByFile() Locations
+
+    }
+    interface Parser  {
+        + Parse() *File
+        + Error() error
+        + Errors() []error
 
     }
     class PluralEntries << (S,Aquamarine) >> {

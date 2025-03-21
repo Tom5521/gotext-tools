@@ -33,7 +33,8 @@ namespace parse {
 
         + Error() error
         + Errors() []error
-        + Parse(options ...PoOption) *po.File
+        + ParseWithOptions(opts ...PoOption) *po.File
+        + Parse() *po.File
 
     }
     class entry << (S,Aquamarine) >> {
@@ -66,12 +67,11 @@ namespace parse {
     class parse.u32 << (T, #FF7700) >>  {
     }
     class pluralEntries << (S,Aquamarine) >> {
-        + ID string
+        + ID int
         + Str []string
 
     }
     class poFile << (S,Aquamarine) >> {
-        + Pos lexer.Position
         + Entries []entry
 
     }
