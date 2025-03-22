@@ -12,6 +12,8 @@ namespace po {
         + Index(id string, context string) int
         + IsSorted() bool
         + Sort() Entries
+        + IsSortedByObsolete() bool
+        + SortByObsolete() Entries
         + IsSortedByFuzzy() bool
         + SortByFuzzy() Entries
         + IsSortedByFile() bool
@@ -135,6 +137,10 @@ namespace po {
         + Str string
 
         + Equal(p2 PluralEntry) bool
+
+    }
+    class SortMode << (S,Aquamarine) >> {
+        + SortMethod(entries Entries) <font color=blue>func</font>() Entries
 
     }
     class po.Entries << (T, #FF7700) >>  {
