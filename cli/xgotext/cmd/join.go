@@ -19,19 +19,19 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 		return err
 	}
 
-	base := baseParse.Parse()
+	poParsed := baseParse.Parse()
 	if len(baseParse.Errors()) > 0 {
 		return baseParse.Errors()[0]
 	}
 
-	parsed := newParse.Parse()
+	goParsed := newParse.Parse()
 	if len(newParse.Errors()) > 0 {
 		return newParse.Errors()[0]
 	}
 
-	po.MergeFiles(false, base, parsed)
+	poParsed.MergeWithOptions([]*po.File{goParsed}, po.MergeWithFuzzyMatch(false))
 
-	compiler := compiler.NewPo(base, compiler.PoWithConfig(CompilerCfg))
+	compiler := compiler.NewPo(poParsed, compiler.PoWithConfig(CompilerCfg))
 
 	// Truncate file.
 	rawfile, err = os.Create(rawfile.Name())

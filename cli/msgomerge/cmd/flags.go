@@ -27,7 +27,7 @@ func init() {
 	)
 	flags.BoolVarP(&update, "update", "U", false, `update def.po,
 do nothing if def.po already up to date`)
-	flags.StringVarP(&outputFile, "output-file", "o", "", `write output to specified file
+	flags.StringVarP(&outputFile, "output-file", "o", "-", `write output to specified file
 The results are written to standard output if no output file is specified
 or if it is -.`)
 	flags.BoolVarP(&noFuzzyMatching, "no-fuzzy-matching", "N", false, `do not use fuzzy matching`)

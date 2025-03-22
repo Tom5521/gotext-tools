@@ -5,7 +5,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
+	"github.com/kr/pretty"
 )
 
 func TestSortEntriesByID(t *testing.T) {
@@ -101,13 +103,9 @@ func TestSortEntries(t *testing.T) {
 
 	entries = entries.Sort()
 
-	for i, entry := range entries {
-		if entry.Locations[0].File != expected[i].Locations[0].File ||
-			entry.Locations[0].Line != expected[i].Locations[0].Line {
-			t.Errorf("Expected file %s and line %d at index %d, got file %s and line %d",
-				expected[i].Locations[0].File, expected[i].Locations[0].Line, i,
-				entry.Locations[0].File, entry.Locations[0].Line)
-		}
+	if !util.Equal(entries, expected) {
+		t.Fail()
+		pretty.Println(entries)
 	}
 }
 

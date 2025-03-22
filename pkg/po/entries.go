@@ -16,12 +16,22 @@ func (e Entries) Equal(e2 Entries) bool {
 	return util.Equal(e, e2)
 }
 
+func (e Entries) IndexByUnifiedID(uid string) int {
+	return slices.IndexFunc(e, func(e Entry) bool {
+		return e.UnifiedID() == uid
+	})
+}
+
 func (e Entries) Index(id, context string) int {
 	return slices.IndexFunc(e,
 		func(e Entry) bool {
 			return e.ID == id && e.Context == context
 		},
 	)
+}
+
+func (e Entries) IsSorted() bool {
+	return util.Equal(e, e.Sort())
 }
 
 // Sort organizes the entries by grouping them by file and sorting them by line.
@@ -58,6 +68,10 @@ func (e Entries) Sort() Entries {
 	return sortedEntries.SortByFuzzy()
 }
 
+func (e Entries) IsSortedByFuzzy() bool {
+	return util.Equal(e, e.SortByFuzzy())
+}
+
 func (e Entries) SortByFuzzy() Entries {
 	slices.SortFunc(e, func(a, b Entry) int {
 		aContains := a.IsFuzzy()
@@ -76,6 +90,10 @@ func (e Entries) SortByFuzzy() Entries {
 	return e
 }
 
+func (e Entries) IsSortedByFile() bool {
+	return util.Equal(e, e.SortByFile())
+}
+
 // SortByFile sorts the entries by the file name of the first location.
 func (e Entries) SortByFile() Entries {
 	slices.SortFunc(e, func(a, b Entry) int {
@@ -90,12 +108,20 @@ func (e Entries) SortByFile() Entries {
 	return e
 }
 
+func (e Entries) IsSortedByID() bool {
+	return util.Equal(e, e.SortByID())
+}
+
 // SortByID sorts the entries by their ID.
 func (e Entries) SortByID() Entries {
 	slices.SortFunc(e, func(a, b Entry) int {
 		return strings.Compare(a.ID, b.ID)
 	})
 	return e
+}
+
+func (e Entries) IsSortedByLine() bool {
+	return util.Equal(e, e.SortByLine())
 }
 
 // SortByLine sorts the entries by line number in their first location.
@@ -112,23 +138,36 @@ func (e Entries) SortByLine() Entries {
 	return e
 }
 
+func (e Entries) HasDuplicates() bool {
+	seen := make(map[string]bool)
+
+	for _, entry := range e {
+		uid := entry.UnifiedID()
+		_, seened := seen[uid]
+		if seened {
+			return true
+		}
+
+		seen[uid] = true
+	}
+
+	return false
+}
+
 // CleanDuplicates removes duplicate entries with the same ID and context, merging their locations.
 func (e Entries) CleanDuplicates() Entries {
 	var cleaned Entries
 	seenID := make(map[string]int)
 
-	for _, translation := range e {
-		idIndex, ok := seenID[translation.ID]
+	for _, entry := range e {
+		uid := entry.UnifiedID()
+		idIndex, ok := seenID[uid]
 		if ok {
-			if translation.Context == cleaned[idIndex].Context {
-				cleaned[idIndex].Locations = append(
-					cleaned[idIndex].Locations,
-					translation.Locations...)
-				continue
-			}
+			cleaned[idIndex].Locations = append(cleaned[idIndex].Locations, entry.Locations...)
+			continue
 		}
-		seenID[translation.ID] = len(cleaned)
-		cleaned = append(cleaned, translation)
+		seenID[uid] = len(cleaned)
+		cleaned = append(cleaned, entry)
 	}
 
 	return cleaned
@@ -141,24 +180,29 @@ func (e Entries) Solve() Entries {
 	var cleaned Entries
 	seenID := make(map[string]int)
 
-	for _, translation := range e {
-		idIndex, ok := seenID[translation.ID]
+	for _, entry := range e {
+		uid := entry.UnifiedID()
+		idIndex, ok := seenID[uid]
 		if ok {
-			if translation.Context == cleaned[idIndex].Context {
-				// If the new entry has a translation and the previous one does not, replace it.
-				if translation.Str != "" && cleaned[idIndex].Str == "" {
-					cleaned[idIndex] = translation
+			// If the new entry has a translation and the previous one does not, replace it.
+			if entry.IsPlural() {
+				if len(entry.Plurals) != 0 && len(cleaned[idIndex].Plurals) > 0 {
+					cleaned[idIndex].Plurals = append(
+						entry.Plurals,
+						cleaned[idIndex].Plurals...).Solve()
 				}
-
-				// Combine the locations of the merged entries.
-				cleaned[idIndex].Locations = append(
-					cleaned[idIndex].Locations,
-					translation.Locations...)
-				continue
+			} else if entry.Str != "" && cleaned[idIndex].Str == "" {
+				cleaned[idIndex] = entry
 			}
+
+			// Combine the locations of the merged entries.
+			cleaned[idIndex].Locations = append(
+				cleaned[idIndex].Locations,
+				entry.Locations...)
+			continue
 		}
-		seenID[translation.ID] = len(cleaned)
-		cleaned = append(cleaned, translation)
+		seenID[uid] = len(cleaned)
+		cleaned = append(cleaned, entry)
 	}
 
 	return cleaned

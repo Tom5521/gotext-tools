@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
@@ -79,23 +78,8 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 	var offsets []u32
 	var ids, strs string
 	for _, e := range entries {
-		var msgid string
-		var msgstr string
-		if e.HasContext() {
-			msgid = e.Context + eot
-		}
-		if e.IsPlural() {
-			var msgstrs []string
-			plurals := e.Plurals.Sort()
-			for _, plural := range plurals {
-				msgstrs = append(msgstrs, plural.Str)
-			}
-			msgid += e.ID + nul + e.Plural
-			msgstr = strings.Join(msgstrs, nul)
-		} else {
-			msgid += e.ID
-			msgstr = e.Str
-		}
+		msgid := e.UnifiedID()
+		msgstr := e.UnifiedStr()
 
 		offsets = append(offsets,
 			flen(ids),

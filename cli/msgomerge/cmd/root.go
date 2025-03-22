@@ -18,8 +18,10 @@ old translations, or a PO Template file (generally created by xgettext);
 any translations or comments in the file will be discarded, however dot
 comments and file positions will be preserved.  Where an exact match
 cannot be found, fuzzy matching is used to produce better results.`,
-	Args:   cobra.RangeArgs(2, 2),
-	PreRun: func(cmd *cobra.Command, args []string) {},
+	Args: cobra.RangeArgs(2, 2),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		initConfig()
+	},
 }
 
 func Execute() {

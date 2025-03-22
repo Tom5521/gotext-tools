@@ -34,8 +34,7 @@ func TestMergeFiles(t *testing.T) {
 		},
 	}
 
-	mergedFile := *file1
-	po.MergeFiles(false, &mergedFile, file2, file3)
+	mergedFile := file1.MergeWithOptions([]*po.File{file2, file3}, po.MergeWithFuzzyMatch(false))
 
 	expectedName := "file1_file2_file3"
 	if mergedFile.Name != expectedName {

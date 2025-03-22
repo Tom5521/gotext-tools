@@ -11,5 +11,11 @@ var (
 )
 
 func initConfig() {
-	compilerCfg = compiler.PoConfig{}
+	headerCfg = po.HeaderConfig{
+		Language: lang,
+	}
+	compilerCfg = compiler.PoConfig{
+		NoLocation:  noLocation,
+		AddLocation: compiler.PoLocationMode(addLocation),
+	}
 }
