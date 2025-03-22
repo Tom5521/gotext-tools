@@ -23,8 +23,8 @@ func TestSort(t *testing.T) {
 				{Locations: []po.Location{{File: "a", Line: 2}}},
 				{Locations: []po.Location{{File: "b", Line: 10}}},
 				{Locations: []po.Location{{File: "c", Line: 200}}},
-				{Obsolete: true},
 				{Flags: []string{"fuzzy"}},
+				{Obsolete: true},
 			},
 		},
 		{

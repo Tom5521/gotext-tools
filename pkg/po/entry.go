@@ -30,14 +30,13 @@ type Entry struct {
 }
 
 func CompareEntry(a, b Entry) int {
-	fuzzy := CompareEntryByFuzzy(a, b)
-	if fuzzy != 0 {
-		return fuzzy
-	}
-
 	obsolete := CompareEntryByObsolete(a, b)
 	if obsolete != 0 {
 		return obsolete
+	}
+	fuzzy := CompareEntryByFuzzy(a, b)
+	if fuzzy != 0 {
+		return fuzzy
 	}
 
 	return CompareEntryByLocation(a, b)
@@ -67,28 +66,22 @@ func CompareEntryByFuzzy(a, b Entry) int {
 }
 
 func CompareEntryByLocation(a, b Entry) int {
-	if len(a.Locations) == 0 && len(b.Locations) == 0 {
-		return 0
-	}
-	if len(a.Locations) == 0 {
+	if len(a.Locations) != 0 && len(b.Locations) == 0 {
 		return 1
-	}
-	if len(b.Locations) == 0 {
+	} else if len(a.Locations) == 0 && len(b.Locations) != 0 {
 		return -1
 	}
+
 	return CompareLocation(a.Locations[0], b.Locations[0])
 }
 
 func CompareEntryByLine(a, b Entry) int {
-	if len(a.Locations) == 0 && len(b.Locations) == 0 {
-		return 0
-	}
-	if len(a.Locations) == 0 {
+	if len(a.Locations) != 0 && len(b.Locations) == 0 {
 		return 1
-	}
-	if len(b.Locations) == 0 {
+	} else if len(a.Locations) == 0 && len(b.Locations) != 0 {
 		return -1
 	}
+
 	return CompareLocationByLine(a.Locations[0], b.Locations[0])
 }
 
@@ -97,15 +90,12 @@ func CompareEntryByID(a, b Entry) int {
 }
 
 func CompareEntryByFile(a, b Entry) int {
-	if len(a.Locations) == 0 && len(b.Locations) == 0 {
-		return 0
-	}
-	if len(a.Locations) == 0 {
+	if len(a.Locations) != 0 && len(b.Locations) == 0 {
 		return 1
-	}
-	if len(b.Locations) == 0 {
+	} else if len(a.Locations) == 0 && len(b.Locations) != 0 {
 		return -1
 	}
+
 	return CompareLocationByFile(a.Locations[0], b.Locations[0])
 }
 
