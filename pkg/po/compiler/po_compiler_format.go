@@ -52,10 +52,17 @@ func (c PoCompiler) writeHeader(w io.Writer) {
 }
 
 func (c PoCompiler) fprintfln(w io.Writer, e po.Entry, format string, args ...any) {
-	str := fmt.Sprintf(format, args...)
-	if c.Config.CommentFuzzy && e.IsFuzzy() && !strings.HasPrefix(str, "#") {
-		str = "# " + str
+	var prefix string
+	if !strings.HasPrefix(format, "#") {
+		if c.Config.CommentFuzzy && e.IsFuzzy() {
+			prefix = "# "
+		}
+		if e.Obsolete {
+			prefix = "#~ "
+		}
 	}
+	str := fmt.Sprintf(prefix+format, args...)
+
 	fmt.Fprintln(w, str)
 }
 

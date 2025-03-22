@@ -20,47 +20,42 @@ func (l Location) Equal(l2 Location) bool {
 
 type Locations []Location
 
+func CompareLocation(a, b Location) int {
+	line := CompareLocationByLine(a, b)
+	file := CompareLocationByFile(a, b)
+
+	if file != 0 {
+		return file
+	}
+
+	return line
+}
+
+func CompareLocationByLine(a, b Location) int {
+	return a.Line - b.Line
+}
+
+func CompareLocationByFile(a, b Location) int {
+	return strings.Compare(filepath.Clean(a.File), filepath.Clean(b.File))
+}
+
 func (l Locations) Equal(l2 Locations) bool {
 	return util.Equal(l, l2)
 }
 
 func (l Locations) Sort() Locations {
-	groups := make(map[string]Locations)
-	for _, l2 := range l {
-		l2.File = filepath.Clean(l2.File)
-		groups[l2.File] = append(groups[l2.File], l2)
-	}
-
-	for k, l2 := range groups {
-		groups[k] = l2.SortByLine()
-	}
-
-	fileKeys := make([]string, 0, len(groups))
-	for k := range groups {
-		fileKeys = append(fileKeys, k)
-	}
-	slices.Sort(fileKeys)
-
-	var sorted Locations
-	for _, file := range fileKeys {
-		sorted = append(sorted, groups[file]...)
-	}
-
-	return sorted
+	slices.SortFunc(l, CompareLocation)
+	return l
 }
 
 func (l Locations) SortByLine() Locations {
-	slices.SortFunc(l, func(a, b Location) int {
-		return a.Line - b.Line
-	})
+	slices.SortFunc(l, CompareLocationByLine)
 
 	return l
 }
 
 func (l Locations) SortByFile() Locations {
-	slices.SortFunc(l, func(a, b Location) int {
-		return strings.Compare(a.File, b.File)
-	})
+	slices.SortFunc(l, CompareLocationByFile)
 
 	return l
 }

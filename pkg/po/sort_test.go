@@ -7,105 +7,74 @@ import (
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/kr/pretty"
 )
 
-func TestSortEntriesByID(t *testing.T) {
-	entries := po.Entries{
-		{ID: "b"},
-		{ID: "a"},
-		{ID: "c"},
+func TestSort(t *testing.T) {
+	tests := []struct {
+		name     string
+		cmp      func(a, b po.Entry) int
+		expected po.Entries
+	}{
+		{
+			"Sort",
+			po.CompareEntry,
+			po.Entries{
+				{Locations: []po.Location{{File: "a", Line: 1}}},
+				{Locations: []po.Location{{File: "a", Line: 2}}},
+				{Locations: []po.Location{{File: "b", Line: 10}}},
+				{Locations: []po.Location{{File: "c", Line: 200}}},
+				{Obsolete: true},
+				{Flags: []string{"fuzzy"}},
+			},
+		},
+		{
+			"SortByLine",
+			po.CompareEntryByLine,
+			po.Entries{
+				{Locations: []po.Location{{Line: 1}}},
+				{Locations: []po.Location{{Line: 2}}},
+				{Locations: []po.Location{{Line: 3}}},
+				{Locations: []po.Location{{Line: 4}}},
+				{Locations: []po.Location{{Line: 5}}},
+			},
+		},
+		{
+			"SortByFile",
+			po.CompareEntryByFile,
+			po.Entries{
+				{Locations: []po.Location{{File: "a.txt"}}},
+				{Locations: []po.Location{{File: "b.txt"}}},
+				{Locations: []po.Location{{File: "c.txt"}}},
+				{Locations: []po.Location{{File: "d.txt"}}},
+				{Locations: []po.Location{{File: "e.txt"}}},
+				{Locations: []po.Location{{File: "f.txt"}}},
+			},
+		},
+		{
+			"SortByID",
+			po.CompareEntryByID,
+			po.Entries{
+				{ID: "a"},
+				{ID: "b"},
+				{ID: "c"},
+				{ID: "d"},
+			},
+		},
 	}
 
-	expected := po.Entries{
-		{ID: "a"},
-		{ID: "b"},
-		{ID: "c"},
-	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sorted := slices.Clone(test.expected)
+			rand.Shuffle(len(sorted), func(i, j int) {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			})
 
-	entries = entries.SortByID()
+			slices.SortFunc(sorted, test.cmp)
 
-	for i, entry := range entries {
-		if entry.ID != expected[i].ID {
-			t.Errorf("Expected ID %s at index %d, got %s", expected[i].ID, i, entry.ID)
-		}
-	}
-}
-
-func TestSortEntriesByLine(t *testing.T) {
-	entries := po.Entries{
-		{Locations: []po.Location{{Line: 3}}},
-		{Locations: []po.Location{{Line: 1}}},
-		{Locations: []po.Location{{Line: 2}}},
-	}
-
-	expected := po.Entries{
-		{Locations: []po.Location{{Line: 1}}},
-		{Locations: []po.Location{{Line: 2}}},
-		{Locations: []po.Location{{Line: 3}}},
-	}
-
-	entries = entries.SortByLine()
-
-	for i, entry := range entries {
-		if entry.Locations[0].Line != expected[i].Locations[0].Line {
-			t.Errorf(
-				"Expected line %d at index %d, got %d",
-				expected[i].Locations[0].Line,
-				i,
-				entry.Locations[0].Line,
-			)
-		}
-	}
-}
-
-func TestSortEntriesByFile(t *testing.T) {
-	entries := po.Entries{
-		{Locations: []po.Location{{File: "b.txt"}}},
-		{Locations: []po.Location{{File: "a.txt"}}},
-		{Locations: []po.Location{{File: "c.txt"}}},
-	}
-
-	expected := po.Entries{
-		{Locations: []po.Location{{File: "a.txt"}}},
-		{Locations: []po.Location{{File: "b.txt"}}},
-		{Locations: []po.Location{{File: "c.txt"}}},
-	}
-
-	entries = entries.SortByFile()
-
-	for i, entry := range entries {
-		if entry.Locations[0].File != expected[i].Locations[0].File {
-			t.Errorf(
-				"Expected file %s at index %d, got %s",
-				expected[i].Locations[0].File,
-				i,
-				entry.Locations[0].File,
-			)
-		}
-	}
-}
-
-func TestSortEntries(t *testing.T) {
-	entries := po.Entries{
-		{Locations: []po.Location{{File: "b.txt", Line: 2}}},
-		{Locations: []po.Location{{File: "a.txt", Line: 2}}},
-		{Locations: []po.Location{{File: "a.txt", Line: 1}}},
-		{Locations: []po.Location{{File: "c.txt", Line: 1}}},
-	}
-
-	expected := po.Entries{
-		{Locations: []po.Location{{File: "a.txt", Line: 1}}},
-		{Locations: []po.Location{{File: "a.txt", Line: 2}}},
-		{Locations: []po.Location{{File: "b.txt", Line: 2}}},
-		{Locations: []po.Location{{File: "c.txt", Line: 1}}},
-	}
-
-	entries = entries.Sort()
-
-	if !util.Equal(entries, expected) {
-		t.Fail()
-		pretty.Println(entries)
+			if !util.Equal(sorted, test.expected) {
+				t.Fail()
+			}
+		})
 	}
 }
 
@@ -125,17 +94,9 @@ func BenchmarkSortEntries(b *testing.B) {
 		{ID: "How are you?", Str: "Como estás?"},
 	}
 
-	// Expand and shuffle entries
-	{
-		const maxEntries = 10000
-
-		for len(entries) < maxEntries {
-			entries = append(entries, slices.Clone(entries)...)
-		}
-		rand.Shuffle(len(entries), func(i, j int) {
-			entries[i] = entries[j]
-		})
-	}
+	rand.Shuffle(len(entries), func(i, j int) {
+		entries[i], entries[j] = entries[j], entries[i]
+	})
 
 	tests := []struct {
 		name   string
@@ -171,17 +132,9 @@ func BenchmarkEntriesSolve(b *testing.B) {
 		{ID: "How are you?", Str: "Como estás?"},
 	}
 
-	// Expand and shuffle entries
-	{
-		const maxEntries = 10000
-
-		for len(entries) < maxEntries {
-			entries = append(entries, slices.Clone(entries)...)
-		}
-		rand.Shuffle(len(entries), func(i, j int) {
-			entries[i] = entries[j]
-		})
-	}
+	rand.Shuffle(len(entries), func(i, j int) {
+		entries[i], entries[j] = entries[j], entries[i]
+	})
 
 	tests := []struct {
 		name   string

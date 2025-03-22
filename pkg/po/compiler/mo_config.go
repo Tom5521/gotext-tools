@@ -3,6 +3,8 @@ package compiler
 import (
 	"io"
 	"log"
+
+	"github.com/Tom5521/xgotext/pkg/po"
 )
 
 type MoConfig struct {
@@ -10,6 +12,8 @@ type MoConfig struct {
 	Force        bool
 	Verbose      bool
 	IgnoreErrors bool
+	Sort         bool
+	SortMode     po.SortMode
 	// HashTable    bool // TODO: Implement this.
 }
 
@@ -34,6 +38,18 @@ type MoOption func(c *MoConfig)
 func MoWithConfig(n MoConfig) MoOption {
 	return func(c *MoConfig) {
 		*c = n
+	}
+}
+
+func MoWithSortMode(m po.SortMode) MoOption {
+	return func(c *MoConfig) {
+		c.SortMode = m
+	}
+}
+
+func MoWithSort(s bool) MoOption {
+	return func(c *MoConfig) {
+		c.Sort = s
 	}
 }
 

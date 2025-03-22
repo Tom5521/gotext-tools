@@ -8,12 +8,20 @@ namespace po {
     }
     class Entries << (S,Aquamarine) >> {
         + Equal(e2 Entries) bool
+        + IndexByUnifiedID(uid string) int
         + Index(id string, context string) int
+        + IsSorted() bool
         + Sort() Entries
+        + IsSortedByFuzzy() bool
         + SortByFuzzy() Entries
+        + IsSortedByFile() bool
         + SortByFile() Entries
+        + IsSortedByID() bool
         + SortByID() Entries
+        + IsSortedByLine() bool
         + SortByLine() Entries
+        + HasDuplicates() bool
+        + CleanObsoletes() Entries
         + CleanDuplicates() Entries
         + Solve() Entries
         + CleanFuzzy() Entries
@@ -27,6 +35,7 @@ namespace po {
         + Comments []string
         + ExtractedComments []string
         + Previous []string
+        + Obsolete bool
         + ID string
         + Context string
         + Plural string
@@ -34,6 +43,9 @@ namespace po {
         + Str string
         + Locations Locations
 
+        + Validate() error
+        + UnifiedStr() string
+        + UnifiedID() string
         + Equal(x Entry) bool
         + IsPlural() bool
         + HasContext() bool
@@ -45,10 +57,15 @@ namespace po {
         + Entries Entries
         + Name string
 
+        + Validate() error
         + Equal(f2 File) bool
         + Header() Header
         + Set(id string, context string, e Entry) 
-        + LoadID(id string, context string) string
+        + LoadByUnifiedID(uid string) string
+        + Load(id string, context string) string
+        + MergeWithConfig(config MergeConfig, files ...*File) *File
+        + MergeWithOptions(files []*File, options ...MergeOption) *File
+        + Merge(files ...*File) *File
 
     }
     class Header << (S,Aquamarine) >> {
@@ -92,6 +109,15 @@ namespace po {
         + SortByFile() Locations
 
     }
+    class MergeConfig << (S,Aquamarine) >> {
+        + FuzzyMatch bool
+        + KeepPreviousIDs bool
+        + Sort bool
+        + SortMode SortMode
+
+        + ApplyOption(opts ...MergeOption) 
+
+    }
     interface Parser  {
         + Parse() *File
         + Error() error
@@ -100,6 +126,7 @@ namespace po {
     }
     class PluralEntries << (S,Aquamarine) >> {
         + Equal(p2 PluralEntries) bool
+        + Solve() PluralEntries
         + Sort() PluralEntries
 
     }
@@ -116,12 +143,18 @@ namespace po {
     }
     class po.Locations << (T, #FF7700) >>  {
     }
+    class po.MergeOption << (T, #FF7700) >>  {
+    }
     class po.PluralEntries << (T, #FF7700) >>  {
+    }
+    class po.SortMode << (T, #FF7700) >>  {
     }
 }
 
 
+"__builtin__.int" #.. "po.SortMode"
 "po.<font color=blue>func</font>(*HeaderConfig) " #.. "po.HeaderOption"
+"po.<font color=blue>func</font>(*MergeConfig) " #.. "po.MergeOption"
 "po.[]Entry" #.. "po.Entries"
 "po.[]Location" #.. "po.Locations"
 "po.[]PluralEntry" #.. "po.PluralEntries"

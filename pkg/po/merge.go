@@ -10,7 +10,25 @@ const (
 	SortByFile
 	SortByLine
 	SortByFuzzy
+	SortByObsolete
 )
+
+func (mode SortMode) SortMethod(entries Entries) func() Entries {
+	method, ok := map[SortMode]func() Entries{
+		SortByAll:      entries.Sort,
+		SortByID:       entries.SortByID,
+		SortByFile:     entries.SortByFile,
+		SortByLine:     entries.SortByLine,
+		SortByFuzzy:    entries.SortByFuzzy,
+		SortByObsolete: entries.SortByObsolete,
+	}[mode]
+
+	if !ok {
+		return entries.Sort
+	}
+
+	return method
+}
 
 type MergeConfig struct {
 	FuzzyMatch      bool
@@ -67,20 +85,7 @@ func (f File) MergeWithConfig(config MergeConfig, files ...*File) *File {
 		f.Entries = f.Entries.Solve()
 	}
 	if config.Sort {
-		switch config.SortMode {
-		case SortByID:
-			f.Entries = f.Entries.SortByID()
-		case SortByFile:
-			f.Entries = f.Entries.SortByFile()
-		case SortByLine:
-			f.Entries = f.Entries.SortByLine()
-		case SortByFuzzy:
-			f.Entries = f.Entries.SortByFuzzy()
-		case SortByAll:
-			fallthrough
-		default:
-			f.Entries = f.Entries.Sort()
-		}
+		f.Entries = config.SortMode.SortMethod(f.Entries)()
 	}
 
 	return &f

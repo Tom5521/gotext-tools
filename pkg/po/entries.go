@@ -1,12 +1,9 @@
 package po
 
 import (
-	"path/filepath"
 	"slices"
-	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
 // Entries represents a collection of Entry objects.
@@ -31,110 +28,60 @@ func (e Entries) Index(id, context string) int {
 }
 
 func (e Entries) IsSorted() bool {
-	return util.Equal(e, e.Sort())
+	return slices.IsSortedFunc(e, CompareEntry)
 }
 
 // Sort organizes the entries by grouping them by file and sorting them by line.
 func (e Entries) Sort() Entries {
-	groupsMap := make(map[string]Entries)
+	slices.SortFunc(e, CompareEntry)
+	return e
+}
 
-	// Group entries by file.
-	for _, entry := range e {
-		var file string
-		if len(entry.Locations) > 0 {
-			file = filepath.Clean(entry.Locations[0].File)
-		}
-		groupsMap[file] = append(groupsMap[file], entry)
-	}
+func (e Entries) IsSortedByObsolete() bool {
+	return slices.IsSortedFunc(e, CompareEntryByObsolete)
+}
 
-	// Sort each group by line.
-	for k, group := range groupsMap {
-		groupsMap[k] = group.SortByLine()
-	}
-
-	// Get sorted file names.
-	fileKeys := make([]string, 0, len(groupsMap))
-	for file := range groupsMap {
-		fileKeys = append(fileKeys, file)
-	}
-	slices.Sort(fileKeys)
-
-	// Concatenate groups into a single sorted list.
-	var sortedEntries Entries
-	for _, file := range fileKeys {
-		sortedEntries = append(sortedEntries, groupsMap[file]...)
-	}
-
-	return sortedEntries.SortByFuzzy()
+func (e Entries) SortByObsolete() Entries {
+	slices.SortFunc(e, CompareEntryByObsolete)
+	return e
 }
 
 func (e Entries) IsSortedByFuzzy() bool {
-	return util.Equal(e, e.SortByFuzzy())
+	return slices.IsSortedFunc(e, CompareEntryByFuzzy)
 }
 
 func (e Entries) SortByFuzzy() Entries {
-	slices.SortFunc(e, func(a, b Entry) int {
-		aContains := a.IsFuzzy()
-		bContains := b.IsFuzzy()
-
-		switch {
-		case aContains == bContains:
-			return 0
-		case aContains && !bContains:
-			return 1
-		default:
-			return -1
-		}
-	})
-
+	slices.SortFunc(e, CompareEntryByFuzzy)
 	return e
 }
 
 func (e Entries) IsSortedByFile() bool {
-	return util.Equal(e, e.SortByFile())
+	return slices.IsSortedFunc(e, CompareEntryByFile)
 }
 
 // SortByFile sorts the entries by the file name of the first location.
 func (e Entries) SortByFile() Entries {
-	slices.SortFunc(e, func(a, b Entry) int {
-		if len(a.Locations) == 0 {
-			return 1
-		}
-		if len(b.Locations) == 0 {
-			return -1
-		}
-		return strings.Compare(a.Locations[0].File, b.Locations[0].File)
-	})
+	slices.SortFunc(e, CompareEntryByFile)
 	return e
 }
 
 func (e Entries) IsSortedByID() bool {
-	return util.Equal(e, e.SortByID())
+	return slices.IsSortedFunc(e, CompareEntryByID)
 }
 
 // SortByID sorts the entries by their ID.
 func (e Entries) SortByID() Entries {
-	slices.SortFunc(e, func(a, b Entry) int {
-		return strings.Compare(a.ID, b.ID)
-	})
+	slices.SortFunc(e, CompareEntryByID)
 	return e
 }
 
 func (e Entries) IsSortedByLine() bool {
-	return util.Equal(e, e.SortByLine())
+	return slices.IsSortedFunc(e, CompareEntryByLine)
 }
 
 // SortByLine sorts the entries by line number in their first location.
 func (e Entries) SortByLine() Entries {
-	slices.SortFunc(e, func(a, b Entry) int {
-		if len(a.Locations) == 0 {
-			return 1
-		}
-		if len(b.Locations) == 0 {
-			return -1
-		}
-		return a.Locations[0].Line - b.Locations[0].Line
-	})
+	slices.SortFunc(e, CompareEntryByLine)
 	return e
 }
 
@@ -152,6 +99,12 @@ func (e Entries) HasDuplicates() bool {
 	}
 
 	return false
+}
+
+func (e Entries) CleanObsoletes() Entries {
+	return slices.DeleteFunc(e, func(e Entry) bool {
+		return e.Obsolete
+	})
 }
 
 // CleanDuplicates removes duplicate entries with the same ID and context, merging their locations.
@@ -216,13 +169,9 @@ func (e Entries) CleanFuzzy() Entries {
 }
 
 func (e Entries) FuzzyFind(id, context string) int {
-	for i, entry := range e {
-		if fuzzy.Ratio(entry.ID, id) >= 80 && entry.Context == context {
-			return i
-		}
-	}
-
-	return -1
+	return slices.IndexFunc(e, func(e Entry) bool {
+		return util.FuzzyEqual(id, e.ID) && e.Context == context
+	})
 }
 
 func (e Entries) FuzzySolve() (cleaned Entries) {
@@ -231,7 +180,7 @@ func (e Entries) FuzzySolve() (cleaned Entries) {
 	find := func(e Entry) int {
 		for i, group := range dupedGroups {
 			if len(group) > 0 {
-				if fuzzy.Ratio(group[0].ID, e.ID) >= 80 &&
+				if util.FuzzyEqual(group[0].ID, e.ID) &&
 					group[0].Context == e.Context {
 					return i
 				}

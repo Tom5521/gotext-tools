@@ -20,12 +20,93 @@ type Entry struct {
 
 	// Fields.
 
+	Obsolete  bool
 	ID        string // The original string to be translated.
 	Context   string // The context in which the string is used (optional).
 	Plural    string // The plural form of the string (optional).
 	Plurals   PluralEntries
 	Str       string
 	Locations Locations // A list of source code locations for the string.
+}
+
+func CompareEntry(a, b Entry) int {
+	fuzzy := CompareEntryByFuzzy(a, b)
+	if fuzzy != 0 {
+		return fuzzy
+	}
+
+	obsolete := CompareEntryByObsolete(a, b)
+	if obsolete != 0 {
+		return obsolete
+	}
+
+	return CompareEntryByLocation(a, b)
+}
+
+func CompareEntryByObsolete(a, b Entry) int {
+	if !a.Obsolete && b.Obsolete {
+		return -1
+	} else if a.Obsolete && !b.Obsolete {
+		return 1
+	}
+
+	return 0
+}
+
+func CompareEntryByFuzzy(a, b Entry) int {
+	aContains := a.IsFuzzy()
+	bContains := b.IsFuzzy()
+
+	if !aContains && bContains {
+		return -1
+	} else if aContains && !bContains {
+		return 1
+	}
+
+	return 0
+}
+
+func CompareEntryByLocation(a, b Entry) int {
+	if len(a.Locations) == 0 && len(b.Locations) == 0 {
+		return 0
+	}
+	if len(a.Locations) == 0 {
+		return 1
+	}
+	if len(b.Locations) == 0 {
+		return -1
+	}
+	return CompareLocation(a.Locations[0], b.Locations[0])
+}
+
+func CompareEntryByLine(a, b Entry) int {
+	if len(a.Locations) == 0 && len(b.Locations) == 0 {
+		return 0
+	}
+	if len(a.Locations) == 0 {
+		return 1
+	}
+	if len(b.Locations) == 0 {
+		return -1
+	}
+	return CompareLocationByLine(a.Locations[0], b.Locations[0])
+}
+
+func CompareEntryByID(a, b Entry) int {
+	return strings.Compare(a.ID, b.ID)
+}
+
+func CompareEntryByFile(a, b Entry) int {
+	if len(a.Locations) == 0 && len(b.Locations) == 0 {
+		return 0
+	}
+	if len(a.Locations) == 0 {
+		return 1
+	}
+	if len(b.Locations) == 0 {
+		return -1
+	}
+	return CompareLocationByFile(a.Locations[0], b.Locations[0])
 }
 
 // Check for possible errors and inconsistencies in the entry.
@@ -54,7 +135,7 @@ func (e Entry) UnifiedStr() string {
 }
 
 // Returns the unified msgid, msgid_plural and context according
-// to MO format (CTXT \x04 ID \x00 PLURAL)
+// to MO format (CTXT \x04 ID \x00 PLURAL).
 func (e Entry) UnifiedID() string {
 	id := e.ID
 	if e.HasContext() {

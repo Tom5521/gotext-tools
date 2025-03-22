@@ -2,8 +2,25 @@ package util
 
 import (
 	"math"
+	"path/filepath"
 	"reflect"
+
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
+
+func FuzzyEqual(x, y string) bool {
+	return fuzzy.Ratio(x, y) >= 80
+}
+
+func EqualPaths(x, y string) bool {
+	abs1, err := filepath.Abs(x)
+	abs2, err1 := filepath.Abs(y)
+	if err != nil || err1 != nil {
+		return x == y
+	}
+
+	return abs1 == abs2
+}
 
 func Equal[X, Y any](x X, y Y) bool {
 	typeX, typeY := reflect.TypeOf(x), reflect.TypeOf(y)
