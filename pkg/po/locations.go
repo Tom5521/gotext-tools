@@ -21,14 +21,11 @@ func (l Location) Equal(l2 Location) bool {
 type Locations []Location
 
 func CompareLocation(a, b Location) int {
-	line := CompareLocationByLine(a, b)
-	file := CompareLocationByFile(a, b)
-
-	if file != 0 {
+	if file := CompareLocationByFile(a, b); file != 0 {
 		return file
 	}
 
-	return line
+	return CompareLocationByLine(a, b)
 }
 
 func CompareLocationByLine(a, b Location) int {
