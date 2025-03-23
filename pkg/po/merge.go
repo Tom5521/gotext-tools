@@ -1,6 +1,8 @@
 package po
 
-import "strings"
+import (
+	"slices"
+)
 
 type SortMode int
 
@@ -72,23 +74,34 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 }
 
 func (f File) MergeWithConfig(config MergeConfig, files ...*File) *File {
-	names := []string{f.Name}
+	mergedFile := f
+
 	for _, file := range files {
-		names = append(names, file.Name)
-		f.Entries = append(f.Entries, file.Entries...)
+		mergedFile.Name += "_" + file.Name
+		mergedFile.Entries = append(mergedFile.Entries, file.Entries...)
 	}
-	f.Name = strings.Join(names, "_")
 
 	if config.FuzzyMatch {
-		f.Entries = f.Entries.FuzzySolve()
+		mergedFile.Entries = mergedFile.Entries.FuzzySolve()
 	} else {
-		f.Entries = f.Entries.Solve()
-	}
-	if config.Sort {
-		f.Entries = config.SortMode.SortMethod(f.Entries)()
+		mergedFile.Entries = mergedFile.Entries.Solve()
 	}
 
-	return &f
+	if !config.KeepPreviousIDs {
+		for i, e := range mergedFile.Entries {
+			e.Obsolete = !slices.ContainsFunc(
+				f.Entries,
+				func(e2 Entry) bool { return e2.UnifiedID() == e.UnifiedID() },
+			)
+			mergedFile.Entries[i] = e
+		}
+	}
+
+	if config.Sort {
+		mergedFile.Entries = config.SortMode.SortMethod(mergedFile.Entries)()
+	}
+
+	return &mergedFile
 }
 
 func (f File) MergeWithOptions(files []*File, options ...MergeOption) *File {
