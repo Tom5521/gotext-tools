@@ -62,12 +62,13 @@ func main(){
 		input,
 		"test.go",
 		parse.WithExtractAll(true),
+		parse.WithNoHeader(true),
 	)
 	if err != nil {
 		t.Error(err)
 	}
 
-	file := parser.ParseWithOptions(parse.WithNoHeader(true))
+	file := parser.Parse()
 	if len(parser.Errors()) > 0 {
 		t.Error(parser.Errors()[0])
 	}

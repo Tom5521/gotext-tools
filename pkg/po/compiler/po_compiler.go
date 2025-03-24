@@ -33,23 +33,27 @@ func (c *PoCompiler) SetFile(f *po.File) {
 	c.File = f
 }
 
-func (c PoCompiler) ToWriterWithOptions(w io.Writer, opts ...PoOption) error {
+func (c *PoCompiler) ToWriterWithOptions(w io.Writer, opts ...PoOption) error {
 	c.Config.ApplyOptions(opts...)
+	defer c.Config.RestoreLastCfg()
 	return c.ToWriter(w)
 }
 
-func (c PoCompiler) ToStringWithOptions(opts ...PoOption) string {
+func (c *PoCompiler) ToStringWithOptions(opts ...PoOption) string {
 	c.Config.ApplyOptions(opts...)
+	defer c.Config.RestoreLastCfg()
 	return c.ToString()
 }
 
-func (c PoCompiler) ToFileWithOptions(f string, opts ...PoOption) error {
+func (c *PoCompiler) ToFileWithOptions(f string, opts ...PoOption) error {
 	c.Config.ApplyOptions(opts...)
+	defer c.Config.RestoreLastCfg()
 	return c.ToFile(f)
 }
 
-func (c PoCompiler) ToBytesWithOptions(opts ...PoOption) []byte {
+func (c *PoCompiler) ToBytesWithOptions(opts ...PoOption) []byte {
 	c.Config.ApplyOptions(opts...)
+	defer c.Config.RestoreLastCfg()
 	return c.ToBytes()
 }
 

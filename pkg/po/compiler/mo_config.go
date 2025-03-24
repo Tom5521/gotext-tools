@@ -8,18 +8,28 @@ import (
 )
 
 type MoConfig struct {
+	lastCfg any
+
 	Logger       *log.Logger
 	Force        bool
 	Verbose      bool
 	IgnoreErrors bool
 	Sort         bool
 	SortMode     po.SortMode
-	// HashTable    bool // TODO: Implement this.
+	// HashTable    bool
 }
 
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
+	mc.lastCfg = *mc
+
 	for _, opt := range opts {
 		opt(mc)
+	}
+}
+
+func (mc *MoConfig) RestoreLastCfg() {
+	if mc.lastCfg != nil {
+		*mc = mc.lastCfg.(MoConfig)
 	}
 }
 
@@ -53,7 +63,6 @@ func MoWithSort(s bool) MoOption {
 	}
 }
 
-// TODO: Finish this.
 // func MoWithHashTable(h bool) MoOption {
 // 	return func(c *MoConfig) {
 // 		c.HashTable = h

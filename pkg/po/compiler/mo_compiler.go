@@ -51,18 +51,21 @@ func (mc *MoCompiler) SetFile(f *po.File) {
 	mc.File = f
 }
 
-func (mc MoCompiler) ToWriterWithOptions(w io.Writer, opts ...MoOption) error {
+func (mc *MoCompiler) ToWriterWithOptions(w io.Writer, opts ...MoOption) error {
 	mc.Config.ApplyOptions(opts...)
+	defer mc.Config.RestoreLastCfg()
 	return mc.ToWriter(w)
 }
 
-func (mc MoCompiler) ToBytesWithOptions(options ...MoOption) []byte {
+func (mc *MoCompiler) ToBytesWithOptions(options ...MoOption) []byte {
 	mc.Config.ApplyOptions(options...)
+	defer mc.Config.RestoreLastCfg()
 	return mc.ToBytes()
 }
 
-func (mc MoCompiler) ToFileWithOptions(f string, options ...MoOption) error {
+func (mc *MoCompiler) ToFileWithOptions(f string, options ...MoOption) error {
 	mc.Config.ApplyOptions(options...)
+	defer mc.Config.RestoreLastCfg()
 	return mc.ToFile(f)
 }
 
@@ -72,14 +75,18 @@ func flen(value any) u32 {
 }
 
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
-func (mc MoCompiler) writeTo(writer io.Writer) error {
+func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	entries := mc.File.Entries.FuzzySolve().CleanFuzzy().CleanObsoletes()
+
 	if mc.Config.Sort {
 		entries = mc.Config.SortMode.SortMethod(entries)()
 	}
 
-	var offsets []u32
-	var ids, strs string
+	var (
+		offsets   []u32
+		ids, strs string
+	)
+
 	for _, e := range entries {
 		msgid := e.UnifiedID()
 		msgstr := e.UnifiedStr()
@@ -108,16 +115,17 @@ func (mc MoCompiler) writeTo(writer io.Writer) error {
 		koffsets = append(koffsets, l1, o1+keystart)
 		voffsets = append(voffsets, l2, o2+valuestart)
 	}
-	offsets = append(koffsets, voffsets...)
 
+	// Write the data to the file
 	data := []any{
 		magicNumber,
 		u32(0),
 		flen(entries),
-		u32(7 * 4),
-		7*4 + flen(entries)*8,
+		u32(7 * 4),            // Offset of the original strings table
+		7*4 + flen(entries)*8, // Offset of the translated strings table
 		u32(0), keystart,
-		offsets,
+		koffsets,
+		voffsets,
 		[]byte(ids),
 		[]byte(strs),
 	}
