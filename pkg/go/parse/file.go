@@ -25,19 +25,19 @@ const (
 //
 // It does not generate Header, it only extracts the entries according to the configuration.
 type File struct {
-	config     *Config
-	seenTokens map[token.Pos]bool
-	file       *ast.File // The parsed abstract syntax tree (AST) of the file.
-	reader     *bytes.Reader
-	name       string // The path to the file.
-	pkgName    string // The name of the package declared in the file.
-	hasGotext  bool   // Indicates if the file imports the desired "gotext" package.
+	config    *Config
+	seenNodes map[ast.Node]bool
+	file      *ast.File // The parsed abstract syntax tree (AST) of the file.
+	reader    *bytes.Reader
+	name      string // The path to the file.
+	pkgName   string // The name of the package declared in the file.
+	hasGotext bool   // Indicates if the file imports the desired "gotext" package.
 
 	errors []error
 }
 
 func (f *File) Reset(d io.Reader, name string, config *Config) error {
-	f.seenTokens = nil
+	f.seenNodes = nil
 	f.errors = nil
 
 	if r, ok := d.(*bytes.Reader); ok {
@@ -142,7 +142,7 @@ func (f *File) Error() error {
 // Entries returns all translations found in the file.
 func (f *File) Entries() po.Entries {
 	// Reset fields.
-	f.seenTokens = make(map[token.Pos]bool)
+	f.seenNodes = make(map[ast.Node]bool)
 	f.errors = nil
 
 	var entries po.Entries

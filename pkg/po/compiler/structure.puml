@@ -16,6 +16,8 @@ namespace compiler {
 
     }
     class MoConfig << (S,Aquamarine) >> {
+        - lastCfg any
+
         + Logger *log.Logger
         + Force bool
         + Verbose bool
@@ -24,6 +26,7 @@ namespace compiler {
         + SortMode po.SortMode
 
         + ApplyOptions(opts ...MoOption) 
+        + RestoreLastCfg() 
 
     }
     class PoCompiler << (S,Aquamarine) >> {
@@ -55,6 +58,8 @@ namespace compiler {
 
     }
     class PoConfig << (S,Aquamarine) >> {
+        - lastCfg any
+
         + Logger *log.Logger
         + ForcePo bool
         + OmitHeader bool
@@ -74,6 +79,7 @@ namespace compiler {
         + WordWrap bool
 
         + ApplyOptions(opts ...PoOption) 
+        + RestoreLastCfg() 
         + Validate() error
 
     }

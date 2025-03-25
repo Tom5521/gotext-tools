@@ -6,7 +6,7 @@ namespace parse {
         - errors []error
 
         - genBasics() (*bytes.Reader, binary.ByteOrder, error)
-        - makeEntries(r io.ReadSeeker, header moHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
+        - makeEntries(r *bytes.Reader, header *moHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
 
         + Error() error
         + Errors() []error

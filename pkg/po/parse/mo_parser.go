@@ -158,7 +158,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		Name: m.filename,
 		Entries: m.makeEntries(
 			r,
-			header,
+			&header,
 			msgIDStart,
 			msgIDLen,
 			msgStrStart,
@@ -170,8 +170,8 @@ func (m *MoParser) Parse() (file *po.File) {
 }
 
 func (m *MoParser) makeEntries(
-	r io.ReadSeeker,
-	header moHeader,
+	r *bytes.Reader,
+	header *moHeader,
 	msgIDStart, msgIDLen []u32,
 	msgStrStart, msgStrLen []i32,
 ) (entries po.Entries) {

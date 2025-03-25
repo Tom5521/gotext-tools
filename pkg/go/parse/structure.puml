@@ -19,7 +19,7 @@ namespace parse {
     }
     class File << (S,Aquamarine) >> {
         - config *Config
-        - seenTokens <font color=blue>map</font>[token.Pos]bool
+        - seenNodes <font color=blue>map</font>[ast.Node]bool
         - file *ast.File
         - reader *bytes.Reader
         - name string
@@ -31,7 +31,6 @@ namespace parse {
         - determinePackageInfo() 
         - isGotextCall(n ast.Node) bool
         - basicLitToEntry(n *ast.BasicLit) (po.Entry, error)
-        - processGeneric(exprs ...ast.Expr) (po.Entries, []error)
         - extractArg(index int, call *ast.CallExpr) argumentData
         - processPoCall(call *ast.CallExpr) (po.Entry, bool, error)
         - processNode(n ast.Node) (po.Entries, []error)

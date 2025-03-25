@@ -71,35 +71,6 @@ func (f *File) basicLitToEntry(n *ast.BasicLit) (po.Entry, error) {
 	}, nil
 }
 
-// processGeneric processes a list of AST expressions and extracts translation entries.
-func (f *File) processGeneric(exprs ...ast.Expr) (po.Entries, []error) {
-	var entries po.Entries
-	var errors []error
-
-	for _, expr := range exprs {
-		if lit, ok := expr.(*ast.BasicLit); ok && lit.Kind == token.STRING {
-			if f.seenTokens[lit.Pos()] {
-				continue
-			}
-
-			if lit.Value == `""` {
-				continue
-			}
-
-			entry, err := f.basicLitToEntry(lit)
-			if err != nil {
-				errors = append(errors, err)
-				continue
-			}
-
-			entries = append(entries, entry)
-			f.seenTokens[lit.Pos()] = true
-		}
-	}
-
-	return entries, errors
-}
-
 // argumentData holds information about an argument extracted from a function call.
 type argumentData struct {
 	str   string
@@ -131,9 +102,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 		return
 	}
 
-	pos := lit.Pos()
-
-	f.seenTokens[lit.Pos()] = true
+	f.seenNodes[lit] = true
 
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil {
@@ -141,7 +110,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 		return
 	}
 
-	return argumentData{str, true, err, pos}
+	return argumentData{str, true, err, lit.Pos()}
 }
 
 // processPoCall processes a gotext function call and extracts translation entries.
@@ -192,12 +161,6 @@ func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 	var entries po.Entries
 	var errors []error
 
-	processGeneric := func(exprs ...ast.Expr) {
-		t, e := f.processGeneric(exprs...)
-		entries = append(entries, t...)
-		errors = append(errors, e...)
-	}
-
 	processPoCall := func(call *ast.CallExpr) {
 		t, valid, err := f.processPoCall(call)
 		if err != nil {
@@ -219,31 +182,24 @@ func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 	}
 
 	switch t := n.(type) {
+	case *ast.ImportSpec:
+		f.seenNodes[t.Path] = true
 	case *ast.CallExpr:
 		if f.isGotextCall(t) {
 			processPoCall(t)
+		}
+	case *ast.BasicLit:
+		_, ok := f.seenNodes[t]
+		if t.Kind != token.STRING || ok || t.Value == `""` {
 			break
 		}
-		processGeneric(t.Args...)
-	case *ast.AssignStmt:
-		processGeneric(t.Rhs...)
-	case *ast.ValueSpec:
-		processGeneric(t.Values...)
-	case *ast.ReturnStmt:
-		processGeneric(t.Results...)
-	case *ast.KeyValueExpr:
-		processGeneric(t.Value)
-	case *ast.SendStmt:
-		processGeneric(t.Value)
-	case *ast.CompositeLit:
-		processGeneric(t.Elts...)
-	case *ast.BinaryExpr:
-		processGeneric(t.X, t.Y)
-	// Switch expressions.
-	case *ast.SwitchStmt:
-		processGeneric(t.Tag)
-	case *ast.CaseClause:
-		processGeneric(t.List...)
+		f.seenNodes[t] = true
+		entry, err := f.basicLitToEntry(t)
+		if err != nil {
+			errors = append(errors, err)
+			break
+		}
+		entries = append(entries, entry)
 	}
 
 	return entries, errors

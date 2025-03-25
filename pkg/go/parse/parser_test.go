@@ -1,8 +1,10 @@
 package parse_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/go/parse"
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/kr/pretty"
@@ -123,7 +125,7 @@ func main(){
 	}
 }
 
-func BenchmarkParse(b *testing.B) {
+func TestExtractAll2(t *testing.T) {
 	const input = `package main
 
 import "github.com/leonelquinteros/gotext"
@@ -134,33 +136,65 @@ func main(){
 	b := "I love onions!"
 	
 	var eggs string = "sugar"
+	const asadasd = "asad"
+
+	for i := range "Hello World From a Loop!"{
+		fmt.Println("Hello!")
+	}
+	for i := "hello";i != "from";i += "another loop"{
+
+	}
+
+	a := struct{x string}{"Hello from a struct!"}
+
+	if "Hello From an if" != "Bye from an if"{
+		print("no")
+	}
+
+	a := make(map[string]string)
+	a["Hello from a key"] = "Hello from a value"
 }`
-	bytes := []byte(input)
-	parser, err := parse.NewParserFromBytes(bytes, "test.go")
-	if err != nil {
-		b.Error(err)
+
+	parser, _ := parse.NewParserFromString(
+		input,
+		"lol",
+		parse.WithExtractAll(true),
+		parse.WithNoHeader(true),
+	)
+
+	file := parser.Parse()
+	if err := parser.Error(); err != nil {
+		t.Error(err)
+		return
 	}
 
-	tests := []struct {
-		name    string
-		options []parse.Option
-	}{
-		{name: "normal"},
-		{name: "extract-all", options: []parse.Option{parse.WithExtractAll(true)}},
+	expectedIDs := []string{
+		"Hello World",
+		"Hi world",
+		"I love onions!",
+		"sugar",
+		"asad",
+		"Hello World From a Loop!",
+		"Hello!",
+		"hello",
+		"from",
+		"another loop",
+		"Hello from a struct!",
+		"Hello From an if",
+		"Bye from an if",
+		"no",
+		"Hello from a key",
+		"Hello from a value",
 	}
 
-	b.ResetTimer()
-	for _, t := range tests {
-		b.Run(t.name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				parser.ParseWithOptions(t.options...)
-				b.StopTimer()
-				if parser.Error() != nil {
-					b.Error(parser.Error())
-					b.Skip(parser.Error())
-				}
-				b.StartTimer()
-			}
-		})
+	var ids []string
+	for _, e := range file.Entries {
+		ids = append(ids, e.ID)
+	}
+	if !util.Equal(expectedIDs, ids) {
+		t.Error("Unexpected ids slice")
+		for _, d := range pretty.Diff(expectedIDs, ids) {
+			fmt.Println(d)
+		}
 	}
 }
