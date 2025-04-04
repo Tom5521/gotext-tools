@@ -70,7 +70,7 @@ func BenchmarkEntriesSolve(b *testing.B) {
 		method func() po.Entries
 	}{
 		{"Solve", entries.Solve},
-		{"FuzzySolve", entries.FuzzySolve},
+		// {"FuzzySolve", entries.FuzzySolve},
 	}
 
 	for _, t := range tests {

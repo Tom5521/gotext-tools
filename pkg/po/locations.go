@@ -1,9 +1,7 @@
 package po
 
 import (
-	"path/filepath"
 	"slices"
-	"strings"
 
 	"github.com/Tom5521/xgotext/internal/util"
 )
@@ -19,22 +17,6 @@ func (l Location) Equal(l2 Location) bool {
 }
 
 type Locations []Location
-
-func CompareLocation(a, b Location) int {
-	if file := CompareLocationByFile(a, b); file != 0 {
-		return file
-	}
-
-	return CompareLocationByLine(a, b)
-}
-
-func CompareLocationByLine(a, b Location) int {
-	return a.Line - b.Line
-}
-
-func CompareLocationByFile(a, b Location) int {
-	return strings.Compare(filepath.Clean(a.File), filepath.Clean(b.File))
-}
 
 func (l Locations) Equal(l2 Locations) bool {
 	return util.Equal(l, l2)

@@ -39,9 +39,7 @@ func (p PluralEntries) Solve() PluralEntries {
 }
 
 func (p PluralEntries) Sort() PluralEntries {
-	slices.SortFunc(p, func(a, b PluralEntry) int {
-		return a.ID - b.ID
-	})
+	slices.SortFunc(p, ComparePluralEntryByID)
 
 	return p
 }

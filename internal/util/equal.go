@@ -8,6 +8,10 @@ import (
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
+func SimiliarButNotEqual(x, y string) bool {
+	return fuzzy.Ratio(x, y) >= 80 && x != y
+}
+
 func FuzzyEqual(x, y string) bool {
 	return fuzzy.Ratio(x, y) >= 80
 }
@@ -22,53 +26,57 @@ func EqualPaths(x, y string) bool {
 	return abs1 == abs2
 }
 
+type visitedPairs map[[2]uintptr]struct{}
+
 func Equal[X, Y any](x X, y Y) bool {
-	typeX, typeY := reflect.TypeOf(x), reflect.TypeOf(y)
-	valueX, valueY := reflect.ValueOf(x), reflect.ValueOf(y)
+	return equal(reflect.ValueOf(x), reflect.ValueOf(y), make(visitedPairs))
+}
 
-	if typeX.Kind() != typeY.Kind() {
-		return false
-	}
-
-	if typeX.Kind() == reflect.Pointer {
-		if valueX.IsNil() || valueY.IsNil() {
-			return valueX.IsNil() == valueY.IsNil()
+func equal(v1, v2 reflect.Value, visited visitedPairs) bool {
+	if v1.Kind() == reflect.Pointer || v1.Kind() == reflect.Interface {
+		if v1.IsNil() || v2.IsNil() {
+			return v1.IsNil() == v2.IsNil()
 		}
-		typeX = typeX.Elem()
-		valueX = valueX.Elem()
-		typeY = typeY.Elem()
-		valueY = valueY.Elem()
+		return equal(v1.Elem(), v2.Elem(), visited)
 	}
-	if typeX != typeY {
+
+	if v1.Type() != v2.Type() {
 		return false
 	}
 
-	switch typeX.Kind() {
+	if v1.CanAddr() && v2.CanAddr() {
+		addr1, addr2 := v1.UnsafeAddr(), v2.UnsafeAddr()
+		pair := [2]uintptr{addr1, addr2}
+		if _, found := visited[pair]; found {
+			return true
+		}
+		visited[pair] = struct{}{}
+	}
+
+	switch v1.Kind() {
 	case reflect.Bool:
-		return valueX.Bool() == valueY.Bool()
+		return v1.Bool() == v2.Bool()
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return valueX.Int() == valueY.Int()
+		return v1.Int() == v2.Int()
 	case reflect.Uint,
 		reflect.Uint8,
 		reflect.Uint16,
 		reflect.Uint32,
 		reflect.Uint64,
 		reflect.Uintptr:
-		return valueX.Uint() == valueY.Uint()
+		return v1.Uint() == v2.Uint()
 	case reflect.Float32, reflect.Float64:
-		return floatEqual(valueX.Float(), valueY.Float())
+		return floatEqual(v1.Float(), v2.Float())
 	case reflect.Complex64, reflect.Complex128:
-		return complexEqual(valueX.Complex(), valueY.Complex())
+		return complexEqual(v1.Complex(), v2.Complex())
 	case reflect.String:
-		return valueX.String() == valueY.String()
+		return v1.String() == v2.String()
 	case reflect.Array, reflect.Slice:
-		return sliceEqual(valueX, valueY)
+		return sliceEqual(v1, v2, visited)
 	case reflect.Map:
-		return mapEqual(valueX, valueY)
+		return mapEqual(v1, v2, visited)
 	case reflect.Struct:
-		return structEqual(valueX, valueY)
-	case reflect.Interface:
-		return interfaceEqual(valueX, valueY)
+		return structEqual(v1, v2, visited)
 	case reflect.Chan, reflect.Func, reflect.UnsafePointer:
 		return false
 	default:
@@ -85,47 +93,40 @@ func complexEqual(a, b complex128) bool {
 	return floatEqual(real(a), real(b)) && floatEqual(imag(a), imag(b))
 }
 
-func sliceEqual(v1, v2 reflect.Value) bool {
+func sliceEqual(v1, v2 reflect.Value, visited visitedPairs) bool {
 	if v1.Len() != v2.Len() {
 		return false
 	}
 	for i := 0; i < v1.Len(); i++ {
-		if !Equal(v1.Index(i).Interface(), v2.Index(i).Interface()) {
+		if !equal(v1.Index(i), v2.Index(i), visited) {
 			return false
 		}
 	}
 	return true
 }
 
-func mapEqual(v1, v2 reflect.Value) bool {
+func mapEqual(v1, v2 reflect.Value, visited visitedPairs) bool {
 	if v1.Len() != v2.Len() {
 		return false
 	}
 	for _, key := range v1.MapKeys() {
 		val1 := v1.MapIndex(key)
 		val2 := v2.MapIndex(key)
-		if !val2.IsValid() || !Equal(val1.Interface(), val2.Interface()) {
+		if !val2.IsValid() || !equal(val1, val2, visited) {
 			return false
 		}
 	}
 	return true
 }
 
-func structEqual(v1, v2 reflect.Value) bool {
+func structEqual(v1, v2 reflect.Value, visited visitedPairs) bool {
 	for i := 0; i < v1.NumField(); i++ {
 		field := v1.Type().Field(i)
 		if field.IsExported() {
-			if !Equal(v1.Field(i).Interface(), v2.Field(i).Interface()) {
+			if !equal(v1.Field(i), v2.Field(i), visited) {
 				return false
 			}
 		}
 	}
 	return true
-}
-
-func interfaceEqual(v1, v2 reflect.Value) bool {
-	if v1.IsNil() || v2.IsNil() {
-		return v1.IsNil() == v2.IsNil()
-	}
-	return Equal(v1.Elem().Interface(), v2.Elem().Interface())
 }

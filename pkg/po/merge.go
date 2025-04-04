@@ -80,12 +80,11 @@ func (f File) MergeWithConfig(config MergeConfig, files ...*File) *File {
 		mergedFile.Name += "_" + file.Name
 		mergedFile.Entries = append(mergedFile.Entries, file.Entries...)
 	}
-
-	if config.FuzzyMatch {
-		mergedFile.Entries = mergedFile.Entries.FuzzySolve()
-	} else {
-		mergedFile.Entries = mergedFile.Entries.Solve()
-	}
+	// if config.FuzzyMatch {
+	// 	mergedFile.Entries = mergedFile.Entries.Solve()
+	// } else {
+	mergedFile.Entries = mergedFile.Entries.Solve()
+	// }
 
 	if !config.KeepPreviousIDs {
 		for i, e := range mergedFile.Entries {
