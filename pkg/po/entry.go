@@ -44,7 +44,10 @@ func (e Entry) UnifiedStr() string {
 	str := e.Str
 	if e.IsPlural() {
 		var msgstrs []string
-		plurals := e.Plurals.Sort()
+		plurals := e.Plurals
+		if !plurals.IsSorted() {
+			plurals = plurals.Sort()
+		}
 		for _, plural := range plurals {
 			msgstrs = append(msgstrs, plural.Str)
 		}

@@ -78,14 +78,11 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 		if !ref.ContainsUnifiedID(e.UnifiedID()) {
 			if _, ratio := ref.BestRatio(e); ratio > 50 && !e.IsFuzzy() && config.FuzzyMatch {
 				e.Flags = append(e.Flags, "fuzzy")
-				goto finish
-			}
-			if !config.KeepPreviousIDs {
+			} else if !config.KeepPreviousIDs {
 				e.Obsolete = true
 			}
 		}
 
-	finish:
 		def[i] = e
 	}
 	for _, e := range ref {

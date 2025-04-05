@@ -38,6 +38,10 @@ func (p PluralEntries) Solve() PluralEntries {
 	return cleaned
 }
 
+func (p PluralEntries) IsSorted() bool {
+	return slices.IsSortedFunc(p, ComparePluralEntryByID)
+}
+
 func (p PluralEntries) Sort() PluralEntries {
 	slices.SortFunc(p, ComparePluralEntryByID)
 
