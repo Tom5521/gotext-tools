@@ -2,6 +2,7 @@ package po_test
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -10,11 +11,10 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/Tom5521/xgotext/pkg/po/parse"
+	"github.com/kr/pretty"
 )
 
 func TestMergeWithMsgmerge(t *testing.T) {
-	t.Skip("This isn't finished yet...")
-	return
 	msgmerge, err := exec.LookPath("msgmerge")
 	if err != nil {
 		t.Skip(err)
@@ -28,17 +28,50 @@ func TestMergeWithMsgmerge(t *testing.T) {
 	outPath := filepath.Join(tmpDir, "out.po")
 
 	defStruct := &po.File{Entries: po.Entries{
-		{ID: "id1", Str: "translated id1"},
-		{ID: "id2", Str: "translated id2"},
-		{ID: "id3", Str: "translated id3"},
-		{ID: "this must be removed.", Str: "old translation"},
+		{
+			Context: "ctx1",
+			ID:      "id1",
+			Plural:  "plural id1",
+			Plurals: []po.PluralEntry{
+				{ID: 0, Str: "translated singular id1"},
+				{ID: 1, Str: "translated plural id1"},
+			},
+		},
+		{
+			ID:     "id2",
+			Plural: "plural id2",
+			Plurals: []po.PluralEntry{
+				{ID: 0, Str: "translated singular id2"},
+				{ID: 1, Str: "translated plural id2"},
+			},
+		},
+		{
+			ID:  "id3",
+			Str: "translated id3",
+		},
+		{
+			ID:  "this must be removed.",
+			Str: "old translation",
+		},
 	}}
 
 	refStruct := &po.File{Entries: po.Entries{
-		{ID: "id1"},
-		{ID: "id2"},
-		{ID: "id3"},
-		{ID: "id4"},
+		{
+			Context: "ctx1",
+			ID:      "id1",
+			Plural:  "plural id1",
+		},
+		{
+			ID:     "id2",
+			Plural: "plural id2",
+		},
+		{
+			ID: "id3",
+		},
+		{
+			ID:     "id4",
+			Plural: "plural id4",
+		},
 	}}
 
 	// Write input.
@@ -84,10 +117,32 @@ func TestMergeWithMsgmerge(t *testing.T) {
 		return
 	}
 
-	getted := refStruct.Merge(defStruct)
+	getted := po.Merge(defStruct.Entries, refStruct.Entries).CleanObsoletes()
 
-	if !util.Equal(expected.Entries, getted.Entries.CleanFuzzy().CleanObsoletes()) {
+	if !util.Equal(expected.Entries, getted) {
+		x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)
+
+		fmt.Println("DIFF:")
+		for _, d := range pretty.Diff(expected.Entries, getted) {
+			fmt.Println(d)
+		}
+
+		fmt.Println("Getted:\n", x)
+		fmt.Println("Expected:\n", y)
+
 		t.Fail()
 		return
 	}
+}
+
+func formatFileOrEntries[X *po.File | po.Entries](a X) string {
+	var f *po.File
+	switch v := any(a).(type) {
+	case po.Entries:
+		f = &po.File{Entries: v}
+	case *po.File:
+		f = v
+	}
+
+	return compiler.NewPo(f, compiler.PoWithOmitHeader(true)).ToString()
 }

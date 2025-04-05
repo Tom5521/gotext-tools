@@ -1,9 +1,5 @@
 package po
 
-import (
-	"slices"
-)
-
 type SortMode int
 
 const (
@@ -73,42 +69,46 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 	}
 }
 
-func (f File) MergeWithConfig(config MergeConfig, files ...*File) *File {
-	mergedFile := f
+func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
+	def = def.Solve()
 
-	for _, file := range files {
-		mergedFile.Name += "_" + file.Name
-		mergedFile.Entries = append(mergedFile.Entries, file.Entries...)
+	for i, e := range def {
+		if !ref.ContainsUnifiedID(e.UnifiedID()) {
+			if _, ratio := ref.BestRatio(e); ratio > 50 && !e.IsFuzzy() && config.FuzzyMatch {
+				e.Flags = append(e.Flags, "fuzzy")
+				goto finish
+			}
+			if !config.KeepPreviousIDs {
+				e.Obsolete = true
+			}
+		}
+
+	finish:
+		def[i] = e
 	}
-	// if config.FuzzyMatch {
-	// 	mergedFile.Entries = mergedFile.Entries.Solve()
-	// } else {
-	mergedFile.Entries = mergedFile.Entries.Solve()
-	// }
+	for _, e := range ref {
+		if !def.ContainsUnifiedID(e.UnifiedID()) {
+			if id, ratio := def.BestRatio(e); ratio > 50 && !e.IsFuzzy() && config.FuzzyMatch {
+				e.Flags = append(e.Flags, "fuzzy")
 
-	if !config.KeepPreviousIDs {
-		for i, e := range mergedFile.Entries {
-			e.Obsolete = !slices.ContainsFunc(
-				f.Entries,
-				func(e2 Entry) bool { return e2.UnifiedID() == e.UnifiedID() },
-			)
-			mergedFile.Entries[i] = e
+				best := def[id]
+				e.Str = best.Str
+				e.Plurals = best.Plurals
+			}
+
+			def = append(def, e)
 		}
 	}
 
 	if config.Sort {
-		mergedFile.Entries = config.SortMode.SortMethod(mergedFile.Entries)()
+		def = config.SortMode.SortMethod(def)()
 	}
 
-	return &mergedFile
+	return def
 }
 
-func (f File) MergeWithOptions(files []*File, options ...MergeOption) *File {
-	var cfg MergeConfig
+func Merge(def, ref Entries, options ...MergeOption) Entries {
+	cfg := DefaultMergeConfig()
 	cfg.ApplyOption(options...)
-	return f.MergeWithConfig(cfg, files...)
-}
-
-func (f File) Merge(files ...*File) *File {
-	return f.MergeWithConfig(DefaultMergeConfig(), files...)
+	return MergeWithConfig(cfg, def, ref)
 }

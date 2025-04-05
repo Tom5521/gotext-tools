@@ -74,7 +74,8 @@ var (
 	generalRegex   = regexp.MustCompile(`# *(.*)`)
 	extractedRegex = regexp.MustCompile(`#\. *(.*)`)
 	flagRegex      = regexp.MustCompile(`#, *(.*)`)
-	previousRegex  = regexp.MustCompile(`#\| *(.*)`)
+	// obsoleteRegex  = regexp.MustCompile(`#~ *(.*)`)
+	previousRegex = regexp.MustCompile(`#\| *(.*)`)
 )
 
 func parseComments(entry *po.Entry, tks []lexer.Token) (err error) {

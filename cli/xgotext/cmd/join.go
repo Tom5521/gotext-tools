@@ -29,7 +29,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 		return newParse.Errors()[0]
 	}
 
-	poParsed.MergeWithOptions([]*po.File{goParsed}, po.MergeWithFuzzyMatch(false))
+	poParsed.Entries = po.Merge(poParsed.Entries, goParsed.Entries)
 
 	compiler := compiler.NewPo(poParsed, compiler.PoWithConfig(CompilerCfg))
 

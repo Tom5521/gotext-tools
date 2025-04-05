@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/Tom5521/xgotext/internal/util"
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
 // Entries represents a collection of Entry objects.
@@ -15,6 +16,17 @@ func (e Entries) Equal(e2 Entries) bool {
 
 func (e Entries) ContainsUnifiedID(uid string) bool {
 	return slices.ContainsFunc(e, func(e Entry) bool { return e.UnifiedID() == uid })
+}
+
+func (e Entries) BestRatio(e1 Entry) (best, highestRatio int) {
+	for i, e2 := range e {
+		ratio := fuzzy.Ratio(e1.UnifiedID(), e2.UnifiedID())
+		if ratio > highestRatio {
+			best = i
+			highestRatio = ratio
+		}
+	}
+	return
 }
 
 func (e Entries) IndexByUnifiedID(uid string) int {
