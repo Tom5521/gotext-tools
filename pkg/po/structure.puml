@@ -8,6 +8,8 @@ namespace po {
     }
     class Entries << (S,Aquamarine) >> {
         + Equal(e2 Entries) bool
+        + ContainsUnifiedID(uid string) bool
+        + BestRatio(e1 Entry) (int, int)
         + IndexByUnifiedID(uid string) int
         + Index(id string, context string) int
         + IsSorted() bool
@@ -25,10 +27,10 @@ namespace po {
         + HasDuplicates() bool
         + CleanObsoletes() Entries
         + CleanDuplicates() Entries
+        + SolveFunc(merger MergeFunc) Entries
         + Solve() Entries
         + CleanFuzzy() Entries
         + FuzzyFind(id string, context string) int
-        + FuzzySolve() Entries
         + Header() Header
 
     }
@@ -65,9 +67,6 @@ namespace po {
         + Set(id string, context string, e Entry) 
         + LoadByUnifiedID(uid string) string
         + Load(id string, context string) string
-        + MergeWithConfig(config MergeConfig, files ...*File) *File
-        + MergeWithOptions(files []*File, options ...MergeOption) *File
-        + Merge(files ...*File) *File
 
     }
     class Header << (S,Aquamarine) >> {
@@ -129,6 +128,7 @@ namespace po {
     class PluralEntries << (S,Aquamarine) >> {
         + Equal(p2 PluralEntries) bool
         + Solve() PluralEntries
+        + IsSorted() bool
         + Sort() PluralEntries
 
     }
@@ -149,6 +149,8 @@ namespace po {
     }
     class po.Locations << (T, #FF7700) >>  {
     }
+    class po.MergeFunc << (T, #FF7700) >>  {
+    }
     class po.MergeOption << (T, #FF7700) >>  {
     }
     class po.PluralEntries << (T, #FF7700) >>  {
@@ -161,6 +163,7 @@ namespace po {
 "__builtin__.int" #.. "po.SortMode"
 "po.<font color=blue>func</font>(*HeaderConfig) " #.. "po.HeaderOption"
 "po.<font color=blue>func</font>(*MergeConfig) " #.. "po.MergeOption"
+"po.<font color=blue>func</font>(Entry, Entry) *Entry" #.. "po.MergeFunc"
 "po.[]Entry" #.. "po.Entries"
 "po.[]Location" #.. "po.Locations"
 "po.[]PluralEntry" #.. "po.PluralEntries"

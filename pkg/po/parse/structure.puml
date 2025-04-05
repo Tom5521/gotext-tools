@@ -16,6 +16,8 @@ namespace parse {
     class PoConfig << (S,Aquamarine) >> {
         - lastCfg any
 
+        + IgnoreComments bool
+        + IgnoreAllComments bool
         + Logger *log.Logger
         + SkipHeader bool
         + CleanDuplicates bool
