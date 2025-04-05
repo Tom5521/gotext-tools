@@ -163,6 +163,16 @@ func (p *PoParser) Parse() *po.File {
 			p.errors = append(p.errors, err)
 		}
 
+		if p.Config.IgnoreComments || p.Config.IgnoreAllComments {
+			newEntry.Comments = nil
+			newEntry.ExtractedComments = nil
+			newEntry.Previous = nil
+			if p.Config.IgnoreAllComments {
+				newEntry.Locations = nil
+				newEntry.Flags = nil
+			}
+		}
+
 		entries = append(entries, newEntry)
 	}
 

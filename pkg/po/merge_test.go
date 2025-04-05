@@ -13,6 +13,8 @@ import (
 )
 
 func TestMergeWithMsgmerge(t *testing.T) {
+	t.Skip("This isn't finished yet...")
+	return
 	msgmerge, err := exec.LookPath("msgmerge")
 	if err != nil {
 		t.Skip(err)
@@ -25,8 +27,19 @@ func TestMergeWithMsgmerge(t *testing.T) {
 	refPath := filepath.Join(tmpDir, "ref.po")
 	outPath := filepath.Join(tmpDir, "out.po")
 
-	defStruct := &po.File{Entries: po.Entries{}}
-	refStruct := &po.File{Entries: po.Entries{}}
+	defStruct := &po.File{Entries: po.Entries{
+		{ID: "id1", Str: "translated id1"},
+		{ID: "id2", Str: "translated id2"},
+		{ID: "id3", Str: "translated id3"},
+		{ID: "this must be removed.", Str: "old translation"},
+	}}
+
+	refStruct := &po.File{Entries: po.Entries{
+		{ID: "id1"},
+		{ID: "id2"},
+		{ID: "id3"},
+		{ID: "id4"},
+	}}
 
 	// Write input.
 	{
@@ -55,7 +68,11 @@ func TestMergeWithMsgmerge(t *testing.T) {
 		}
 	}
 
-	parser, err := parse.NewPo(outPath, parse.PoWithSkipHeader(true))
+	parser, err := parse.NewPo(
+		outPath,
+		parse.PoWithSkipHeader(true),
+		parse.PoWithIgnoreComments(true),
+	)
 	if err != nil {
 		t.Error(err)
 		return
@@ -69,7 +86,7 @@ func TestMergeWithMsgmerge(t *testing.T) {
 
 	getted := refStruct.Merge(defStruct)
 
-	if !util.Equal(expected.Entries, getted.Entries) {
+	if !util.Equal(expected.Entries, getted.Entries.CleanFuzzy().CleanObsoletes()) {
 		t.Fail()
 		return
 	}

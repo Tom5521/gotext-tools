@@ -8,9 +8,11 @@ import (
 type PoConfig struct {
 	lastCfg any // Any type to not refer itself.
 
-	Logger          *log.Logger
-	SkipHeader      bool
-	CleanDuplicates bool
+	IgnoreComments    bool
+	IgnoreAllComments bool
+	Logger            *log.Logger
+	SkipHeader        bool
+	CleanDuplicates   bool
 }
 
 func (p *PoConfig) RestoreLastCfg() {
@@ -38,6 +40,18 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func PoWithIgnoreAllComments(iag bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.IgnoreAllComments = iag
+	}
+}
+
+func PoWithIgnoreComments(ig bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.IgnoreComments = ig
+	}
+}
 
 func PoWithConfig(cfg PoConfig) PoOption {
 	return func(c *PoConfig) { *c = cfg }

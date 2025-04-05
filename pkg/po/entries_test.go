@@ -1,13 +1,44 @@
 package po_test
 
 import (
+	"fmt"
 	"math/rand"
 	"slices"
 	"testing"
 
 	"github.com/Tom5521/xgotext/internal/util"
 	"github.com/Tom5521/xgotext/pkg/po"
+	"github.com/Tom5521/xgotext/pkg/po/compiler"
+	"github.com/kr/pretty"
 )
+
+func TestSolve(t *testing.T) {
+	input := po.Entries{
+		{ID: "Hello", Str: "World"},
+		{ID: "Hello2", Str: "World2"},
+		{ID: "Hello3", Str: "World3"},
+		{ID: "Hello"},
+		{ID: "Hello2"},
+		{ID: "Hello3"},
+	}
+	expected := po.Entries{
+		{ID: "Hello", Str: "World"},
+		{ID: "Hello2", Str: "World2"},
+		{ID: "Hello3", Str: "World3"},
+	}
+
+	solved := input.Solve()
+
+	if !util.Equal(solved, expected) {
+		fmt.Println(
+			compiler.NewPo(&po.File{Entries: solved}, compiler.PoWithOmitHeader(true)).ToString(),
+		)
+		for _, d := range pretty.Diff(solved, expected) {
+			fmt.Println(d)
+		}
+		t.Fail()
+	}
+}
 
 func TestSort(t *testing.T) {
 	tests := []struct {

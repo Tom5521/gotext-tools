@@ -46,6 +46,13 @@ func CompareEntryByLocation(a, b Entry) int {
 	return slices.CompareFunc(a.Locations, b.Locations, CompareLocation)
 }
 
+func CompareEntryByStr(a, b Entry) int {
+	if a.IsPlural() && b.IsPlural() {
+		return slices.CompareFunc(a.Plurals, b.Plurals, ComparePluralEntryByStr)
+	}
+	return strings.Compare(a.Str, b.Str)
+}
+
 func CompareEntryByLine(a, b Entry) int {
 	return slices.CompareFunc(a.Locations, b.Locations, CompareLocationByLine)
 }
@@ -56,6 +63,10 @@ func CompareEntryByID(a, b Entry) int {
 
 func CompareEntryByFile(a, b Entry) int {
 	return slices.CompareFunc(a.Locations, b.Locations, CompareLocationByFile)
+}
+
+func ComparePluralEntryByStr(a, b PluralEntry) int {
+	return strings.Compare(a.Str, b.Str)
 }
 
 func ComparePluralEntryByID(a, b PluralEntry) int {
