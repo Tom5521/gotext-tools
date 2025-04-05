@@ -51,22 +51,24 @@ func (m *MergeConfig) ApplyOption(opts ...MergeOption) {
 
 type MergeOption func(mc *MergeConfig)
 
+func MergeWithSortMode(sm SortMode) MergeOption {
+	return func(mc *MergeConfig) { mc.SortMode = sm }
+}
+
+func MergeWithSort(s bool) MergeOption {
+	return func(mc *MergeConfig) { mc.Sort = s }
+}
+
 func MergeWithMergeConfig(n MergeConfig) MergeOption {
-	return func(mc *MergeConfig) {
-		*mc = n
-	}
+	return func(mc *MergeConfig) { *mc = n }
 }
 
 func MergeWithFuzzyMatch(f bool) MergeOption {
-	return func(mc *MergeConfig) {
-		mc.FuzzyMatch = f
-	}
+	return func(mc *MergeConfig) { mc.FuzzyMatch = f }
 }
 
 func MergeWithKeepPreviousIDs(k bool) MergeOption {
-	return func(mc *MergeConfig) {
-		mc.KeepPreviousIDs = k
-	}
+	return func(mc *MergeConfig) { mc.KeepPreviousIDs = k }
 }
 
 func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {

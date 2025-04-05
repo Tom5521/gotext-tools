@@ -1,4 +1,5 @@
 test:
+  go clean -testcache
   go test -v $(dirname $(find . -name "*_test.go"))
 benchmark:
   go test -bench=. $(dirname $(find . -name "*_benchmark_test.go"))

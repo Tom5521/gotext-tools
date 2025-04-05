@@ -117,18 +117,17 @@ func TestMergeWithMsgmerge(t *testing.T) {
 		return
 	}
 
-	getted := po.Merge(defStruct.Entries, refStruct.Entries).CleanObsoletes()
+	getted := po.Merge(defStruct.Entries, refStruct.Entries, po.MergeWithSort(false)).
+		CleanObsoletes()
 
 	if !util.Equal(expected.Entries, getted) {
-		x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)
-
 		fmt.Println("DIFF:")
 		for _, d := range pretty.Diff(expected.Entries, getted) {
 			fmt.Println(d)
 		}
 
-		fmt.Println("Getted:\n", x)
-		fmt.Println("Expected:\n", y)
+		fmt.Println("Getted:\n", formatFileOrEntries(getted))
+		fmt.Println("Expected:\n", formatFileOrEntries(expected))
 
 		t.Fail()
 		return

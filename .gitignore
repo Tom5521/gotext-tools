@@ -6,5 +6,6 @@ vendor
 *.diff
 *.po
 *.pot
+*.test
 default.pot
 messages.*
