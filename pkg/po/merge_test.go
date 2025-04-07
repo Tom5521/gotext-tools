@@ -3,6 +3,7 @@ package po_test
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -11,8 +12,11 @@ import (
 	"github.com/Tom5521/xgotext/pkg/po"
 	"github.com/Tom5521/xgotext/pkg/po/compiler"
 	"github.com/Tom5521/xgotext/pkg/po/parse"
-	"github.com/kr/pretty"
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
+
+var dmp = diffmatchpatch.New()
 
 func TestMergeWithMsgmerge(t *testing.T) {
 	msgmerge, err := exec.LookPath("msgmerge")
@@ -72,6 +76,9 @@ func TestMergeWithMsgmerge(t *testing.T) {
 			ID:     "id4",
 			Plural: "plural id4",
 		},
+		{
+			ID: "id6",
+		},
 	}}
 
 	// Write input.
@@ -90,47 +97,78 @@ func TestMergeWithMsgmerge(t *testing.T) {
 		}
 	}
 
-	// Run command.
-	{
-		var stderr bytes.Buffer
-		cmd := exec.Command(msgmerge, defPath, refPath, "-o", outPath)
-		cmd.Stderr = &stderr
-		if err = cmd.Run(); err != nil {
-			t.Error(stderr.String())
-			return
-		}
+	tests := []struct {
+		name      string
+		cmdArgs   []string
+		mergeOpts []po.MergeOption
+	}{
+		{
+			"FuzzyMatch",
+			[]string{},
+			[]po.MergeOption{},
+		},
+		{
+			"NoFuzzyMatch",
+			[]string{"-N"},
+			[]po.MergeOption{po.MergeWithFuzzyMatch(false)},
+		},
 	}
 
-	parser, err := parse.NewPo(
-		outPath,
-		parse.PoWithSkipHeader(true),
-		parse.PoWithIgnoreComments(true),
-	)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.mergeOpts = append(test.mergeOpts, po.MergeWithSort(false))
+			test.cmdArgs = append(test.cmdArgs, defPath, refPath, "-o", outPath)
+			// Run command.
+			{
+				var stderr bytes.Buffer
+				cmd := exec.Command(msgmerge, test.cmdArgs...)
+				cmd.Stderr = &stderr
+				if err = cmd.Run(); err != nil {
+					t.Error(stderr.String())
+					return
+				}
+			}
 
-	expected := parser.Parse()
-	if err = parser.Error(); err != nil {
-		t.Error(err)
-		return
-	}
+			outBytes, err := os.ReadFile(outPath)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 
-	getted := po.Merge(defStruct.Entries, refStruct.Entries, po.MergeWithSort(false)).
-		CleanObsoletes()
+			parser := parse.NewPoFromBytes(
+				outBytes,
+				outPath,
+				parse.PoWithSkipHeader(true),
+				parse.PoWithIgnoreComments(true),
+			)
 
-	if !util.Equal(expected.Entries, getted) {
-		fmt.Println("DIFF:")
-		for _, d := range pretty.Diff(expected.Entries, getted) {
-			fmt.Println(d)
-		}
+			expected := parser.Parse()
+			if err = parser.Error(); err != nil {
+				t.Error(err)
+				return
+			}
 
-		fmt.Println("Getted:\n", formatFileOrEntries(getted))
-		fmt.Println("Expected:\n", formatFileOrEntries(expected))
+			getted := po.Merge(defStruct.Entries, refStruct.Entries, test.mergeOpts...).
+				CleanObsoletes()
 
-		t.Fail()
-		return
+			if !util.Equal(expected.Entries, getted) {
+				x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)
+				fmt.Println("--- STRUCT DIFF:")
+				diff := dmp.DiffMain(util.Format(getted), util.Format(expected.Entries), false)
+				fmt.Println(dmp.DiffPrettyText(diff))
+				ratio := fuzzy.Ratio(x, y)
+				fmt.Println("--- COMPILED MATCH RATIO:", ratio)
+				if ratio < 95 {
+					diff = dmp.DiffMain(x, y, false)
+					fmt.Println(dmp.DiffPrettyText(diff))
+				} else {
+					fmt.Println(string(outBytes))
+				}
+
+				t.Fail()
+				return
+			}
+		})
 	}
 }
 
