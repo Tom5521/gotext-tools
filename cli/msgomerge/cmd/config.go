@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	mergeCfg    po.MergeConfig
 	headerCfg   po.HeaderConfig
 	compilerCfg compiler.PoConfig
 )
@@ -17,5 +18,8 @@ func initConfig() {
 	compilerCfg = compiler.PoConfig{
 		NoLocation:  noLocation,
 		AddLocation: compiler.PoLocationMode(addLocation),
+	}
+	mergeCfg = po.MergeConfig{
+		FuzzyMatch: !noFuzzyMatching,
 	}
 }

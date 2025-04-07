@@ -20,7 +20,12 @@ func (e Entries) ContainsUnifiedID(uid string) bool {
 
 func (e Entries) BestRatio(e1 Entry) (best, highestRatio int) {
 	for i, e2 := range e {
-		ratio := fuzzy.Ratio(e1.UnifiedID(), e2.UnifiedID())
+		// TODO: Fix this so that ratios compute better for plural entries.
+		ctxRatio := fuzzy.Ratio(e1.Context, e2.Context)
+		idRatio := fuzzy.Ratio(e1.ID, e2.ID)
+		pluralRatio := fuzzy.Ratio(e1.Plural, e2.Plural)
+
+		ratio := util.Average(ctxRatio, idRatio, pluralRatio)
 		if ratio > highestRatio {
 			best = i
 			highestRatio = ratio

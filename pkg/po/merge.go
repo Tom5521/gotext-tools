@@ -33,6 +33,8 @@ type MergeConfig struct {
 	KeepPreviousIDs bool
 	Sort            bool
 	SortMode        SortMode
+	// TODO: Finish this.
+	// Compendium      Entries
 }
 
 func DefaultMergeConfig() MergeConfig {
@@ -50,6 +52,13 @@ func (m *MergeConfig) ApplyOption(opts ...MergeOption) {
 }
 
 type MergeOption func(mc *MergeConfig)
+
+// TODO: Finish this.
+// func MergeWithCompendium(compendium Entries) MergeOption {
+// 	return func(mc *MergeConfig) {
+// 		mc.Compendium = compendium
+// 	}
+// }
 
 func MergeWithSortMode(sm SortMode) MergeOption {
 	return func(mc *MergeConfig) { mc.SortMode = sm }
@@ -71,28 +80,41 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 	return func(mc *MergeConfig) { mc.KeepPreviousIDs = k }
 }
 
+// TODO: Fix with fuzzy match.
 func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	def = def.Solve()
 
 	for i, e := range def {
 		if !ref.ContainsUnifiedID(e.UnifiedID()) {
-			if _, ratio := ref.BestRatio(e); ratio > 50 && !e.IsFuzzy() && config.FuzzyMatch {
-				e.Flags = append(e.Flags, "fuzzy")
-			} else if !config.KeepPreviousIDs {
+			if config.FuzzyMatch {
+				if _, ratio := ref.BestRatio(e); ratio >= 50 && !e.IsFuzzy() {
+					e.Flags = append(e.Flags, "fuzzy")
+					goto finish
+				}
+			}
+			if !config.KeepPreviousIDs || !config.FuzzyMatch {
 				e.Obsolete = true
 			}
 		}
 
+	finish:
 		def[i] = e
 	}
 	for _, e := range ref {
 		if !def.ContainsUnifiedID(e.UnifiedID()) {
-			if id, ratio := def.BestRatio(e); ratio > 50 && !e.IsFuzzy() && config.FuzzyMatch {
-				e.Flags = append(e.Flags, "fuzzy")
+			if config.FuzzyMatch {
+				if id, ratio := def.BestRatio(e); ratio > 50 && !e.IsFuzzy() {
+					e.Flags = append(e.Flags, "fuzzy")
 
-				best := def[id]
-				e.Str = best.Str
-				e.Plurals = best.Plurals
+					best := def[id]
+					e.Str = best.Str
+					e.Plurals = best.Plurals
+				}
+			} else if e.IsPlural() {
+				e.Plurals = PluralEntries{
+					{0, e.ID},
+					{1, e.ID},
+				}
 			}
 
 			def = append(def, e)

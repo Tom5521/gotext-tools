@@ -64,7 +64,7 @@ func (e Entry) UnifiedID() string {
 	if e.HasContext() {
 		id = e.Context + "\x04" + id
 	}
-	if e.Plural != "" {
+	if e.IsPlural() {
 		id += "\x00" + e.Plural
 	}
 
