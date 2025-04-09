@@ -2,28 +2,13 @@ package util
 
 import (
 	"math"
-	"path/filepath"
 	"reflect"
 
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
-func SimiliarButNotEqual(x, y string) bool {
-	return fuzzy.Ratio(x, y) >= 80 && x != y
-}
-
 func FuzzyEqual(x, y string) bool {
 	return fuzzy.Ratio(x, y) >= 80
-}
-
-func EqualPaths(x, y string) bool {
-	abs1, err := filepath.Abs(x)
-	abs2, err1 := filepath.Abs(y)
-	if err != nil || err1 != nil {
-		return x == y
-	}
-
-	return abs1 == abs2
 }
 
 type visitedPairs map[[2]uintptr]struct{}

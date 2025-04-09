@@ -15,16 +15,3 @@ func Average[T Number](values ...T) T {
 
 	return total / T(len(values))
 }
-
-func WeightedAverage[T Number](values, weights []T) T {
-	if len(values) != len(weights) {
-		panic("the number of values and averages differs")
-	}
-	var sum T
-
-	for i, v := range values {
-		sum += v * (weights[i] / 100)
-	}
-
-	return sum
-}
