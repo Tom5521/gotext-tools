@@ -19,7 +19,7 @@ func EntryMatchRatio(e1, e2 Entry) int {
 	if e1.HasContext() || e2.HasContext() {
 		ratios = append(ratios, ratio(e1.Context, e2.Context))
 	}
-	if e1.IsPlural() {
+	if e1.IsPlural() && e2.IsPlural() {
 		ratios = append(ratios, ratio(e1.Plural, e2.Plural))
 	}
 
