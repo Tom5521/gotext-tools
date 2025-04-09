@@ -4,7 +4,6 @@ import (
 	"slices"
 
 	"github.com/Tom5521/xgotext/internal/util"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
 // Entries represents a collection of Entry objects.
@@ -20,12 +19,7 @@ func (e Entries) ContainsUnifiedID(uid string) bool {
 
 func (e Entries) BestRatio(e1 Entry) (best, highestRatio int) {
 	for i, e2 := range e {
-		// TODO: Fix this so that ratios compute better for plural entries.
-		ctxRatio := fuzzy.Ratio(e1.Context, e2.Context)
-		idRatio := fuzzy.Ratio(e1.ID, e2.ID)
-		pluralRatio := fuzzy.Ratio(e1.Plural, e2.Plural)
-
-		ratio := util.Average(ctxRatio, idRatio, pluralRatio)
+		ratio := EntryMatchRatio(e1, e2)
 		if ratio > highestRatio {
 			best = i
 			highestRatio = ratio

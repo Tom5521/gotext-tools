@@ -80,35 +80,51 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 	return func(mc *MergeConfig) { mc.KeepPreviousIDs = k }
 }
 
-// TODO: Fix with fuzzy match.
 func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	def = def.Solve()
 
 	for i, e := range def {
 		if !ref.ContainsUnifiedID(e.UnifiedID()) {
 			if config.FuzzyMatch {
-				if _, ratio := ref.BestRatio(e); ratio >= 50 && !e.IsFuzzy() {
-					e.Flags = append(e.Flags, "fuzzy")
-					goto finish
+				if _, ratio := ref.BestRatio(e); ratio >= 20 {
+					e.markAsFuzzy()
+				} else {
+					e.markAsObsolete()
+				}
+			} else {
+				if !config.KeepPreviousIDs {
+					e.markAsObsolete()
+				} else {
+					e.markAsFuzzy()
 				}
 			}
-			if !config.KeepPreviousIDs || !config.FuzzyMatch {
-				e.Obsolete = true
-			}
-		}
 
-	finish:
-		def[i] = e
+			def[i] = e
+		}
 	}
+
 	for _, e := range ref {
 		if !def.ContainsUnifiedID(e.UnifiedID()) {
-			if config.FuzzyMatch {
-				if id, ratio := def.BestRatio(e); ratio > 50 && !e.IsFuzzy() {
-					e.Flags = append(e.Flags, "fuzzy")
+			e.markAsFuzzy()
 
+			if config.FuzzyMatch {
+				if id, ratio := def.BestRatio(e); ratio >= 20 {
 					best := def[id]
-					e.Str = best.Str
-					e.Plurals = best.Plurals
+					switch {
+					case e.IsPlural() && best.IsPlural():
+						e.Plurals = best.Plurals
+					case e.IsPlural() && !best.IsPlural():
+						if len(e.Plurals) == 0 {
+							e.Plurals = append(e.Plurals, PluralEntry{})
+						}
+						e.Plurals[0].Str = best.Str
+					case !e.IsPlural() && best.IsPlural():
+						if len(best.Plurals) > 0 {
+							e.Str = best.Plurals[0].Str
+						}
+					case !e.IsPlural() && !best.IsPlural():
+						e.Str = best.Str
+					}
 				}
 			} else if e.IsPlural() {
 				e.Plurals = PluralEntries{

@@ -4,7 +4,27 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/Tom5521/xgotext/internal/util"
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
+
+func EntryMatchRatio(e1, e2 Entry) int {
+	ratio := fuzzy.Ratio
+
+	var ratios []int
+	if e1.ID != "" || e2.ID != "" {
+		ratios = append(ratios, ratio(e1.ID, e2.ID))
+	}
+	if e1.HasContext() || e2.HasContext() {
+		ratios = append(ratios, ratio(e1.Context, e2.Context))
+	}
+	if e1.IsPlural() {
+		ratios = append(ratios, ratio(e1.Plural, e2.Plural))
+	}
+
+	return util.Average(ratios...)
+}
 
 func CompareEntry(a, b Entry) int {
 	obsolete := CompareEntryByObsolete(a, b)

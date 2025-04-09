@@ -158,12 +158,8 @@ func TestMergeWithMsgmerge(t *testing.T) {
 				fmt.Println(dmp.DiffPrettyText(diff))
 				ratio := fuzzy.Ratio(x, y)
 				fmt.Println("--- COMPILED MATCH RATIO:", ratio)
-				if ratio < 95 {
-					diff = dmp.DiffMain(x, y, false)
-					fmt.Println(dmp.DiffPrettyText(diff))
-				} else {
-					fmt.Println(string(outBytes))
-				}
+				diff = dmp.DiffMain(x, y, false)
+				fmt.Println(dmp.DiffPrettyText(diff))
 
 				t.Fail()
 				return

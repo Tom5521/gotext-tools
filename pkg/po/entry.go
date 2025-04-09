@@ -29,6 +29,14 @@ type Entry struct {
 	Locations Locations // A list of source code locations for the string.
 }
 
+func (e *Entry) markAsObsolete() { e.Obsolete = true }
+
+func (e *Entry) markAsFuzzy() {
+	if !e.IsFuzzy() {
+		e.Flags = append(e.Flags, "fuzzy")
+	}
+}
+
 // Check for possible errors and inconsistencies in the entry.
 func (e Entry) Validate() error {
 	if e.Str != "" && e.IsPlural() && len(e.Plurals) > 0 {
@@ -76,7 +84,7 @@ func (e Entry) Equal(x Entry) bool {
 }
 
 func (e Entry) IsPlural() bool {
-	return e.Plural != ""
+	return e.Plural != "" || len(e.Plurals) > 0
 }
 
 func (e Entry) HasContext() bool {
