@@ -33,8 +33,6 @@ type MergeConfig struct {
 	KeepPreviousIDs bool
 	Sort            bool
 	SortMode        SortMode
-	// TODO: Finish this.
-	// Compendium      Entries
 }
 
 func DefaultMergeConfig() MergeConfig {
@@ -52,13 +50,6 @@ func (m *MergeConfig) ApplyOption(opts ...MergeOption) {
 }
 
 type MergeOption func(mc *MergeConfig)
-
-// TODO: Finish this.
-// func MergeWithCompendium(compendium Entries) MergeOption {
-// 	return func(mc *MergeConfig) {
-// 		mc.Compendium = compendium
-// 	}
-// }
 
 func MergeWithSortMode(sm SortMode) MergeOption {
 	return func(mc *MergeConfig) { mc.SortMode = sm }

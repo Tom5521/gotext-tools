@@ -8,18 +8,16 @@ import (
 )
 
 type File struct {
-	Entries Entries
-	Name    string
+	Name string
+	Entries
 }
 
 func NewFile(name string, entries ...Entry) *File {
-	f := &File{Name: name, Entries: entries}
-
-	return f
+	return &File{name, entries}
 }
 
 func (f File) Validate() error {
-	if f.Entries.HasDuplicates() {
+	if f.HasDuplicates() {
 		return errors.New("there are duplicate entries")
 	}
 	for i, entry := range f.Entries {
@@ -35,12 +33,8 @@ func (f File) Equal(f2 File) bool {
 	return util.Equal(f, f2)
 }
 
-func (f File) Header() Header {
-	return f.Entries.Header()
-}
-
 func (f *File) Set(id, context string, e Entry) {
-	index := f.Entries.Index(id, context)
+	index := f.Index(id, context)
 	if index == -1 {
 		f.Entries = append(f.Entries, e)
 		return
@@ -49,7 +43,7 @@ func (f *File) Set(id, context string, e Entry) {
 }
 
 func (f File) LoadByUnifiedID(uid string) string {
-	i := f.Entries.IndexByUnifiedID(uid)
+	i := f.IndexByUnifiedID(uid)
 	if i == -1 {
 		return ""
 	}
@@ -57,7 +51,7 @@ func (f File) LoadByUnifiedID(uid string) string {
 }
 
 func (f File) Load(id string, context string) string {
-	i := f.Entries.Index(id, context)
+	i := f.Index(id, context)
 	if i == -1 {
 		return ""
 	}
