@@ -22,19 +22,20 @@ func (l Locations) Equal(l2 Locations) bool {
 	return util.Equal(l, l2)
 }
 
+func (l Locations) IsSorted() bool {
+	return l.IsSortedFunc(CompareLocation)
+}
+
+func (l Locations) IsSortedFunc(cmp Cmp[Location]) bool {
+	return slices.IsSortedFunc(l, cmp)
+}
+
 func (l Locations) Sort() Locations {
 	slices.SortFunc(l, CompareLocation)
 	return l
 }
 
-func (l Locations) SortByLine() Locations {
-	slices.SortFunc(l, CompareLocationByLine)
-
-	return l
-}
-
-func (l Locations) SortByFile() Locations {
-	slices.SortFunc(l, CompareLocationByFile)
-
+func (l Locations) SortFunc(cmp Cmp[Location]) Locations {
+	slices.SortFunc(l, cmp)
 	return l
 }

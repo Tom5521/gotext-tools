@@ -39,11 +39,20 @@ func (p PluralEntries) Solve() PluralEntries {
 }
 
 func (p PluralEntries) IsSorted() bool {
-	return slices.IsSortedFunc(p, ComparePluralEntryByID)
+	return slices.IsSortedFunc(p, ComparePluralEntry)
+}
+
+func (p PluralEntries) IsSortedFunc(cmp Cmp[PluralEntry]) bool {
+	return slices.IsSortedFunc(p, cmp)
 }
 
 func (p PluralEntries) Sort() PluralEntries {
-	slices.SortFunc(p, ComparePluralEntryByID)
+	slices.SortFunc(p, ComparePluralEntry)
 
+	return p
+}
+
+func (p PluralEntries) SortFunc(cmp Cmp[PluralEntry]) PluralEntries {
+	slices.SortFunc(p, cmp)
 	return p
 }

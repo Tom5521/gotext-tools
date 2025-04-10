@@ -32,10 +32,10 @@ func BenchmarkSortEntries(b *testing.B) {
 		method func() po.Entries
 	}{
 		{"Sort", entries.Sort},
-		{"SortByFile", entries.SortByFile},
-		{"SortByID", entries.SortByID},
-		{"SortByLine", entries.SortByLine},
-		{"SortByFuzzy", entries.SortByFuzzy},
+		{"SortByFile", entries.PrepareSorter(po.CompareEntryByFile)},
+		{"SortByID", entries.PrepareSorter(po.CompareEntryByID)},
+		{"SortByLine", entries.PrepareSorter(po.CompareEntryByLine)},
+		{"SortByFuzzy", entries.PrepareSorter(po.CompareEntryByFuzzy)},
 	}
 
 	for _, t := range tests {

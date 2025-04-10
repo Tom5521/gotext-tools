@@ -14,11 +14,11 @@ const (
 func (mode SortMode) SortMethod(entries Entries) func() Entries {
 	method, ok := map[SortMode]func() Entries{
 		SortByAll:      entries.Sort,
-		SortByID:       entries.SortByID,
-		SortByFile:     entries.SortByFile,
-		SortByLine:     entries.SortByLine,
-		SortByFuzzy:    entries.SortByFuzzy,
-		SortByObsolete: entries.SortByObsolete,
+		SortByID:       entries.PrepareSorter(CompareEntryByID),
+		SortByFile:     entries.PrepareSorter(CompareEntryByFile),
+		SortByLine:     entries.PrepareSorter(CompareEntryByLine),
+		SortByFuzzy:    entries.PrepareSorter(CompareEntryByFuzzy),
+		SortByObsolete: entries.PrepareSorter(CompareEntryByObsolete),
 	}[mode]
 
 	if !ok {

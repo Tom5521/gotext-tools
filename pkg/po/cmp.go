@@ -85,6 +85,14 @@ func CompareEntryByFile(a, b Entry) int {
 	return slices.CompareFunc(a.Locations, b.Locations, CompareLocationByFile)
 }
 
+func ComparePluralEntry(a, b PluralEntry) int {
+	id := ComparePluralEntryByID(a, b)
+	if id != 0 {
+		return id
+	}
+	return ComparePluralEntryByStr(a, b)
+}
+
 func ComparePluralEntryByStr(a, b PluralEntry) int {
 	return strings.Compare(a.Str, b.Str)
 }

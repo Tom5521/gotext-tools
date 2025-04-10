@@ -5,7 +5,8 @@ import (
 )
 
 type (
-	Parser interface {
+	Cmp[X any] func(a, b X) int
+	Parser     interface {
 		Parse() *File
 		Error() error
 		Errors() []error

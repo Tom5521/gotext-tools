@@ -46,57 +46,21 @@ func (e Entries) IsSorted() bool {
 	return slices.IsSortedFunc(e, CompareEntry)
 }
 
+func (e Entries) IsSortedFunc(cmp Cmp[Entry]) bool {
+	return slices.IsSortedFunc(e, cmp)
+}
+
 // Sort organizes the entries by grouping them by file and sorting them by line.
 func (e Entries) Sort() Entries {
-	slices.SortFunc(e, CompareEntry)
-	return e
+	return e.SortFunc(CompareEntry)
 }
 
-func (e Entries) IsSortedByObsolete() bool {
-	return slices.IsSortedFunc(e, CompareEntryByObsolete)
+func (e Entries) PrepareSorter(cmp Cmp[Entry]) func() Entries {
+	return func() Entries { return e.SortFunc(cmp) }
 }
 
-func (e Entries) SortByObsolete() Entries {
-	slices.SortFunc(e, CompareEntryByObsolete)
-	return e
-}
-
-func (e Entries) IsSortedByFuzzy() bool {
-	return slices.IsSortedFunc(e, CompareEntryByFuzzy)
-}
-
-func (e Entries) SortByFuzzy() Entries {
-	slices.SortFunc(e, CompareEntryByFuzzy)
-	return e
-}
-
-func (e Entries) IsSortedByFile() bool {
-	return slices.IsSortedFunc(e, CompareEntryByFile)
-}
-
-// SortByFile sorts the entries by the file name of the first location.
-func (e Entries) SortByFile() Entries {
-	slices.SortFunc(e, CompareEntryByFile)
-	return e
-}
-
-func (e Entries) IsSortedByID() bool {
-	return slices.IsSortedFunc(e, CompareEntryByID)
-}
-
-// SortByID sorts the entries by their ID.
-func (e Entries) SortByID() Entries {
-	slices.SortFunc(e, CompareEntryByID)
-	return e
-}
-
-func (e Entries) IsSortedByLine() bool {
-	return slices.IsSortedFunc(e, CompareEntryByLine)
-}
-
-// SortByLine sorts the entries by line number in their first location.
-func (e Entries) SortByLine() Entries {
-	slices.SortFunc(e, CompareEntryByLine)
+func (e Entries) SortFunc(cmp Cmp[Entry]) Entries {
+	slices.SortFunc(e, cmp)
 	return e
 }
 
