@@ -2,8 +2,6 @@
 
 A Go library and CLI toolkit for working with Gettext `.po` and `.mo` files. This project provides cross-platform tools for extracting, merging, and compiling translation files, with a focus on Go projects.
 
-🔗 **Repository:** [https://github.com/Tom5521/gotext-tools](https://github.com/Tom5521/gotext-tools)
-
 ---
 
 ## Features
