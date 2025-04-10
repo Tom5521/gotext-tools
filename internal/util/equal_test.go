@@ -3,7 +3,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 func TestEqual(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 // Entry represents a translatable string, including its context, plural forms,

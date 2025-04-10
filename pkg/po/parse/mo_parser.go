@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po"
+	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/pkg/po"
 )
 
 type (

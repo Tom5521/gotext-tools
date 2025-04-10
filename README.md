@@ -1,4 +1,4 @@
-# xgotext
+# gotext-tools
 
 A command-line tool for extracting translatable strings from Go source code that uses the [gotext](https://github.com/leonelquinteros/gotext) library for internationalization. This tool generates POT (Portable Object Template) files that can be used with standard translation tools.
 
@@ -18,7 +18,7 @@ A command-line tool for extracting translatable strings from Go source code that
 ## Installation
 
 ```bash
-go install github.com/Tom5521/xgotext/cli/xgotext@latest
+go install github.com/Tom5521/gotext-tools/cli/xgotext@latest
 ```
 
 ## Usage

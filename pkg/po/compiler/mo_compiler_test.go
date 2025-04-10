@@ -6,10 +6,10 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/Tom5521/xgotext/pkg/po/compiler"
-	"github.com/Tom5521/xgotext/pkg/po/parse"
+	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	"github.com/kr/pretty"
 )
 

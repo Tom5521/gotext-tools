@@ -6,8 +6,8 @@ import (
 	"go/token"
 	"strconv"
 
-	"github.com/Tom5521/xgotext/internal/util"
-	"github.com/Tom5521/xgotext/pkg/po"
+	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/pkg/po"
 )
 
 // translationMethod defines the structure for different getter methods.

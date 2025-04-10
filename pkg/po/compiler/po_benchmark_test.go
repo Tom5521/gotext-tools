@@ -3,8 +3,8 @@ package compiler_test
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/Tom5521/xgotext/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
 )
 
 func BenchmarkPoCompiler(b *testing.B) {

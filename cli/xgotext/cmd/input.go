@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/Tom5521/xgotext/internal/util"
-	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/internal/util"
+	goparse "github.com/Tom5521/gotext-tools/pkg/go/parse"
 	krfs "github.com/kr/fs"
 )
 

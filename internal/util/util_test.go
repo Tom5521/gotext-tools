@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 func TestFindLine(t *testing.T) {

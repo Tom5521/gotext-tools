@@ -3,7 +3,7 @@ package parse_test
 import (
 	"testing"
 
-	"github.com/Tom5521/xgotext/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/pkg/go/parse"
 )
 
 func BenchmarkParse(b *testing.B) {

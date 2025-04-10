@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Tom5521/xgotext/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
 	"github.com/spf13/cobra"
 )
 

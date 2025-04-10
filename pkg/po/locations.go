@@ -3,7 +3,7 @@ package po
 import (
 	"slices"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 // Location represents the location of a translation string in the source code.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 // HeaderField represents a single key-value pair in a header.

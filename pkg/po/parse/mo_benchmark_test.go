@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/Tom5521/xgotext/pkg/po/compiler"
-	"github.com/Tom5521/xgotext/pkg/po/parse"
+	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 )
 
 func BenchmarkParseMo(b *testing.B) {

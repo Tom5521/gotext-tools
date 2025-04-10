@@ -3,7 +3,7 @@ package po
 import (
 	"slices"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 // Entries represents a collection of Entry objects.

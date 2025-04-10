@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Tom5521/xgotext/pkg/po"
+	"github.com/Tom5521/gotext-tools/pkg/po"
 )
 
 var _ po.Compiler = (*PoCompiler)(nil)

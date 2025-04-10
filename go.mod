@@ -1,4 +1,4 @@
-module github.com/Tom5521/xgotext
+module github.com/Tom5521/gotext-tools
 
 go 1.21
 

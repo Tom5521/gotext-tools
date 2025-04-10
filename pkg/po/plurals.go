@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/Tom5521/xgotext/internal/util"
+	"github.com/Tom5521/gotext-tools/internal/util"
 )
 
 type PluralEntry struct {

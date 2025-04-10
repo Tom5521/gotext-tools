@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	goparse "github.com/Tom5521/xgotext/pkg/go/parse"
-	"github.com/Tom5521/xgotext/pkg/po"
-	"github.com/Tom5521/xgotext/pkg/po/compiler"
-	poparse "github.com/Tom5521/xgotext/pkg/po/parse"
+	goparse "github.com/Tom5521/gotext-tools/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	poparse "github.com/Tom5521/gotext-tools/pkg/po/parse"
 )
 
 var (
