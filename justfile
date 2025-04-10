@@ -25,10 +25,13 @@ gen-diff:
 build app os arch:
   @GOOS={{os}} GOARCH={{arch}} \
   go build -o \
-  builds/{{app}}-{{os}}-{{arch}}\
-  $([[ "{{os}}" == "windows" ]] && echo ".exe") \
+  builds/{{app}}-{{os}}-{{arch}} \
   -ldflags '-s -w' \
   ./cli/{{app}}
+[private]
+win-build app arch:
+  just build {{app}} windows {{arch}}
+  @mv ./builds/{{app}}-windows-{{arch}} ./builds/{{app}}-windows-{{arch}}.exe
 [private]
 build-all-unix app os:
   just build {{app}} {{os}} 386
@@ -40,9 +43,9 @@ build-all-app app:
   @just build-all-unix {{app}} openbsd
   @just build-all-unix {{app}} netbsd
 
-  just build {{app}} windows 386
-  just build {{app}} windows amd64
-  just build {{app}} windows arm64
+  @just win-build {{app}} 386
+  @just win-build {{app}} amd64
+  @just win-build {{app}} arm64
 
   just build {{app}} darwin amd64
   just build {{app}} darwin arm64
