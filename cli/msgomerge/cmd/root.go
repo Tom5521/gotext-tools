@@ -39,69 +39,56 @@ cannot be found, fuzzy matching is used to produce better results.`,
 		}
 
 		var defFile, refFile *os.File
-		{
-			defFile, err = os.OpenFile(defPath, os.O_RDWR, os.ModePerm)
-			if err != nil {
-				return err
-			}
-
-			refFile, err = os.OpenFile(refPath, os.O_RDONLY, os.ModePerm)
-			if err != nil {
-				return err
-			}
-
+		if defFile, err = os.OpenFile(defPath, os.O_RDWR, os.ModePerm); err != nil {
+			return err
 		}
+		if refFile, err = os.OpenFile(refPath, os.O_RDWR, os.ModePerm); err != nil {
+			return err
+		}
+		defer defFile.Close()
+		defer refFile.Close()
 
 		var outWriter io.Writer
 		if outputPath == "-" {
 			outWriter = os.Stdout
 		} else {
-			outWriter, err = os.OpenFile(outputPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+			var file *os.File
+			file, err = os.OpenFile(outputPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
 			if err != nil {
 				return err
 			}
-			defer outWriter.(*os.File).Close()
+			defer file.Close()
+			outWriter = file
 		}
 
 		var def, ref *po.File
-		// Read files.
-		{
-			def, err = parse.ParsePoFromFile(defFile)
-			if err != nil {
-				return err
-			}
-			ref, err = parse.ParsePoFromFile(refFile)
-			if err != nil {
-				return err
-			}
+		if def, err = parse.ParsePoFromFile(defFile); err != nil {
+			return err
 		}
+		if ref, err = parse.ParsePoFromFile(refFile); err != nil {
+			return err
+		}
+
 		// Read compendiums.
-		{
-			for _, comp := range compendium {
-				var c *po.File
-				c, err = parse.ParsePo(comp)
-				if err != nil {
-					return err
-				}
-				ref.Entries = append(ref.Entries, c.Entries...)
+		for _, comp := range compendium {
+			var c *po.File
+			c, err = parse.ParsePo(comp)
+			if err != nil {
+				return err
 			}
-			if len(compendium) > 0 {
-				ref.Entries = ref.Solve()
-			}
+			ref.Entries = append(ref.Entries, c.Entries...)
+		}
+		if len(compendium) > 0 {
+			ref.Entries = ref.Solve()
 		}
 
 		if update {
-			// Truncate defFile.
-			{
-				_, err = defFile.Seek(0, 0)
-				if err != nil {
-					return err
-				}
-
-				err = defFile.Truncate(0)
-				if err != nil {
-					return err
-				}
+			// Reset and truncate defFile
+			if _, err := defFile.Seek(0, 0); err != nil {
+				return err
+			}
+			if err := defFile.Truncate(0); err != nil {
+				return err
 			}
 
 			outWriter = io.MultiWriter(defFile, outWriter)
