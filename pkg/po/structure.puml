@@ -9,21 +9,16 @@ namespace po {
     class Entries << (S,Aquamarine) >> {
         + Equal(e2 Entries) bool
         + ContainsUnifiedID(uid string) bool
-        + BestRatio(e1 Entry) (int, int)
+        + CutHeader() Entries
+        + BestIDRatio(e1 Entry) (int, int)
+        + BestStrRatio(e1 Entry) (int, int)
         + IndexByUnifiedID(uid string) int
         + Index(id string, context string) int
         + IsSorted() bool
+        + IsSortedFunc(cmp ) bool
         + Sort() Entries
-        + IsSortedByObsolete() bool
-        + SortByObsolete() Entries
-        + IsSortedByFuzzy() bool
-        + SortByFuzzy() Entries
-        + IsSortedByFile() bool
-        + SortByFile() Entries
-        + IsSortedByID() bool
-        + SortByID() Entries
-        + IsSortedByLine() bool
-        + SortByLine() Entries
+        + PrepareSorter(cmp ) <font color=blue>func</font>() Entries
+        + SortFunc(cmp ) Entries
         + HasDuplicates() bool
         + CleanObsoletes() Entries
         + CleanDuplicates() Entries
@@ -50,6 +45,7 @@ namespace po {
         - markAsObsolete() 
         - markAsFuzzy() 
 
+        + IsHeader() bool
         + Validate() error
         + UnifiedStr() string
         + UnifiedID() string
@@ -106,9 +102,10 @@ namespace po {
     }
     class Locations << (S,Aquamarine) >> {
         + Equal(l2 Locations) bool
+        + IsSorted() bool
+        + IsSortedFunc(cmp ) bool
         + Sort() Locations
-        + SortByLine() Locations
-        + SortByFile() Locations
+        + SortFunc(cmp ) Locations
 
     }
     class MergeConfig << (S,Aquamarine) >> {
@@ -130,7 +127,9 @@ namespace po {
         + Equal(p2 PluralEntries) bool
         + Solve() PluralEntries
         + IsSorted() bool
+        + IsSortedFunc(cmp ) bool
         + Sort() PluralEntries
+        + SortFunc(cmp ) PluralEntries
 
     }
     class PluralEntry << (S,Aquamarine) >> {
@@ -143,6 +142,8 @@ namespace po {
     class SortMode << (S,Aquamarine) >> {
         + SortMethod(entries Entries) <font color=blue>func</font>() Entries
 
+    }
+    class po.Cmp << (T, #FF7700) >>  {
     }
     class po.Entries << (T, #FF7700) >>  {
     }
@@ -166,6 +167,7 @@ namespace po {
 "po.<font color=blue>func</font>(*HeaderConfig) " #.. "po.HeaderOption"
 "po.<font color=blue>func</font>(*MergeConfig) " #.. "po.MergeOption"
 "po.<font color=blue>func</font>(Entry, Entry) *Entry" #.. "po.MergeFunc"
+"po.<font color=blue>func</font>(X, X) int" #.. "po.Cmp"
 "po.[]Entry" #.. "po.Entries"
 "po.[]Location" #.. "po.Locations"
 "po.[]PluralEntry" #.. "po.PluralEntries"

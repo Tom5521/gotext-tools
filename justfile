@@ -18,6 +18,34 @@ gen-uml:
 clean:
   rm -rf $(find . -name "*.po") \
   $(find . -name "*.mo") \
-  $(find . -name "*.log")
+  $(find . -name "*.log") \
+  builds
 gen-diff:
   git diff --staged > diff.log
+build app os arch:
+  @GOOS={{os}} GOARCH={{arch}} \
+  go build -o \
+  builds/{{app}}-{{os}}-{{arch}}\
+  $([[ "{{os}}" == "windows" ]] && echo ".exe") \
+  -ldflags '-s -w' \
+  ./cli/{{app}}
+[private]
+build-all-unix app os:
+  just build {{app}} {{os}} 386
+  just build {{app}} {{os}} amd64
+  just build {{app}} {{os}} arm
+  just build {{app}} {{os}} arm64
+build-all-app app:
+  @just build-all-unix {{app}} linux
+  @just build-all-unix {{app}} openbsd
+  @just build-all-unix {{app}} netbsd
+
+  just build {{app}} windows 386
+  just build {{app}} windows amd64
+  just build {{app}} windows arm64
+
+  just build {{app}} darwin amd64
+  just build {{app}} darwin arm64
+build-all:
+  @just build-all-app msgomerge
+  @just build-all-app xgotext
