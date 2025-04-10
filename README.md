@@ -26,6 +26,8 @@ A cross-platform alternative to `msgmerge`, used for updating `.po` files with n
 msgomerge [old.po] [new.po] -o [output.po]
 ```
 
+[More information here](/cli/msgomerge/README.md)
+
 ### `xgotext`
 
 A Go-compatible version of `xgettext` for extracting translatable strings from Go source code.
@@ -36,7 +38,7 @@ A Go-compatible version of `xgettext` for extracting translatable strings from G
 xgotext -o [output.po] [file1.go] [file2.go] ...
 ```
 
-[More info here](/cli/xgotext/README.md)
+[More information here](/cli/xgotext/README.md)
 
 ---
 
