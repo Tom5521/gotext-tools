@@ -92,9 +92,16 @@ cannot be found, fuzzy matching is used to produce better results.`,
 
 		if update {
 			// Truncate defFile.
-			defFile, err = os.Create(defFile.Name())
-			if err != nil {
-				return err
+			{
+				_, err = defFile.Seek(0, 0)
+				if err != nil {
+					return err
+				}
+
+				err = defFile.Truncate(0)
+				if err != nil {
+					return err
+				}
 			}
 
 			outWriter = io.MultiWriter(defFile, outWriter)
