@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -37,24 +38,39 @@ cannot be found, fuzzy matching is used to produce better results.`,
 			refPath = filepath.Join(directory, refPath)
 		}
 
-		var outFile *os.File
-		if outputPath == "-" {
-			outFile = os.Stdout
-		} else {
-			outFile, err = os.OpenFile(outputPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+		var defFile, refFile *os.File
+		{
+			defFile, err = os.OpenFile(defPath, os.O_RDWR, os.ModePerm)
 			if err != nil {
 				return err
 			}
-			defer outFile.Close()
+
+			refFile, err = os.OpenFile(refPath, os.O_RDONLY, os.ModePerm)
+			if err != nil {
+				return err
+			}
+
 		}
+
+		var outWriter io.Writer
+		if outputPath == "-" {
+			outWriter = os.Stdout
+		} else {
+			outWriter, err = os.OpenFile(outputPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+			if err != nil {
+				return err
+			}
+			defer outWriter.(*os.File).Close()
+		}
+
 		var def, ref *po.File
 		// Read files.
 		{
-			def, err = parse.ParsePo(defPath)
+			def, err = parse.ParsePoFromFile(defFile)
 			if err != nil {
 				return err
 			}
-			ref, err = parse.ParsePo(refPath)
+			ref, err = parse.ParsePoFromFile(refFile)
 			if err != nil {
 				return err
 			}
@@ -62,7 +78,8 @@ cannot be found, fuzzy matching is used to produce better results.`,
 		// Read compendiums.
 		{
 			for _, comp := range compendium {
-				c, err := parse.ParsePo(comp)
+				var c *po.File
+				c, err = parse.ParsePo(comp)
 				if err != nil {
 					return err
 				}
@@ -71,6 +88,16 @@ cannot be found, fuzzy matching is used to produce better results.`,
 			if len(compendium) > 0 {
 				ref.Entries = ref.Solve()
 			}
+		}
+
+		if update {
+			// Truncate defFile.
+			defFile, err = os.Create(defFile.Name())
+			if err != nil {
+				return err
+			}
+
+			outWriter = io.MultiWriter(defFile, outWriter)
 		}
 
 		out := &po.File{
@@ -82,7 +109,7 @@ cannot be found, fuzzy matching is used to produce better results.`,
 			File:   out,
 			Config: compilerCfg,
 		}
-		return comp.ToWriter(outFile)
+		return comp.ToWriter(outWriter)
 	},
 }
 
