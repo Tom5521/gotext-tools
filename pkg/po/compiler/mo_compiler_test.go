@@ -29,11 +29,7 @@ func TestMoCompiler(t *testing.T) {
 
 	c := compiler.NewMo(&po.File{Entries: input})
 
-	parser, err := parse.NewMoFromBytes(c.ToBytes(), "test.mo")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	parser := parse.NewMoFromBytes(c.ToBytes(), "test.mo")
 
 	parsedFile := parser.Parse()
 	if len(parser.Errors()) > 0 {

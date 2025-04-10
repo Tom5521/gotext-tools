@@ -9,7 +9,7 @@ import (
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
-func EntryMatchRatio(e1, e2 Entry) int {
+func EntryIDMatchRatio(e1, e2 Entry) int {
 	ratio := fuzzy.Ratio
 
 	var ratios []int
@@ -21,6 +21,24 @@ func EntryMatchRatio(e1, e2 Entry) int {
 	}
 	if e1.IsPlural() && e2.IsPlural() {
 		ratios = append(ratios, ratio(e1.Plural, e2.Plural))
+	}
+
+	return util.Average(ratios...)
+}
+
+func EntryStrMatchRatio(e1, e2 Entry) int {
+	ratio := fuzzy.Ratio
+
+	var ratios []int
+	if e1.Str != "" || e2.Str != "" {
+		ratios = append(ratios, ratio(e1.ID, e2.ID))
+	}
+	if e1.IsPlural() || e2.IsPlural() {
+		for i, pe := range e1.Plurals {
+			if i >= 0 && i < len(e2.Plurals) {
+				ratios = append(ratios, ratio(pe.Str, e2.Plurals[i].Str))
+			}
+		}
 	}
 
 	return util.Average(ratios...)

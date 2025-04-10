@@ -30,11 +30,7 @@ func TestMoParse(t *testing.T) {
 	com := compiler.NewMo(&po.File{Entries: entries})
 	moFile := com.ToBytes()
 
-	parser, err := parse.NewMoFromBytes(moFile, "test.mo")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	parser := parse.NewMoFromBytes(moFile, "test.mo")
 
 	parsedEntries := parser.Parse().Entries
 	if parser.Error() != nil {

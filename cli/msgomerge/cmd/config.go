@@ -12,14 +12,15 @@ var (
 )
 
 func initConfig() {
-	headerCfg = po.HeaderConfig{
-		Language: lang,
-	}
 	compilerCfg = compiler.PoConfig{
 		NoLocation:  noLocation,
 		AddLocation: compiler.PoLocationMode(addLocation),
+		WordWrap:    !noWrap,
+		ForcePo:     forcePo,
+		OmitHeader:  true,
 	}
 	mergeCfg = po.MergeConfig{
 		FuzzyMatch: !noFuzzyMatching,
+		Sort:       true,
 	}
 }

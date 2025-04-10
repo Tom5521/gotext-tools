@@ -77,7 +77,7 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		c.Config.Logger.Println("Cleaning duplicates...")
 	}
 	// Remove duplicate entries and write each entry to the writer.
-	entries := c.File.Entries.CleanDuplicates().SortFunc(po.CompareEntryByFuzzy)
+	entries := c.File.Entries
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing entries...")
 	}

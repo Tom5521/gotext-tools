@@ -75,18 +75,20 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	def = def.Solve()
 
 	for i, e := range def {
-		if !ref.ContainsUnifiedID(e.UnifiedID()) {
+		if !ref.ContainsUnifiedID(e.UnifiedID()) && !e.IsHeader() {
 			if config.FuzzyMatch {
-				if _, ratio := ref.BestRatio(e); ratio >= 20 {
+				if bestID, ratio := ref.BestIDRatio(e); ratio >= 50 {
 					e.markAsFuzzy()
+					best := ref[bestID]
+					e.ID = best.ID
 				} else {
 					e.markAsObsolete()
 				}
 			} else {
-				if !config.KeepPreviousIDs {
-					e.markAsObsolete()
-				} else {
+				if config.KeepPreviousIDs {
 					e.markAsFuzzy()
+				} else {
+					e.markAsObsolete()
 				}
 			}
 
@@ -95,11 +97,10 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	}
 
 	for _, e := range ref {
-		if !def.ContainsUnifiedID(e.UnifiedID()) {
-			e.markAsFuzzy()
-
+		if !def.ContainsUnifiedID(e.UnifiedID()) && !e.IsHeader() {
 			if config.FuzzyMatch {
-				if id, ratio := def.BestRatio(e); ratio >= 20 {
+				if id, ratio := def.BestIDRatio(e); ratio >= 50 {
+					e.markAsFuzzy()
 					best := def[id]
 					switch {
 					case e.IsPlural() && best.IsPlural():

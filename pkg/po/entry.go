@@ -37,6 +37,10 @@ func (e *Entry) markAsFuzzy() {
 	}
 }
 
+func (e Entry) IsHeader() bool {
+	return e.ID == "" && e.Context == ""
+}
+
 // Check for possible errors and inconsistencies in the entry.
 func (e Entry) Validate() error {
 	if e.Str != "" && e.IsPlural() && len(e.Plurals) > 0 {

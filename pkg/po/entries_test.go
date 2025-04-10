@@ -43,7 +43,7 @@ func TestSolve(t *testing.T) {
 func TestSort(t *testing.T) {
 	tests := []struct {
 		name     string
-		cmp      func(a, b po.Entry) int
+		cmp      po.Cmp[po.Entry]
 		expected po.Entries
 	}{
 		{
@@ -100,7 +100,7 @@ func TestSort(t *testing.T) {
 				sorted[i], sorted[j] = sorted[j], sorted[i]
 			})
 
-			slices.SortFunc(sorted, test.cmp)
+			sorted = sorted.SortFunc(test.cmp)
 
 			if !util.Equal(sorted, test.expected) {
 				t.Fail()

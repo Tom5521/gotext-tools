@@ -17,14 +17,34 @@ func (e Entries) ContainsUnifiedID(uid string) bool {
 	return slices.ContainsFunc(e, func(e Entry) bool { return e.UnifiedID() == uid })
 }
 
-func (e Entries) BestRatio(e1 Entry) (best, highestRatio int) {
+func (e Entries) CutHeader() Entries {
+	if id := e.Index("", ""); id != -1 {
+		e = slices.Delete(e, id, id+1)
+	}
+
+	return e
+}
+
+func (e Entries) BestIDRatio(e1 Entry) (best, highestRatio int) {
 	for i, e2 := range e {
-		ratio := EntryMatchRatio(e1, e2)
+		ratio := EntryIDMatchRatio(e1, e2)
 		if ratio > highestRatio {
 			best = i
 			highestRatio = ratio
 		}
 	}
+	return
+}
+
+func (e Entries) BestStrRatio(e1 Entry) (best, highestRatio int) {
+	for i, e2 := range e {
+		ratio := EntryStrMatchRatio(e1, e2)
+		if ratio > highestRatio {
+			best = i
+			highestRatio = ratio
+		}
+	}
+
 	return
 }
 
