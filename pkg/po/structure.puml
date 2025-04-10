@@ -47,6 +47,9 @@ namespace po {
         + Str string
         + Locations Locations
 
+        - markAsObsolete() 
+        - markAsFuzzy() 
+
         + Validate() error
         + UnifiedStr() string
         + UnifiedID() string
@@ -58,12 +61,10 @@ namespace po {
 
     }
     class File << (S,Aquamarine) >> {
-        + Entries Entries
         + Name string
 
         + Validate() error
         + Equal(f2 File) bool
-        + Header() Header
         + Set(id string, context string, e Entry) 
         + LoadByUnifiedID(uid string) string
         + Load(id string, context string) string
@@ -158,6 +159,7 @@ namespace po {
     class po.SortMode << (T, #FF7700) >>  {
     }
 }
+"po.Entries" *-- "po.File"
 
 
 "__builtin__.int" #.. "po.SortMode"
