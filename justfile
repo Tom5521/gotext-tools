@@ -27,7 +27,7 @@ clean:
   $(find . -name "*.mo") \
   $(find . -name "*.log") \
   builds
-gen-diff:
+diff:
   git diff --staged > diff.log
 go-install app:
   go install -v -ldflags '-s -w' github.com/Tom5521/gotext-tools/cli/{{app}}
