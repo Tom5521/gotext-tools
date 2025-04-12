@@ -6,7 +6,7 @@ import (
 	"github.com/Tom5521/gotext-tools/pkg/po"
 )
 
-type eOf interface{ *po.File | po.Entries }
+type eOf = interface{ *po.File | po.Entries }
 
 func file[T eOf](i T) *po.File {
 	var f *po.File
