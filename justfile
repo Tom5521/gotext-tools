@@ -84,7 +84,6 @@ build app os arch:
   just build-all-app msgomerge
   just build-all-app xgotext
 [confirm]
-release: clean
-  just build-all
+release: clean build-all
   gh release create {{`git describe --tags --abbrev=0`}} \
   --generate-notes --fail-on-no-commits builds/*
