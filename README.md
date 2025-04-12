@@ -64,7 +64,7 @@ The main package for working with `.po` files. Includes:
 - **`File`**
 - **Sorting & Comparison** – Easily organize and compare translations.
 
-### `po/compiler`
+### `po/compile`
 
 Compiles parsed `.po` files into `.mo` (binary) or updated `.po` files.
 
