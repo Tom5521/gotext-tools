@@ -82,19 +82,13 @@ func TestMergeWithMsgmerge(t *testing.T) {
 	}}
 
 	// Write input.
-	{
-		comp := compile.NewPo(defStruct)
-		err = comp.ToFile(defPath)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		comp.SetFile(refStruct)
-		err = comp.ToFile(refPath)
-		if err != nil {
-			t.Error(err)
-			return
-		}
+	if err = compile.PoToFile(defStruct, defPath); err != nil {
+		t.Error(err)
+		return
+	}
+	if err = compile.PoToFile(refStruct, refPath); err != nil {
+		t.Error(err)
+		return
 	}
 
 	tests := []struct {
@@ -135,15 +129,11 @@ func TestMergeWithMsgmerge(t *testing.T) {
 				return
 			}
 
-			parser := parse.NewPoFromBytes(
-				outBytes,
-				outPath,
+			expected, err := parse.PoFromBytes(outBytes, outPath,
 				parse.PoWithSkipHeader(true),
 				parse.PoWithIgnoreComments(true),
 			)
-
-			expected := parser.Parse()
-			if err = parser.Error(); err != nil {
+			if err != nil {
 				t.Error(err)
 				return
 			}
@@ -168,13 +158,5 @@ func TestMergeWithMsgmerge(t *testing.T) {
 }
 
 func formatFileOrEntries[X *po.File | po.Entries](a X) string {
-	var f *po.File
-	switch v := any(a).(type) {
-	case po.Entries:
-		f = &po.File{Entries: v}
-	case *po.File:
-		f = v
-	}
-
-	return compile.NewPo(f, compile.PoWithOmitHeader(true)).ToString()
+	return compile.PoToString(a, compile.PoWithOmitHeader(true))
 }

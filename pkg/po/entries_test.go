@@ -31,7 +31,7 @@ func TestSolve(t *testing.T) {
 
 	if !util.Equal(solved, expected) {
 		fmt.Println(
-			compile.NewPo(&po.File{Entries: solved}, compile.PoWithOmitHeader(true)).ToString(),
+			compile.PoToString(solved, compile.PoWithOmitHeader(true)),
 		)
 		for _, d := range pretty.Diff(solved, expected) {
 			fmt.Println(d)

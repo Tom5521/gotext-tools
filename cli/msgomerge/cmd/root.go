@@ -105,11 +105,7 @@ cannot be found, fuzzy matching is used to produce better results.`,
 			Entries: po.MergeWithConfig(mergeCfg, def.Entries, ref.Entries),
 		}
 
-		comp := compile.PoCompiler{
-			File:   out,
-			Config: compilerCfg,
-		}
-		return comp.ToWriter(outWriter)
+		return compile.PoToWriter(out, outWriter, compile.PoWithConfig(compilerCfg))
 	},
 }
 
