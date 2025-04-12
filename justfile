@@ -1,4 +1,3 @@
-latest-tag := `git describe --tags --abbrev=0`
 gopath := `go env GOPATH`
 goos := `go env GOOS`
 goarch := `go env GOARCH`
@@ -23,14 +22,19 @@ puml:
   plantuml -theme spacelab ./pkg/go/parse/structure.puml
   plantuml -theme spacelab ./pkg/po/parse/structure.puml
 clean:
-  rm -rf $(find . -name "*.po") \
-  $(find . -name "*.mo") \
-  $(find . -name "*.log") \
+  # Cleaning...
+  @rm -rf \
+  $(find . \( -name "*.po" -o -name "*.mo" -o -name "*.pot" -o -name "*.log" \)) \
   builds
+  # Cleaned!
 diff:
   git diff --staged > diff.log
 go-install app:
-  go install -v -ldflags '-s -w' github.com/Tom5521/gotext-tools/cli/{{app}}
+  go install -v -ldflags '-s -w' ./cli/{{app}}
+[windows]
+go-uninstall app:
+  del {{gopath}}/bin/{{app}}.exe
+[unix]
 go-uninstall app:
   rm {{gopath}}/bin/{{app}} -f
 [unix]
@@ -76,12 +80,11 @@ build app os arch:
 
   just build {{app}} darwin amd64
   just build {{app}} darwin arm64
-@build-all:
-  just clean
+@build-all: clean
   just build-all-app msgomerge
   just build-all-app xgotext
 [confirm]
-release:
-  just clean
+release: clean
   just build-all
-  gh release create {{latest-tag}} --generate-notes --fail-on-no-commits builds/*
+  gh release create {{`git describe --tags --abbrev=0`}} \
+  --generate-notes --fail-on-no-commits builds/*
