@@ -15,25 +15,34 @@ namespace parse {
     }
     class PoConfig << (S,Aquamarine) >> {
         - lastCfg any
+        - markAllAsObsolete bool
 
         + IgnoreComments bool
         + IgnoreAllComments bool
         + Logger *log.Logger
         + SkipHeader bool
         + CleanDuplicates bool
+        + ParseObsoletes bool
+        + UseCustomObsoletePrefix bool
+        + CustomObsoletePrefix rune
 
         + RestoreLastCfg() 
         + ApplyOptions(opts ...PoOption) 
 
     }
     class PoParser << (S,Aquamarine) >> {
+        - originalData []byte
         - data []byte
         - filename string
         - errors []error
+        - warns []error
 
         + Config PoConfig
 
+        - parseObsoleteEntries(tokens []lexer.Token) po.Entries
+
         + Error() error
+        + Warnings() []error
         + Errors() []error
         + ParseWithOptions(opts ...PoOption) *po.File
         + Parse() *po.File
@@ -74,6 +83,7 @@ namespace parse {
 
     }
     class poFile << (S,Aquamarine) >> {
+        + Tokens []lexer.Token
         + Entries []entry
 
     }

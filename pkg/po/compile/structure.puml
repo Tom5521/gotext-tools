@@ -1,5 +1,5 @@
 @startuml
-namespace compiler {
+namespace compile {
     class MoCompiler << (S,Aquamarine) >> {
         + File *po.File
         + Config MoConfig
@@ -83,19 +83,21 @@ namespace compiler {
         + Validate() error
 
     }
-    class compiler.MoOption << (T, #FF7700) >>  {
+    class compile.MoOption << (T, #FF7700) >>  {
     }
-    class compiler.PoLocationMode << (T, #FF7700) >>  {
+    class compile.PoLocationMode << (T, #FF7700) >>  {
     }
-    class compiler.PoOption << (T, #FF7700) >>  {
+    class compile.PoOption << (T, #FF7700) >>  {
     }
-    class compiler.u32 << (T, #FF7700) >>  {
+    class compile.u32 << (T, #FF7700) >>  {
+    }
+    interface eOf  {
     }
 }
 
 
-"__builtin__.string" #.. "compiler.PoLocationMode"
-"__builtin__.uint32" #.. "compiler.u32"
-"compiler.<font color=blue>func</font>(*MoConfig) " #.. "compiler.MoOption"
-"compiler.<font color=blue>func</font>(*PoConfig) " #.. "compiler.PoOption"
+"__builtin__.string" #.. "compile.PoLocationMode"
+"__builtin__.uint32" #.. "compile.u32"
+"compile.<font color=blue>func</font>(*MoConfig) " #.. "compile.MoOption"
+"compile.<font color=blue>func</font>(*PoConfig) " #.. "compile.PoOption"
 @enduml
