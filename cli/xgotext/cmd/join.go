@@ -5,7 +5,7 @@ import (
 
 	goparse "github.com/Tom5521/gotext-tools/pkg/go/parse"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	poparse "github.com/Tom5521/gotext-tools/pkg/po/parse"
 )
 
@@ -31,7 +31,7 @@ func join(newParse *goparse.Parser, rawfile *os.File) error {
 
 	poParsed.Entries = po.Merge(poParsed.Entries, goParsed.Entries)
 
-	compiler := compiler.NewPo(poParsed, compiler.PoWithConfig(CompilerCfg))
+	compiler := compile.NewPo(poParsed, compile.PoWithConfig(CompilerCfg))
 
 	// Truncate file.
 	rawfile, err = os.Create(rawfile.Name())

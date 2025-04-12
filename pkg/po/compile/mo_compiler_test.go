@@ -1,4 +1,4 @@
-package compiler_test
+package compile_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	"github.com/kr/pretty"
 )
@@ -27,7 +27,7 @@ func TestMoCompiler(t *testing.T) {
 		{ID: "id3", Str: "Hello3"},
 	}
 
-	c := compiler.NewMo(&po.File{Entries: input})
+	c := compile.NewMo(&po.File{Entries: input})
 
 	parser := parse.NewMoFromBytes(c.ToBytes(), "test.mo")
 
@@ -64,7 +64,7 @@ func TestMoCompilerWithMsgunfmt(t *testing.T) {
 		{ID: "id3", Str: "Hello3"},
 	}
 
-	c := compiler.NewMo(
+	c := compile.NewMo(
 		&po.File{Entries: input},
 	)
 

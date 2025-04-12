@@ -31,40 +31,6 @@ type MoParser struct {
 	errors   []error
 }
 
-func ParseMo(path string) (*po.File, error) {
-	parser, err := NewMo(path)
-	if err != nil {
-		return nil, err
-	}
-
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParseMoFromReader(r io.Reader, name string) (*po.File, error) {
-	parser, err := NewMoFromReader(r, name)
-	if err != nil {
-		return nil, err
-	}
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParseMoFromFile(f *os.File) (*po.File, error) {
-	parser, err := NewMoFromFile(f)
-	if err != nil {
-		return nil, err
-	}
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParseMoFromBytes(b []byte, name string) (*po.File, error) {
-	parser := NewMoFromBytes(b, name)
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
 func NewMo(path string) (*MoParser, error) {
 	f, err := os.Open(path)
 	if err != nil {

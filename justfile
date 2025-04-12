@@ -13,11 +13,11 @@ bench path:
   go test -bench=. {{path}}
 puml:
   goplantuml ./pkg/go/parse > ./pkg/go/parse/structure.puml
-  goplantuml ./pkg/po/compiler/ > ./pkg/po/compiler/structure.puml
+  goplantuml ./pkg/po/compile/ > ./pkg/po/compile/structure.puml
   goplantuml ./pkg/po/ > ./pkg/po/structure.puml
   goplantuml ./pkg/po/parse/ > ./pkg/po/parse/structure.puml
 
-  plantuml -theme spacelab ./pkg/po/compiler/structure.puml
+  plantuml -theme spacelab ./pkg/po/compile/structure.puml
   plantuml -theme spacelab ./pkg/po/structure.puml
   plantuml -theme spacelab ./pkg/go/parse/structure.puml
   plantuml -theme spacelab ./pkg/po/parse/structure.puml

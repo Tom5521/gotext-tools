@@ -8,7 +8,7 @@ import (
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/kr/pretty"
 )
 
@@ -31,7 +31,7 @@ func TestSolve(t *testing.T) {
 
 	if !util.Equal(solved, expected) {
 		fmt.Println(
-			compiler.NewPo(&po.File{Entries: solved}, compiler.PoWithOmitHeader(true)).ToString(),
+			compile.NewPo(&po.File{Entries: solved}, compile.PoWithOmitHeader(true)).ToString(),
 		)
 		for _, d := range pretty.Diff(solved, expected) {
 			fmt.Println(d)

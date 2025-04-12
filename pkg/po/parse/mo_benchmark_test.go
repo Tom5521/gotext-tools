@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 )
 
@@ -25,7 +25,7 @@ func BenchmarkParseMo(b *testing.B) {
 		{ID: "How are you?", Str: "Como estás?"},
 	}
 
-	compiled := compiler.NewMo(&po.File{Entries: entries}).ToBytes()
+	compiled := compile.NewMo(&po.File{Entries: entries}).ToBytes()
 
 	reader := bytes.NewReader(compiled)
 	parser, err := parse.NewMoFromReader(reader, "test.mo")

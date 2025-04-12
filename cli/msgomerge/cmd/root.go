@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	"github.com/spf13/cobra"
 )
@@ -68,17 +68,17 @@ cannot be found, fuzzy matching is used to produce better results.`,
 		}
 
 		var def, ref *po.File
-		if def, err = parse.ParsePoFromFile(defFile); err != nil {
+		if def, err = parse.PoFromFile(defFile); err != nil {
 			return err
 		}
-		if ref, err = parse.ParsePoFromFile(refFile); err != nil {
+		if ref, err = parse.PoFromFile(refFile); err != nil {
 			return err
 		}
 
 		// Read compendiums.
 		for _, comp := range compendium {
 			var c *po.File
-			c, err = parse.ParsePo(comp)
+			c, err = parse.Po(comp)
 			if err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ cannot be found, fuzzy matching is used to produce better results.`,
 			Entries: po.MergeWithConfig(mergeCfg, def.Entries, ref.Entries),
 		}
 
-		comp := compiler.PoCompiler{
+		comp := compile.PoCompiler{
 			File:   out,
 			Config: compilerCfg,
 		}

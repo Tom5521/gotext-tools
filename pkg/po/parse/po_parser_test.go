@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
@@ -34,7 +34,7 @@ func TestPoParser(t *testing.T) {
 		},
 	}
 
-	comp := compiler.NewPo(input, compiler.PoWithOmitHeader(true))
+	comp := compile.NewPo(input, compile.PoWithOmitHeader(true))
 	expected := comp.ToString()
 
 	parser := parse.NewPoFromString(expected, "test.po")

@@ -1,10 +1,10 @@
-package compiler_test
+package compile_test
 
 import (
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 )
 
 func BenchmarkMoCompiler(b *testing.B) {
@@ -21,7 +21,7 @@ func BenchmarkMoCompiler(b *testing.B) {
 		{ID: "id3", Str: "Hello3"},
 	}
 
-	comp := compiler.NewMo(&po.File{Entries: input})
+	comp := compile.NewMo(&po.File{Entries: input})
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -1,4 +1,4 @@
-package compiler_test
+package compile_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	"github.com/kr/pretty"
 )
@@ -27,16 +27,16 @@ func TestPoCompiler(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		options []compiler.PoOption
+		options []compile.PoOption
 	}{
 		{"Base", nil},
-		{"WithWordWrap", []compiler.PoOption{compiler.PoWithWordWrap(true)}},
+		{"WithWordWrap", []compile.PoOption{compile.PoWithWordWrap(true)}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.options = append(test.options, compiler.PoWithOmitHeader(true))
-			compiled := compiler.NewPo(&po.File{Entries: input}, test.options...).ToBytes()
+			test.options = append(test.options, compile.PoWithOmitHeader(true))
+			compiled := compile.NewPo(&po.File{Entries: input}, test.options...).ToBytes()
 
 			parser := parse.NewPoFromBytes(compiled, "test.po")
 

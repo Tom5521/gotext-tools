@@ -2,19 +2,19 @@ package cmd
 
 import (
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 )
 
 var (
 	mergeCfg    po.MergeConfig
 	headerCfg   po.HeaderConfig
-	compilerCfg compiler.PoConfig
+	compilerCfg compile.PoConfig
 )
 
 func initConfig() {
-	compilerCfg = compiler.PoConfig{
+	compilerCfg = compile.PoConfig{
 		NoLocation:  noLocation,
-		AddLocation: compiler.PoLocationMode(addLocation),
+		AddLocation: compile.PoLocationMode(addLocation),
 		WordWrap:    !noWrap,
 		ForcePo:     forcePo,
 		OmitHeader:  true,

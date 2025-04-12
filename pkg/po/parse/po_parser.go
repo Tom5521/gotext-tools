@@ -26,50 +26,6 @@ type PoParser struct {
 	warns  []error
 }
 
-// Parse directly the provided file.
-func ParsePo(path string, opts ...PoOption) (*po.File, error) {
-	parser, err := NewPo(path, opts...)
-	if err != nil {
-		return nil, err
-	}
-	file := parser.Parse()
-
-	return file, parser.Error()
-}
-
-func ParsePoFromReader(r io.Reader, name string, opts ...PoOption) (*po.File, error) {
-	parser, err := NewPoFromReader(r, name, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParsePoFromFile(f *os.File, opts ...PoOption) (*po.File, error) {
-	parser, err := NewPoFromFile(f, opts...)
-	if err != nil {
-		return nil, err
-	}
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParsePoFromString(s, name string, opts ...PoOption) (*po.File, error) {
-	parser := NewPoFromString(s, name, opts...)
-
-	file := parser.Parse()
-	return file, parser.Error()
-}
-
-func ParsePoFromBytes(b []byte, name string, opts ...PoOption) (*po.File, error) {
-	parser := NewPoFromBytes(b, name, opts...)
-	file := parser.Parse()
-
-	return file, parser.Error()
-}
-
 func NewPo(path string, options ...PoOption) (*PoParser, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {

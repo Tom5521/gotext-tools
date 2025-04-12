@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +51,7 @@ Similarly for optional arguments.`,
 			return join(parser, out)
 		}
 
-		compiler := compiler.NewPo(parsedFile, compiler.PoWithConfig(CompilerCfg))
+		compiler := compile.NewPo(parsedFile, compile.PoWithConfig(CompilerCfg))
 
 		err = compiler.ToWriter(out)
 		if err != nil {

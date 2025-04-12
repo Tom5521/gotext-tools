@@ -10,7 +10,7 @@ import (
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
+	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -83,7 +83,7 @@ func TestMergeWithMsgmerge(t *testing.T) {
 
 	// Write input.
 	{
-		comp := compiler.NewPo(defStruct)
+		comp := compile.NewPo(defStruct)
 		err = comp.ToFile(defPath)
 		if err != nil {
 			t.Error(err)
@@ -176,5 +176,5 @@ func formatFileOrEntries[X *po.File | po.Entries](a X) string {
 		f = v
 	}
 
-	return compiler.NewPo(f, compiler.PoWithOmitHeader(true)).ToString()
+	return compile.NewPo(f, compile.PoWithOmitHeader(true)).ToString()
 }
