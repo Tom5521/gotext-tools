@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -22,6 +23,7 @@ type PoParser struct {
 	filename     string
 
 	errors []error
+	warns  []error
 }
 
 // Parse directly the provided file.
@@ -110,6 +112,10 @@ func (p PoParser) Error() error {
 	return p.errors[0]
 }
 
+func (p PoParser) Warnings() []error {
+	return p.warns
+}
+
 func (p PoParser) Errors() []error {
 	return p.errors
 }
@@ -123,18 +129,29 @@ var (
 	previousRegex  = regexp.MustCompile(`#\| *(.*)`)
 )
 
-func (p PoParser) parseObsoleteEntries(tokens []lexer.Token) (po.Entries, []error) {
+func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
+	comp := obsoleteRegex
+	if p.Config.UseCustomObsoletePrefix {
+		var err error
+		comp, err = regexp.Compile(fmt.Sprintf(`#%v *(.*)`, p.Config.CustomObsoletePrefix))
+		if err != nil {
+			p.warns = append(p.warns, fmt.Errorf("WARN: %w", err))
+			return nil
+		}
+
+	}
+
 	var cleanedLines []string
 	for _, token := range tokens {
 		if token.Type != symbols["Comment"] {
 			continue
 		}
-		if !obsoleteRegex.MatchString(token.String()) {
+		if !comp.MatchString(token.String()) {
 			continue
 		}
 
 		cleanedLines = append(cleanedLines,
-			obsoleteRegex.FindStringSubmatch(token.String())[1],
+			comp.FindStringSubmatch(token.String())[1],
 		)
 	}
 
@@ -150,10 +167,14 @@ func (p PoParser) parseObsoleteEntries(tokens []lexer.Token) (po.Entries, []erro
 	f := parser.Parse()
 	err := parser.Error()
 	if err != nil {
-		return nil, parser.Errors()
+		for _, err2 := range parser.Errors() {
+			err2 = fmt.Errorf("WARN: %w", err2)
+			p.warns = append(p.warns, err2)
+		}
+		return nil
 	}
 
-	return f.Entries, nil
+	return f.Entries
 }
 
 func parseComments(entry *po.Entry, tokens []lexer.Token) (err error) {
@@ -229,7 +250,19 @@ msgstr "---"`)...)
 	// Remove obsolete securer.
 	pFile.Entries = slices.Delete(pFile.Entries, len(pFile.Entries)-1, len(pFile.Entries))
 
+	if p.Config.IgnoreAllComments {
+		pFile.Tokens = slices.DeleteFunc(pFile.Tokens, func(t lexer.Token) bool {
+			return t.Type == symbols["Comment"]
+		})
+	}
+
 	for _, e := range pFile.Entries {
+		if p.Config.IgnoreAllComments {
+			e.Tokens = slices.DeleteFunc(e.Tokens, func(t lexer.Token) bool {
+				return t.Type == symbols["Comment"]
+			})
+		}
+
 		newEntry := po.Entry{
 			Context:  strings.Join(e.Context, "\n"),
 			ID:       strings.Join(e.ID, "\n"),
@@ -254,14 +287,10 @@ msgstr "---"`)...)
 			p.errors = append(p.errors, err)
 		}
 
-		if p.Config.IgnoreComments || p.Config.IgnoreAllComments {
+		if p.Config.IgnoreComments {
 			newEntry.Comments = nil
 			newEntry.ExtractedComments = nil
 			newEntry.Previous = nil
-			if p.Config.IgnoreAllComments {
-				newEntry.Locations = nil
-				newEntry.Flags = nil
-			}
 		}
 
 		entries = append(entries, newEntry)
@@ -269,10 +298,8 @@ msgstr "---"`)...)
 
 	if slices.ContainsFunc(pFile.Tokens, func(t lexer.Token) bool {
 		return t.Type == symbols["Comment"] && obsoleteRegex.MatchString(t.String())
-	}) {
-		obseleteEntries, errs := p.parseObsoleteEntries(pFile.Tokens)
-		p.errors = append(p.errors, errs...)
-		entries = append(entries, obseleteEntries...)
+	}) && p.Config.ParseObsoletes {
+		entries = append(entries, p.parseObsoleteEntries(pFile.Tokens)...)
 	}
 
 	for _, err := range p.errors {

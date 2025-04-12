@@ -14,6 +14,10 @@ type PoConfig struct {
 	SkipHeader        bool
 	CleanDuplicates   bool
 
+	ParseObsoletes          bool
+	UseCustomObsoletePrefix bool
+	CustomObsoletePrefix    rune
+
 	markAllAsObsolete bool
 }
 
@@ -34,6 +38,7 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
 		Logger:          log.New(io.Discard, "", 0),
 		CleanDuplicates: true,
+		ParseObsoletes:  true,
 	}
 
 	c.ApplyOptions(opts...)
@@ -46,6 +51,24 @@ type PoOption func(*PoConfig)
 func poWithMarkAllAsObsolete(m bool) PoOption {
 	return func(pc *PoConfig) {
 		pc.markAllAsObsolete = m
+	}
+}
+
+func PoWithParseObsolete(p bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.ParseObsoletes = p
+	}
+}
+
+func PoWithCustomObsoletePrefix(r rune) PoOption {
+	return func(pc *PoConfig) {
+		pc.CustomObsoletePrefix = r
+	}
+}
+
+func PoWithUseCustomObsoletePrefix(u bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.UseCustomObsoletePrefix = u
 	}
 }
 
