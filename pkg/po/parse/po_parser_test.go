@@ -8,8 +8,10 @@ import (
 	"github.com/Tom5521/gotext-tools/pkg/po"
 	"github.com/Tom5521/gotext-tools/pkg/po/compiler"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
-	"github.com/kr/pretty"
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
+
+var dmp = diffmatchpatch.New()
 
 func TestPoParser(t *testing.T) {
 	input := &po.File{
@@ -25,12 +27,17 @@ func TestPoParser(t *testing.T) {
 				Plural:  "Apples",
 				Plurals: po.PluralEntries{{ID: 0, Str: "Manzana"}, {ID: 1, Str: "Manzanas"}},
 			},
+			{
+				ID:       "MyObsoleteEntry",
+				Obsolete: true,
+			},
 		},
 	}
 
-	compiled := compiler.NewPo(input, compiler.PoWithOmitHeader(true)).ToString()
+	comp := compiler.NewPo(input, compiler.PoWithOmitHeader(true))
+	expected := comp.ToString()
 
-	parser := parse.NewPoFromString(compiled, "test.po")
+	parser := parse.NewPoFromString(expected, "test.po")
 	parsed := parser.Parse()
 
 	if parser.Error() != nil {
@@ -40,12 +47,10 @@ func TestPoParser(t *testing.T) {
 
 	if !util.Equal(parsed.Entries, input.Entries) {
 		t.Error("Compiled and parsed differ!")
-		fmt.Println("ORIGINAL:\n", compiled)
-		fmt.Println("PARSED:\n", compiler.NewPo(parsed, compiler.PoWithOmitHeader(true)).ToString())
 
-		fmt.Println("DIFF:")
-		for _, d := range pretty.Diff(parsed.Entries, input.Entries) {
-			fmt.Println(d)
-		}
+		comp.File = parsed
+
+		dmain := dmp.DiffMain(comp.ToString(), expected, false)
+		fmt.Println(dmp.DiffPrettyText(dmain))
 	}
 }

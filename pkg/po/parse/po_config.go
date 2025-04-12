@@ -13,6 +13,8 @@ type PoConfig struct {
 	Logger            *log.Logger
 	SkipHeader        bool
 	CleanDuplicates   bool
+
+	markAllAsObsolete bool
 }
 
 func (p *PoConfig) RestoreLastCfg() {
@@ -40,6 +42,12 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func poWithMarkAllAsObsolete(m bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.markAllAsObsolete = m
+	}
+}
 
 func PoWithIgnoreAllComments(iag bool) PoOption {
 	return func(pc *PoConfig) {

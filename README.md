@@ -1,5 +1,7 @@
 # gotext-tools
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/Tom5521/xgotext)](https://goreportcard.com/report/github.com/Tom5521/xgotext)
+
 A Go library and CLI toolkit for working with Gettext `.po` and `.mo` files. This project provides cross-platform tools for extracting, merging, and compiling translation files, with a focus on Go projects.
 
 ---

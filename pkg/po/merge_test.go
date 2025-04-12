@@ -116,7 +116,7 @@ func TestMergeWithMsgmerge(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.mergeOpts = append(test.mergeOpts, po.MergeWithSort(false))
+			test.mergeOpts = append(test.mergeOpts, po.MergeWithSort(true))
 			test.cmdArgs = append(test.cmdArgs, defPath, refPath, "-o", outPath)
 			// Run command.
 			{
@@ -148,8 +148,7 @@ func TestMergeWithMsgmerge(t *testing.T) {
 				return
 			}
 
-			getted := po.Merge(defStruct.Entries, refStruct.Entries, test.mergeOpts...).
-				CleanObsoletes()
+			getted := po.Merge(defStruct.Entries, refStruct.Entries, test.mergeOpts...)
 
 			if !util.Equal(expected.Entries, getted) {
 				x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)

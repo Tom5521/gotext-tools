@@ -7,6 +7,7 @@ import (
 
 type (
 	poFile struct {
+		Tokens  []lexer.Token
 		Entries []entry `@@*`
 	}
 
@@ -27,7 +28,7 @@ type (
 )
 
 var (
-	tokens  = poLexer.Symbols()
+	symbols = poLexer.Symbols()
 	poLexer = lexer.MustSimple(
 		[]lexer.SimpleRule{
 			{Name: "WS", Pattern: `\s+`},

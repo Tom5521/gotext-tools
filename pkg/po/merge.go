@@ -35,12 +35,15 @@ type MergeConfig struct {
 	SortMode        SortMode
 }
 
-func DefaultMergeConfig() MergeConfig {
-	return MergeConfig{
+func DefaultMergeConfig(opts ...MergeOption) MergeConfig {
+	cfg := MergeConfig{
 		FuzzyMatch: true,
 		Sort:       true,
 		SortMode:   SortByAll,
 	}
+	cfg.ApplyOption(opts...)
+
+	return cfg
 }
 
 func (m *MergeConfig) ApplyOption(opts ...MergeOption) {
@@ -137,7 +140,5 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 }
 
 func Merge(def, ref Entries, options ...MergeOption) Entries {
-	cfg := DefaultMergeConfig()
-	cfg.ApplyOption(options...)
-	return MergeWithConfig(cfg, def, ref)
+	return MergeWithConfig(DefaultMergeConfig(options...), def, ref)
 }
