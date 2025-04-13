@@ -97,27 +97,28 @@ build-all-app app:
   export VERBOSE={{verbose}}
 
   archs=(
-    "386" # Ahem...
-    "amd64"
-    "arm"
-    "arm64"
+    386 # Ahem...
+    amd64
+    arm
+    arm64
+
     # WHO TF USE THIS ARCHITECTURES?!?!?!?!
-    "ppc64"
-    "ppc64le"
-    "riscv64"
+    ppc64
+    ppc64le
+    riscv64
   )
   oses=(
-    "linux"
-    "netbsd"
-    "freebsd"
-    "windows"
-    "darwin"
+    linux
+    netbsd
+    freebsd
+    windows
+    darwin
 
     # And... the distros that nobody uses
-    "openbsd"
-    "plan9"
-    "solaris"
-    "dragonfly"
+    openbsd
+    plan9
+    solaris
+    dragonfly
   )
 
   valid=$(go tool dist list)
