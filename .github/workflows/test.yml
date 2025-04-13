@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up just
-        run: sudo apt install just gettext
+      - uses: extractions/setup-just@v3
+
+      - name: Install up gettext
+        run: sudo apt install gettext
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
