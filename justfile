@@ -2,25 +2,33 @@ gopath := `go env GOPATH`
 goos := `go env GOOS`
 goarch := `go env GOARCH`
 
-default app:
-  just build {{app}} {{goos}} {{goarch}}
+@default :
+  just build msgomerge
+  just build xgotext
+run app args:
+  GOOS={{goos}} GOARCH={{goarch}} go run -v ./cli/{{app}} {{args}}
 test:
   go clean -testcache
-  go test -v $(dirname $(find . -name "*_test.go"))
-benchmark:
-  go test -bench=. $(dirname $(find . -name "*_benchmark_test.go"))
+  go test ./...
+@benchmark:
+  just bench ./...
 bench path:
   go test -bench=. {{path}}
-puml:
-  goplantuml ./pkg/go/parse > ./pkg/go/parse/structure.puml
-  goplantuml ./pkg/po/compile/ > ./pkg/po/compile/structure.puml
-  goplantuml ./pkg/po/ > ./pkg/po/structure.puml
-  goplantuml ./pkg/po/parse/ > ./pkg/po/parse/structure.puml
+@puml:
+  #!/usr/bin/env bash
+  set -euxo pipefail
+ 
+  paths=( 
+    ./pkg/go/parse
+    ./pkg/po/parse
+    ./pkg/po/compile
+    ./pkg/po
+  )
 
-  plantuml -theme spacelab ./pkg/po/compile/structure.puml
-  plantuml -theme spacelab ./pkg/po/structure.puml
-  plantuml -theme spacelab ./pkg/go/parse/structure.puml
-  plantuml -theme spacelab ./pkg/po/parse/structure.puml
+  for path in "${paths[@]}"; do
+    goplantuml "$path" > "$path/structure.puml"
+    plantuml -theme spacelab "$path/structure.puml"
+  done
 clean:
   # Cleaning...
   @rm -rf \
@@ -33,7 +41,7 @@ go-install app:
   go install -v -ldflags '-s -w' ./cli/{{app}}
 [windows]
 go-uninstall app:
-  del {{gopath}}/bin/{{app}}.exe
+  rm {{gopath}}/bin/{{app}}.exe
 [unix]
 go-uninstall app:
   rm {{gopath}}/bin/{{app}} -f
@@ -51,36 +59,41 @@ root-install app:
 [unix]
 root-uninstall app:
   sudo rm /usr/local/bin/{{app}}
-build app os arch:
-  # building {{app}} for {{os}}-{{arch}}...
-  @GOOS={{os}} GOARCH={{arch}} \
+build app:
+  # building {{app}} for {{goos}}-{{goarch}}...
+  @GOOS={{goos}} GOARCH={{goarch}} \
   go build -o \
-  builds/{{app}}-{{os}}-{{arch}} \
+  builds/{{app}}-{{goos}}-{{goarch}}\
+  $([[ "{{goos}}" == "windows" ]] && echo ".exe") \
   -ldflags '-s -w' \
   ./cli/{{app}}
 [private]
-@win-build app arch:
-  just build {{app}} windows {{arch}}
-  mv ./builds/{{app}}-windows-{{arch}} ./builds/{{app}}-windows-{{arch}}.exe
-[private]
-@build-all-unix app os:
-  just build {{app}} {{os}} 386
-  just build {{app}} {{os}} amd64
-  just build {{app}} {{os}} arm
-  just build {{app}} {{os}} arm64
 @build-all-app app:
-  # ---- building {{app}} -----
-  just build-all-unix {{app}} linux
-  just build-all-unix {{app}} openbsd
-  just build-all-unix {{app}} netbsd
+  #!/usr/bin/env bash
+  set -euo pipefail
 
-  just win-build {{app}} 386
-  just win-build {{app}} amd64
-  just win-build {{app}} arm64
+  archs=(
+    "386"
+    "amd64"
+    "arm"
+    "arm64"
+  )
+  oses=(
+    "windows"
+    "linux"
+    "netbsd"
+    "openbsd"
+    "plan9"
+  )
 
-  just build {{app}} darwin amd64
-  just build {{app}} darwin arm64
-@build-all: clean
+  for os in "${oses[@]}"; do
+    for arch in "${archs[@]}"; do
+      if echo $(go tool dist list) | grep -q "$os/$arch"; then  
+        just goos="$os" goarch="$arch" build {{app}}
+      fi
+    done
+  done
+build-all: clean
   just build-all-app msgomerge
   just build-all-app xgotext
 [confirm]
