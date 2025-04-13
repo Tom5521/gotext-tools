@@ -68,7 +68,7 @@ build app:
   -ldflags '-s -w' \
   ./cli/{{app}}
 [private]
-@build-all-app app:
+build-all-app app:
   #!/usr/bin/env bash
   set -euo pipefail
 
@@ -94,8 +94,11 @@ build app:
     done
   done
 build-all: clean
-  just build-all-app msgomerge
-  just build-all-app xgotext
+  #!/usr/bin/env bash
+  set -euo pipefail
+  for app in ./cli/*; do
+    just build-all-app "$(basename "$app")"
+  done
 [confirm]
 release: clean build-all
   gh release create {{`git describe --tags --abbrev=0`}} \
