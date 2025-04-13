@@ -8,7 +8,7 @@ A Go library and CLI toolkit for working with Gettext `.po` and `.mo` files. Thi
 
 ## Features
 
-✅ **Cross-platform** – Written in Go, works on Windows, Linux, OpenBSD, NetBSD, and MacOS.  
+✅ **Cross-platform** – Written in Go, works on Linux, NetBSD, FreeBSD, OpenBSD, Windows, Darwin(MacOS), Plan9, Solaris and DragonFly. 386, amd64, arm, arm64, ppc64, ppc64le, riscv64.
 ✅ **Go-native support** – Designed with Go projects in mind.  
 ✅ **Easy to Install** – Pre-built binaries available, or build from source.
 
