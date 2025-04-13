@@ -1,11 +1,15 @@
-gopath := `go env GOPATH`
-goos := `go env GOOS`
-goarch := `go env GOARCH`
+gopath := env("GOPATH",`go env GOPATH`)
+goos := env("GOOS",`go env GOOS`)
+goarch := env("GOARCH",`go env GOARCH`)
 verbose := env("VERBOSE","0")
 
-@default :
-  just build msgomerge
-  just build xgotext
+default :
+  #!/bin/env bash
+  set -euo pipefail
+  
+  for app in ./cli/*; do
+    just build $(basename $app)
+  done
 run app args:
   GOOS={{goos}} GOARCH={{goarch}} go run -v ./cli/{{app}} {{args}}
 test:
@@ -32,13 +36,14 @@ puml:
 
   for path in "${paths[@]}"; do
     echo -n {{BOLD}}"Generating PUML's of $path..."{{NORMAL}}
-    goplantuml "$path" > "$path/structure.puml"
-    plantuml -theme spacelab "$path/structure.puml"
+    structure="$path/structure.puml"
+    goplantuml "$path" > "$structure"
+    plantuml -theme spacelab "$structure"
 
     if [[ $? == 0 ]]; then
-    echo {{GREEN}}"DONE"{{NORMAL}}
+    echo {{GREEN}}"OK"{{NORMAL}}
     else
-      echo {{BG_RED}}"ERROR: $?"{{NORMAL}}
+      echo {{RED}}"ERROR: $?"{{NORMAL}}
     fi
   done
 clean:
@@ -47,17 +52,13 @@ clean:
   rm -rf \
   $(find . \( -name "*.po" -o -name "*.mo" -o -name "*.pot" -o -name "*.log" \)) \
   builds
-  echo {{GREEN}}"DONE"{{NORMAL}}
+  echo {{GREEN}}"OK"{{NORMAL}}
 diff:
   git diff --staged > diff.log
 go-install app:
   go install -v -ldflags '-s -w' ./cli/{{app}}
-[windows]
 go-uninstall app:
-  rm {{gopath}}/bin/{{app}}.exe
-[unix]
-go-uninstall app:
-  rm {{gopath}}/bin/{{app}} -f
+  rm {{gopath}}/bin/{{app}}$([[ "{{goos}}" == "windows" ]] && echo .exe) -f
 [unix]
 local-install app:
   just build {{app}} {{goos}} {{goarch}}
@@ -73,8 +74,7 @@ root-install app:
 root-uninstall app:
   sudo rm /usr/local/bin/{{app}}
 build app:
-  #!/usr/bin/env bash
-
+  #!/usr/bin/env bash 
   echo -n {{BOLD}}"Building {{app}} for {{goos}}-{{goarch}}..."{{NORMAL}}
 
   GOOS={{goos}} GOARCH={{goarch}} \
@@ -88,44 +88,56 @@ build app:
   if [[ $? == 0 ]]; then
     echo {{GREEN}}"OK"{{NORMAL}}
   else
-    echo {{BG_RED}}"ERROR: $?"{{NORMAL}}
+    echo {{RED}}"ERROR: $?"{{NORMAL}}
   fi
-[private]
 build-all-app app:
   #!/usr/bin/env bash
+  set -euo pipefail
 
   export VERBOSE={{verbose}}
 
   archs=(
-    "386"
+    "386" # Ahem...
     "amd64"
     "arm"
     "arm64"
+    # WHO TF USE THIS ARCHITECTURES?!?!?!?!
+    "ppc64"
+    "ppc64le"
+    "riscv64"
   )
   oses=(
     "linux"
     "netbsd"
-    "openbsd"
     "freebsd"
-    "plan9"
     "windows"
     "darwin"
+
+    # And... the distros that nobody uses
+    "openbsd"
+    "plan9"
     "solaris"
+    "dragonfly"
   )
+
+  valid=$(go tool dist list)
 
   for os in "${oses[@]}"; do
     for arch in "${archs[@]}"; do
-      if echo $(go tool dist list) | grep -qw "$os/$arch"; then  
+      if echo $valid | grep -qw "$os/$arch"; then  
         just goos="$os" goarch="$arch" build {{app}}
       fi
     done
   done
 build-all: clean
   #!/usr/bin/env bash 
+  set -euo pipefail
   export VERBOSE={{verbose}}
 
   for app in ./cli/*; do
-    just build-all-app "$(basename "$app")"
+    name=$(basename "$app")
+    echo {{BOLD}}{{BG_WHITE}}{{BLACK}}"----- $name -----"{{NORMAL}}
+    just build-all-app "$name"
   done
 [confirm]
 release: clean build-all
