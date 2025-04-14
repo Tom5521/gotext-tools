@@ -57,7 +57,11 @@ func (c PoCompiler) fprintfln(w io.Writer, e po.Entry, format string, args ...an
 			prefix = "# "
 		}
 		if e.Obsolete {
-			prefix = "#~ "
+			prefixRune := '~'
+			if c.Config.UseCustomObsoletePrefix {
+				prefixRune = c.Config.CustomObsoletePrefixRune
+			}
+			prefix = fmt.Sprintf("#%v ", prefixRune)
 		}
 	}
 	str := fmt.Sprintf(prefix+format, args...)

@@ -27,6 +27,9 @@ type PoConfig struct {
 	HeaderComments  bool
 	HeaderFields    bool
 	WordWrap        bool
+
+	UseCustomObsoletePrefix  bool
+	CustomObsoletePrefixRune rune
 }
 
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {
@@ -71,6 +74,18 @@ func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func PoWithUseCustomObsoletePrefix(u bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.UseCustomObsoletePrefix = u
+	}
+}
+
+func PoWithCustomObsoletePrefixRune(r rune) PoOption {
+	return func(pc *PoConfig) {
+		pc.CustomObsoletePrefixRune = r
+	}
+}
 
 func PoWithWordWrap(w bool) PoOption {
 	return func(pc *PoConfig) {
