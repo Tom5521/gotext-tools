@@ -89,7 +89,7 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 	comp := obsoleteRegex
 	if p.Config.UseCustomObsoletePrefix {
 		var err error
-		comp, err = regexp.Compile(fmt.Sprintf(`#%v *(.*)`, p.Config.CustomObsoletePrefix))
+		comp, err = regexp.Compile(fmt.Sprintf(`#%s *(.*)`, string(p.Config.CustomObsoletePrefix)))
 		if err != nil {
 			p.warns = append(p.warns, fmt.Errorf("WARN: %w", err))
 			return nil
