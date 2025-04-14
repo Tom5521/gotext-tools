@@ -17,7 +17,7 @@ test:
   #!/bin/env bash
   go clean -testcache
   go test \
-  $([[ {{verbose}} == 1 ]] && echo "-v") \
+  $([[ "{{verbose}}" == "1" ]] && echo "-v") \
   ./pkg/... ./internal/...
 @benchmark:
   just verbose={{verbose}} bench ./...
@@ -94,7 +94,7 @@ build-all-app app:
   #!/usr/bin/env bash
   set -euo pipefail
 
-  export VERBOSE={{verbose}}
+  export VERBOSE="{{verbose}}"
 
   archs=(
     386 # Ahem...
