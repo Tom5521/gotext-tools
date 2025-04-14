@@ -2,6 +2,7 @@ gopath := env("GOPATH",`go env GOPATH`)
 goos := env("GOOS",`go env GOOS`)
 goarch := env("GOARCH",`go env GOARCH`)
 verbose := env("VERBOSE","0")
+ext := if goos == "windows" { ".exe" } else { "" }
 
 default :
   #!/bin/env bash
@@ -58,7 +59,7 @@ diff:
 go-install app:
   go install -v -ldflags '-s -w' ./cli/{{app}}
 go-uninstall app:
-  rm {{gopath}}/bin/{{app}}$([[ "{{goos}}" == "windows" ]] && echo .exe) -f
+  rm {{gopath}}/bin/{{app}}{{ext}} -f
 [unix]
 local-install app:
   just build {{app}} {{goos}} {{goarch}}
@@ -75,13 +76,12 @@ root-uninstall app:
   sudo rm /usr/local/bin/{{app}}
 build app:
   #!/usr/bin/env bash 
-  echo -n {{BOLD}}"Building {{app}} for {{goos}}-{{goarch}}..."{{NORMAL}}
+  echo -n {{BOLD}}"{{goos}}-{{goarch}}..."{{NORMAL}}
 
   GOOS={{goos}} GOARCH={{goarch}} \
   go build \
   $([[ "{{verbose}}" == "1" ]] && echo "-v") \
-  -o builds/{{app}}-{{goos}}-{{goarch}}\
-  $([[ "{{goos}}" == "windows" ]] && echo ".exe") \
+  -o builds/{{app}}-{{goos}}-{{goarch}}{{ext}} \
   -ldflags '-s -w' \
   ./cli/{{app}}
 
@@ -140,6 +140,7 @@ build-all: clean
     echo {{BOLD}}{{BG_WHITE}}{{BLACK}}"----- $name -----"{{NORMAL}}
     just build-all-app "$name"
   done
+  echo {{BOLD}}{{BG_WHITE}}{{BLACK}}"----- FINISHED -----"{{NORMAL}}
 [confirm]
 release: clean build-all
   gh release create {{`git describe --tags --abbrev=0`}} \
