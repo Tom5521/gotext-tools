@@ -5,7 +5,11 @@ gocmd := env("GOCMD","go")
 verbose := env("VERBOSE","0")
 ext := if goos == "windows" { ".exe" } else { "" }
 
-default :
+set unstable
+set script-interpreter := ["bash","-c"]
+
+
+default:
   #!/bin/env bash
   set -euo pipefail
   
@@ -13,9 +17,10 @@ default :
     just build $(basename $app)
   done
 run app args:
-  GOOS={{goos}} GOARCH={{goarch}} {{gocmd}} run -v ./cli/{{app}} {{args}}
+  GOOS={{goos}} GOARCH={{goarch}} {{gocmd}} run \
+  $([[ "{{verbose}}" == "1" ]] && echo "-v") \
+  ./cli/{{app}} {{args}}
 test:
-  #!/bin/env bash
   {{gocmd}} clean -testcache
   {{gocmd}} test \
   $([[ "{{verbose}}" == "1" ]] && echo "-v") \
@@ -23,8 +28,9 @@ test:
 @benchmark:
   just verbose={{verbose}} bench ./...
 bench path:
+  #!/bin/env bash
   {{gocmd}} test \
-  $([[ "{{verbose}}" == "1" ]] && echo -v) \
+  $([[ "{{verbose}}" == "1" ]] && echo "-v") \
   -bench=. {{path}}
 puml:
   #!/usr/bin/env bash

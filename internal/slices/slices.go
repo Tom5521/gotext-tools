@@ -26,7 +26,6 @@ func Contains[S ~[]E, E comparable](s S, v E) bool {
 }
 
 func DeleteFunc[S ~[]E, E any](s S, del func(E) bool) S {
-	// Don't start copying elements until we find one to delete.
 	for i, v := range s {
 		if del(v) {
 			j := i
@@ -44,7 +43,7 @@ func DeleteFunc[S ~[]E, E any](s S, del func(E) bool) S {
 }
 
 func Delete[S ~[]E, E any](s S, i, j int) S {
-	_ = s[i:j] // bounds check
+	_ = s[i:j]
 
 	return append(s[:i], s[j:]...)
 }
@@ -84,7 +83,6 @@ func Index[S ~[]E, E comparable](s S, v E) int {
 }
 
 func Clone[S ~[]E, E any](s S) S {
-	// Preserve nil in case it matters.
 	if s == nil {
 		return nil
 	}
