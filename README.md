@@ -172,6 +172,8 @@ func main(){
 
 Parsers for reading `.po` and `.mo` files into structured Go objects.
 
+<details>
+
 ```go
 package main
 
@@ -190,6 +192,8 @@ msgstr "mundo"`
   myFile,_ := parse.PoFromString(myPoFile,"my_po_file.po")
 }
 ```
+
+</details>
 
 ---
 
