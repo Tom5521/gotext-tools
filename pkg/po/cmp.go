@@ -2,7 +2,7 @@ package po
 
 import (
 	"path/filepath"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strings"
 
 	"github.com/Tom5521/gotext-tools/internal/util"
@@ -42,6 +42,10 @@ func EntryStrMatchRatio(e1, e2 Entry) int {
 	}
 
 	return util.Average(ratios...)
+}
+
+func CompareEntriesFunc(a, b Entries, cmp Cmp[Entry]) int {
+	return slices.CompareFunc(a, b, cmp)
 }
 
 func CompareEntry(a, b Entry) int {
@@ -86,8 +90,14 @@ func CompareEntryByLocation(a, b Entry) int {
 
 func CompareEntryByStr(a, b Entry) int {
 	if a.IsPlural() && b.IsPlural() {
-		return slices.CompareFunc(a.Plurals, b.Plurals, ComparePluralEntryByStr)
+		if i := ComparePluralEntriesFunc(a.Plurals, b.Plurals, ComparePluralEntryByStr); i != 0 {
+			return i
+		}
+
+		goto str
 	}
+
+str:
 	return strings.Compare(a.Str, b.Str)
 }
 
@@ -101,6 +111,10 @@ func CompareEntryByID(a, b Entry) int {
 
 func CompareEntryByFile(a, b Entry) int {
 	return slices.CompareFunc(a.Locations, b.Locations, CompareLocationByFile)
+}
+
+func ComparePluralEntriesFunc(a, b PluralEntries, cmp Cmp[PluralEntry]) int {
+	return slices.CompareFunc(a, b, cmp)
 }
 
 func ComparePluralEntry(a, b PluralEntry) int {
@@ -117,6 +131,10 @@ func ComparePluralEntryByStr(a, b PluralEntry) int {
 
 func ComparePluralEntryByID(a, b PluralEntry) int {
 	return a.ID - b.ID
+}
+
+func CompareLocationsFunc(a, b Locations, cmp Cmp[Location]) int {
+	return slices.CompareFunc(a, b, cmp)
 }
 
 func CompareLocation(a, b Location) int {

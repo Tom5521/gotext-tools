@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 	goparse "github.com/Tom5521/gotext-tools/pkg/go/parse"

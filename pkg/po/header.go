@@ -3,10 +3,11 @@ package po
 import (
 	"fmt"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tom5521/gotext-tools/internal/slices"
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 )
@@ -148,14 +149,17 @@ func (e Entries) Header() (h Header) {
 // These fields are typically found in .po files for localization.
 func DefaultTemplateHeader() (h Header) {
 	// Register standard header fields with optional default values.
-	h.Register("Project-Id-Version")                                  // No default value.
-	h.Register("Report-Msgid-Bugs-To")                                // No default value.
-	h.Register("POT-Creation-Date", time.Now().Format(time.DateTime)) // Current date and time.
-	h.Register("PO-Revision-Date")                                    // No default value.
-	h.Register("Last-Translator")                                     // No default value.
-	h.Register("Language-Team")                                       // No default value.
-	h.Register("Language")                                            // No default value.
-	h.Register("MIME-Version", "1.0")                                 // MIME version.
+	h.Register("Project-Id-Version")   // No default value.
+	h.Register("Report-Msgid-Bugs-To") // No default value.
+	h.Register(
+		"POT-Creation-Date",
+		time.Now().Format("2006-01-02 15:04:05"),
+	) // Current date and time.
+	h.Register("PO-Revision-Date")    // No default value.
+	h.Register("Last-Translator")     // No default value.
+	h.Register("Language-Team")       // No default value.
+	h.Register("Language")            // No default value.
+	h.Register("MIME-Version", "1.0") // MIME version.
 	h.Register(
 		"Content-Type",
 		"text/plain; charset=CHARSET",

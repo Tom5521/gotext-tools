@@ -13,10 +13,8 @@ import (
 	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/rogpeppe/go-internal/diff"
 )
-
-var dmp = diffmatchpatch.New()
 
 func TestMergeWithMsgmerge(t *testing.T) {
 	msgmerge, err := exec.LookPath("msgmerge")
@@ -143,12 +141,23 @@ func TestMergeWithMsgmerge(t *testing.T) {
 			if !util.Equal(expected.Entries, getted) {
 				x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)
 				fmt.Println("--- STRUCT DIFF:")
-				diff := dmp.DiffMain(util.Format(getted), util.Format(expected.Entries), false)
-				fmt.Println(dmp.DiffPrettyText(diff))
+
+				d := diff.Diff(
+					"getted",
+					[]byte(util.Format(getted)),
+					"expected",
+					[]byte(util.Format(expected)),
+				)
+				fmt.Println(string(d))
 				ratio := fuzzy.Ratio(x, y)
 				fmt.Println("--- COMPILED MATCH RATIO:", ratio)
-				diff = dmp.DiffMain(x, y, false)
-				fmt.Println(dmp.DiffPrettyText(diff))
+				d = diff.Diff(
+					"getted",
+					compile.PoToBytes(getted),
+					"expected",
+					compile.PoToBytes(expected),
+				)
+				fmt.Println(string(d))
 
 				t.Fail()
 				return

@@ -23,7 +23,7 @@ var (
 		}
 		return util.LittleEndianMagicNumber
 	}()
-	order = bin.NativeEndian
+	order = util.NativeEndian
 )
 
 const (

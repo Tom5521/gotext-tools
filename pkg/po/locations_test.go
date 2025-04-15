@@ -2,7 +2,7 @@ package po_test
 
 import (
 	"math/rand"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/internal/util"

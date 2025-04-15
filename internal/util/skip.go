@@ -3,7 +3,7 @@ package util
 import (
 	"log"
 	"path/filepath"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 
 	krfs "github.com/kr/fs"
 )

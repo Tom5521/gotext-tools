@@ -1,7 +1,7 @@
 package po
 
 import (
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 
 	"github.com/Tom5521/gotext-tools/internal/util"
 )

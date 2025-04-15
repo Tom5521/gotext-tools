@@ -1,6 +1,7 @@
 gopath := env("GOPATH",`go env GOPATH`)
 goos := env("GOOS",`go env GOOS`)
 goarch := env("GOARCH",`go env GOARCH`)
+gocmd := env("GOCMD","go")
 verbose := env("VERBOSE","0")
 ext := if goos == "windows" { ".exe" } else { "" }
 
@@ -12,17 +13,17 @@ default :
     just build $(basename $app)
   done
 run app args:
-  GOOS={{goos}} GOARCH={{goarch}} go run -v ./cli/{{app}} {{args}}
+  GOOS={{goos}} GOARCH={{goarch}} {{gocmd}} run -v ./cli/{{app}} {{args}}
 test:
   #!/bin/env bash
-  go clean -testcache
-  go test \
+  {{gocmd}} clean -testcache
+  {{gocmd}} test \
   $([[ "{{verbose}}" == "1" ]] && echo "-v") \
   ./pkg/... ./internal/...
 @benchmark:
   just verbose={{verbose}} bench ./...
 bench path:
-  go test \
+  {{gocmd}} test \
   $([[ "{{verbose}}" == "1" ]] && echo -v) \
   -bench=. {{path}}
 puml:
@@ -57,7 +58,7 @@ clean:
 diff:
   git diff --staged > diff.log
 go-install app:
-  go install -v -ldflags '-s -w' ./cli/{{app}}
+  {{gocmd}} install -v -ldflags '-s -w' ./cli/{{app}}
 go-uninstall app:
   rm {{gopath}}/bin/{{app}}{{ext}} -f
 [unix]
@@ -79,7 +80,7 @@ build app:
   echo -n {{BOLD}}"{{goos}}-{{goarch}}..."{{NORMAL}}
 
   GOOS={{goos}} GOARCH={{goarch}} \
-  go build \
+  {{gocmd}} build \
   $([[ "{{verbose}}" == "1" ]] && echo "-v") \
   -o builds/{{app}}-{{goos}}-{{goarch}}{{ext}} \
   -ldflags '-s -w' \
@@ -95,7 +96,8 @@ build-all-app app:
   set -euo pipefail
 
   export VERBOSE="{{verbose}}"
-
+  export GOCMD={{gocmd}}
+  
   archs=(
     386 # Ahem...
     amd64
@@ -121,7 +123,7 @@ build-all-app app:
     dragonfly
   )
 
-  valid=$(go tool dist list)
+  valid=$({{gocmd}} tool dist list)
 
   for os in "${oses[@]}"; do
     for arch in "${archs[@]}"; do
@@ -134,6 +136,7 @@ build-all: clean
   #!/usr/bin/env bash 
   set -euo pipefail
   export VERBOSE={{verbose}}
+  export GOCMD={{gocmd}}
 
   for app in ./cli/*; do
     name=$(basename "$app")

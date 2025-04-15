@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strings"
 
 	"github.com/Tom5521/gotext-tools/pkg/po"

@@ -8,10 +8,9 @@ import (
 	"github.com/Tom5521/gotext-tools/pkg/po"
 	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
-	"github.com/sergi/go-diff/diffmatchpatch"
-)
 
-var dmp = diffmatchpatch.New()
+	"github.com/rogpeppe/go-internal/diff"
+)
 
 func TestPoParser(t *testing.T) {
 	input := &po.File{
@@ -48,9 +47,7 @@ func TestPoParser(t *testing.T) {
 	if !util.Equal(parsed.Entries, input.Entries) {
 		t.Error("Compiled and parsed differ!")
 
-		comp.File = parsed
-
-		dmain := dmp.DiffMain(comp.ToString(), expected, false)
-		fmt.Println(dmp.DiffPrettyText(dmain))
+		d := diff.Diff("parsed", compile.PoToBytes(parsed), "expected", compile.PoToBytes(input))
+		fmt.Println(string(d))
 	}
 }

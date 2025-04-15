@@ -1,6 +1,9 @@
 package util
 
-import "unsafe"
+import (
+	"encoding/binary"
+	"unsafe"
+)
 
 const (
 	BigEndianMagicNumber    uint32 = 0xde120495
@@ -8,3 +11,10 @@ const (
 )
 
 var IsBigEndian = (*[2]uint8)(unsafe.Pointer(&[]uint16{1}[0]))[0] == 0
+
+var NativeEndian = func() binary.ByteOrder {
+	if IsBigEndian {
+		return binary.BigEndian
+	}
+	return binary.LittleEndian
+}()

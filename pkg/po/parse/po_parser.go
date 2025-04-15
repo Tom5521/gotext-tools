@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"slices"
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strconv"
 	"strings"
 
