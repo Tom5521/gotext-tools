@@ -57,6 +57,44 @@ The core library is located in `pkg/` and provides structured handling of `.po` 
 
 Extracts Gettext-compatible strings from Go source code. Useful for generating translation templates.
 
+#### Example:
+
+<details>
+
+```go
+package main
+
+import (
+  goparse"github.com/Tom5521/gotext-tools/pkg/go/parse"
+  "fmt"
+)
+
+func main(){
+  myGolangFile := `package main
+
+  import "fmt" // Import strings are ignored!
+
+  func MyFunc(){
+    a := 10
+    "My anonymous string"
+
+    switch "a"{
+      case "b":
+      case "c":
+    }
+  }`
+
+  file,err := goparse.FromString(myGolangFile,"my-file.go")
+  if err != nil{
+    panic(err)
+  }
+
+  fmt.Println(file.Entries)
+}
+```
+
+</details>
+
 ### `po`
 
 The main package for working with `.po` files. Includes:
@@ -65,13 +103,93 @@ The main package for working with `.po` files. Includes:
 - **`File`**
 - **Sorting & Comparison** – Easily organize and compare translations.
 
+<details>
+
+```go
+package main
+
+import (
+  "os"
+  "github.com/Tom5521/gotext-tools/pkg/po"
+  "github.com/Tom5521/gotext-tools/pkg/po/compiler"
+  "github.com/Tom5521/gotext-tools/pkg/po/parse"
+)
+
+
+func main(){
+  def,_ := parse.Mo("es.mo")
+  ref,_ := parse.Po("en.pot")
+  if def.Equal(ref){
+    return
+  }
+
+  merged := po.Merge(def.Entries,ref.Entries)
+  merged = merged.CleanFuzzy().CleanDuplicates()
+  compiler.PoToWriter(merged,os.Stdout)
+}
+
+```
+
+</details>
+
 ### `po/compile`
 
 Compiles parsed `.po` files into `.mo` (binary) or updated `.po` files.
 
+<details>
+
+```go
+package main
+
+import (
+  "os"
+  "github.com/Tom5521/gotext-tools/pkg/po"
+  "github.com/Tom5521/gotext-tools/pkg/po/compile"
+)
+
+func main(){
+  myFile := &po.File{
+    Name: "My File!",
+    Entries: po.Entries{
+      {
+        ID: "Hello World!",
+        Str: "Hola Mundo!",
+      },
+      {
+        ID: "Bye World!"
+        Str: "Adios Mundo!"
+      },
+    },
+  }
+
+  compile.PoToWriter(myFile,os.Stdout)
+}
+```
+
+</details>
+
 ### `po/parse`
 
 Parsers for reading `.po` and `.mo` files into structured Go objects.
+
+```go
+package main
+
+import (
+  "github.com/Tom5521/gotext-tools/pkg/po/parse"
+)
+
+func main(){
+  myPoFile := `msgid "hello"
+msgstr "hola"
+
+#, fuzzy
+msgid "world"
+msgstr "mundo"`
+
+  myFile,_ := parse.PoFromString(myPoFile,"my_po_file.po")
+}
+```
 
 ---
 
