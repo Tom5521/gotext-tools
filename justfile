@@ -5,10 +5,6 @@ gocmd := env("GOCMD","go")
 verbose := env("VERBOSE","0")
 ext := if goos == "windows" { ".exe" } else { "" }
 
-set unstable
-set script-interpreter := ["bash","-c"]
-
-
 default:
   #!/bin/env bash
   set -euo pipefail
@@ -23,7 +19,7 @@ run app args:
 test:
   {{gocmd}} clean -testcache
   {{gocmd}} test \
-  $([[ "{{verbose}}" == "1" ]] && echo "-v") \
+  $([ "{{verbose}}" -eq "1" ] && echo "-v") \
   ./pkg/... ./internal/...
 @benchmark:
   just verbose={{verbose}} bench ./...
