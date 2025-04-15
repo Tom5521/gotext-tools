@@ -2,9 +2,9 @@ package po
 
 import (
 	"errors"
-	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"github.com/Tom5521/gotext-tools/internal/util"
 )
 

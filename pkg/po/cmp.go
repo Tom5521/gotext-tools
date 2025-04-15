@@ -2,9 +2,9 @@ package po
 
 import (
 	"path/filepath"
-	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"github.com/Tom5521/gotext-tools/internal/util"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )

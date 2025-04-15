@@ -3,9 +3,9 @@ package po_test
 import (
 	"fmt"
 	"math/rand"
-	"github.com/Tom5521/gotext-tools/internal/slices"
 	"testing"
 
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"github.com/Tom5521/gotext-tools/internal/util"
 	"github.com/Tom5521/gotext-tools/pkg/po"
 	"github.com/Tom5521/gotext-tools/pkg/po/compile"

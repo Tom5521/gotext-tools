@@ -8,7 +8,6 @@ import (
 	"github.com/Tom5521/gotext-tools/pkg/po"
 	"github.com/Tom5521/gotext-tools/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/pkg/po/parse"
-
 	"github.com/rogpeppe/go-internal/diff"
 )
 

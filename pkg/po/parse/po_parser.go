@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"github.com/Tom5521/gotext-tools/internal/slices"
 	"strconv"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/internal/slices"
 	"github.com/Tom5521/gotext-tools/pkg/po"
 	"github.com/alecthomas/participle/v2/lexer"
 )
