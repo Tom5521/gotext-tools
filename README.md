@@ -65,7 +65,7 @@ Extracts Gettext-compatible strings from Go source code. Useful for generating t
 package main
 
 import (
-  goparse"github.com/Tom5521/gotext-tools/pkg/go/parse"
+  goparse"github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
   "fmt"
 )
 
@@ -110,9 +110,9 @@ package main
 
 import (
   "os"
-  "github.com/Tom5521/gotext-tools/pkg/po"
-  "github.com/Tom5521/gotext-tools/pkg/po/compiler"
-  "github.com/Tom5521/gotext-tools/pkg/po/parse"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po/compiler"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
 )
 
 
@@ -143,8 +143,8 @@ package main
 
 import (
   "os"
-  "github.com/Tom5521/gotext-tools/pkg/po"
-  "github.com/Tom5521/gotext-tools/pkg/po/compile"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 )
 
 func main(){
@@ -178,7 +178,7 @@ Parsers for reading `.po` and `.mo` files into structured Go objects.
 package main
 
 import (
-  "github.com/Tom5521/gotext-tools/pkg/po/parse"
+  "github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
 )
 
 func main(){

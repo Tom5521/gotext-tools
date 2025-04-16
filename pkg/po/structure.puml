@@ -29,6 +29,8 @@ namespace po {
         + Header() Header
 
     }
+    interface EntriesOrFile  {
+    }
     class Entry << (S,Aquamarine) >> {
         + Flags []string
         + Comments []string

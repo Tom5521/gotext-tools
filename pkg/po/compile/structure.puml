@@ -77,6 +77,8 @@ namespace compile {
         + HeaderComments bool
         + HeaderFields bool
         + WordWrap bool
+        + UseCustomObsoletePrefix bool
+        + CustomObsoletePrefixRune rune
 
         + ApplyOptions(opts ...PoOption) 
         + RestoreLastCfg() 
@@ -90,8 +92,6 @@ namespace compile {
     class compile.PoOption << (T, #FF7700) >>  {
     }
     class compile.u32 << (T, #FF7700) >>  {
-    }
-    interface eOf  {
     }
 }
 

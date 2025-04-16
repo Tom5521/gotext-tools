@@ -17,7 +17,7 @@ A command-line tool for merging two Uniforum style `.po` files together. The too
 ## Installation
 
 ```bash
-go install github.com/Tom5521/gotext-tools/cli/msgomerge@latest
+go install github.com/Tom5521/gotext-tools/v2/cli/msgomerge@latest
 ```
 
 ## Usage
