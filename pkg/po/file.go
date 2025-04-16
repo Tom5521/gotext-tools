@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
 type File struct {

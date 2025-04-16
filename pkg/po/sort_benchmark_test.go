@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 func BenchmarkSortEntries(b *testing.B) {

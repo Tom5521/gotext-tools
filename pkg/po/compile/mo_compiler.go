@@ -9,8 +9,8 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/Tom5521/gotext-tools/internal/util"
-	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 // Aliase this bc I'm too lazy to write "uint32" every time I want to use it.

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Tom5521/gotext-tools/internal/slices"
-	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
 // Entry represents a translatable string, including its context, plural forms,

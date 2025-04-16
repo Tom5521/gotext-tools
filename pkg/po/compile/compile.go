@@ -3,7 +3,7 @@ package compile
 import (
 	"io"
 
-	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 func file[T po.EntriesOrFile](i T) *po.File {

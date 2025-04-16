@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 type MoConfig struct {

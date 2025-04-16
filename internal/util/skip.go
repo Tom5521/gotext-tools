@@ -4,7 +4,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/Tom5521/gotext-tools/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	krfs "github.com/kr/fs"
 )
 

@@ -6,7 +6,7 @@ package util_test
 import (
 	"testing"
 
-	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
 func BenchmarkPJWHash(b *testing.B) {

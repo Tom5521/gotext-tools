@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tom5521/gotext-tools/internal/slices"
-	"github.com/Tom5521/gotext-tools/internal/util"
-	goparse "github.com/Tom5521/gotext-tools/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
+	goparse "github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
 	krfs "github.com/kr/fs"
 )
 

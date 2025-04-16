@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tom5521/gotext-tools/internal/slices"
-	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
 // HeaderField represents a single key-value pair in a header.

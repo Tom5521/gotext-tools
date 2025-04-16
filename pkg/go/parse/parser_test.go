@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Tom5521/gotext-tools/internal/util"
-	"github.com/Tom5521/gotext-tools/pkg/go/parse"
-	"github.com/Tom5521/gotext-tools/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/kr/pretty"
 )
 

@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tom5521/gotext-tools/pkg/po"
-	"github.com/Tom5521/gotext-tools/pkg/po/compile"
-	"github.com/Tom5521/gotext-tools/pkg/po/parse"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
 	"github.com/spf13/cobra"
 )
 

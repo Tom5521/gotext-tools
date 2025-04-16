@@ -1,4 +1,4 @@
-module github.com/Tom5521/gotext-tools
+module github.com/Tom5521/gotext-tools/v2
 
 go 1.18
 

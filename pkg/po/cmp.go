@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Tom5521/gotext-tools/internal/slices"
-	"github.com/Tom5521/gotext-tools/internal/util"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 )
 
