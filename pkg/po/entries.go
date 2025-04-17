@@ -12,8 +12,12 @@ func (e Entries) Equal(e2 Entries) bool {
 	return util.Equal(e, e2)
 }
 
+func (e Entries) ContainsFunc(f func(e Entry) bool) bool {
+	return slices.ContainsFunc(e, f)
+}
+
 func (e Entries) ContainsUnifiedID(uid string) bool {
-	return slices.ContainsFunc(e, func(e Entry) bool { return e.UnifiedID() == uid })
+	return e.ContainsFunc(func(e Entry) bool { return e.UnifiedID() == uid })
 }
 
 func (e Entries) CutHeader() Entries {
@@ -47,18 +51,16 @@ func (e Entries) BestStrRatio(e1 Entry) (best, highestRatio int) {
 	return
 }
 
+func (e Entries) IndexFunc(f func(Entry) bool) int {
+	return slices.IndexFunc(e, f)
+}
+
 func (e Entries) IndexByUnifiedID(uid string) int {
-	return slices.IndexFunc(e, func(e Entry) bool {
-		return e.UnifiedID() == uid
-	})
+	return e.IndexFunc(func(e Entry) bool { return e.UnifiedID() == uid })
 }
 
 func (e Entries) Index(id, context string) int {
-	return slices.IndexFunc(e,
-		func(e Entry) bool {
-			return e.ID == id && e.Context == context
-		},
-	)
+	return e.IndexFunc(func(e Entry) bool { return e.ID == id && e.Context == context })
 }
 
 func (e Entries) IsSorted() bool {
@@ -100,9 +102,7 @@ func (e Entries) HasDuplicates() bool {
 }
 
 func (e Entries) CleanObsoletes() Entries {
-	return slices.DeleteFunc(e, func(e Entry) bool {
-		return e.Obsolete
-	})
+	return slices.DeleteFunc(e, func(e Entry) bool { return e.Obsolete })
 }
 
 // CleanDuplicates removes duplicate entries with the same ID and context, merging their locations.
@@ -227,14 +227,11 @@ func (e Entries) Solve() Entries {
 }
 
 func (e Entries) CleanFuzzy() Entries {
-	e = slices.DeleteFunc(e, func(e Entry) bool {
-		return e.IsFuzzy()
-	})
-	return e
+	return slices.DeleteFunc(e, func(e Entry) bool { return e.IsFuzzy() })
 }
 
 func (e Entries) FuzzyFind(id, context string) int {
-	return slices.IndexFunc(e, func(e Entry) bool {
-		return util.FuzzyEqual(id, e.ID) && e.Context == context
-	})
+	return e.IndexFunc(
+		func(e Entry) bool { return util.FuzzyEqual(id, e.ID) && util.FuzzyEqual(e.Context, context) },
+	)
 }
