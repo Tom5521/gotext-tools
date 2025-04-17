@@ -93,11 +93,8 @@ func CompareEntryByStr(a, b Entry) int {
 		if i := ComparePluralEntriesFunc(a.Plurals, b.Plurals, ComparePluralEntryByStr); i != 0 {
 			return i
 		}
-
-		goto str
 	}
 
-str:
 	return strings.Compare(a.Str, b.Str)
 }
 
