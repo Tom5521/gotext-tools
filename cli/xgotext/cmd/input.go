@@ -7,11 +7,11 @@ import (
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
-	goparse "github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
+	"github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
 	krfs "github.com/kr/fs"
 )
 
-func processInput(inputFiles []string) (*goparse.Parser, error) {
+func processInput(inputFiles []string) (*parse.Parser, error) {
 	if filesFrom != "" {
 		files, err := readFilesFrom(filesFrom)
 		if err != nil {
@@ -38,7 +38,7 @@ func processInput(inputFiles []string) (*goparse.Parser, error) {
 		}
 	}
 	var err error
-	var parser *goparse.Parser
+	var parser *parse.Parser
 
 	stdinIndex := slices.Index(inputFiles, "-")
 	if stdinIndex != -1 {
@@ -55,9 +55,9 @@ func processInput(inputFiles []string) (*goparse.Parser, error) {
 	}
 
 	// Make the parser.
-	parser, err = goparse.NewParserFromFiles(
+	parser, err = parse.NewParserFromFiles(
 		files,
-		goparse.WithConfig(GoParserCfg),
+		parse.WithConfig(GoParserCfg),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error reading files: %w", err)
