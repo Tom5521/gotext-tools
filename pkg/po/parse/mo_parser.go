@@ -29,34 +29,36 @@ type MoParser struct {
 	data     []byte
 	filename string
 	errors   []error
+	Config   MoConfig
 }
 
-func NewMo(path string) (*MoParser, error) {
+func NewMo(path string, opts ...MoOption) (*MoParser, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	return NewMoFromReader(f, path)
+	return NewMoFromReader(f, path, opts...)
 }
 
-func NewMoFromReader(r io.Reader, name string) (*MoParser, error) {
+func NewMoFromReader(r io.Reader, name string, opts ...MoOption) (*MoParser, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	return &MoParser{data: b, filename: name}, nil
+	return &MoParser{data: b, filename: name, Config: DefaultMoConfig(opts...)}, nil
 }
 
-func NewMoFromFile(f *os.File) (*MoParser, error) {
-	return NewMoFromReader(f, f.Name())
+func NewMoFromFile(f *os.File, opts ...MoOption) (*MoParser, error) {
+	return NewMoFromReader(f, f.Name(), opts...)
 }
 
-func NewMoFromBytes(b []byte, name string) *MoParser {
+func NewMoFromBytes(b []byte, name string, opts ...MoOption) *MoParser {
 	return &MoParser{
 		data:     b,
 		filename: name,
+		Config:   DefaultMoConfig(opts...),
 	}
 }
 
@@ -76,18 +78,28 @@ func (m MoParser) Errors() []error {
 func (m *MoParser) genBasics() (reader *bytes.Reader, order bin.ByteOrder, err error) {
 	reader = bytes.NewReader(m.data)
 
-	var magicNumber uint32
-	if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
-		return nil, nil, err
-	}
-	switch magicNumber {
-	case util.LittleEndianMagicNumber:
-		order = bin.LittleEndian
-	case util.BigEndianMagicNumber:
-		order = bin.BigEndian
-	default:
-		m.errors = append(m.errors, errors.New("invalid magic number"))
-		return
+	var magicNumber u32
+	if m.Config.Endianness == NativeEndian {
+		if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
+			return nil, nil, err
+		}
+		switch magicNumber {
+		case util.LittleEndianMagicNumber:
+			order = bin.LittleEndian
+		case util.BigEndianMagicNumber:
+			order = bin.BigEndian
+		default:
+			m.errors = append(m.errors, errors.New("invalid magic number"))
+			return
+		}
+	} else {
+		order = m.Config.Endianness.Order()
+		if err = bin.Read(reader, order, &magicNumber); err != nil {
+			return nil, nil, err
+		}
+		if magicNumber != m.Config.Endianness.MagicNumber() {
+			m.errors = append(m.errors, errors.New("invalid magic number"))
+		}
 	}
 
 	return
@@ -101,6 +113,13 @@ type moHeader struct {
 	MsgStrOffset u32
 	HashSize     u32
 	HashOffset   u32
+}
+
+func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
+	m.Config.ApplyOptions(opts...)
+	defer m.Config.RestoreLastCfg()
+
+	return m.Parse()
 }
 
 func (m *MoParser) Parse() (file *po.File) {

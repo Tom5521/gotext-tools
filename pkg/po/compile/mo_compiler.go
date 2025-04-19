@@ -9,22 +9,11 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 // Aliase this bc I'm too lazy to write "uint32" every time I want to use it.
 type u32 = uint32
-
-var (
-	magicNumber = func() u32 {
-		if util.IsBigEndian {
-			return util.BigEndianMagicNumber
-		}
-		return util.LittleEndianMagicNumber
-	}()
-	order = util.NativeEndian
-)
 
 const (
 	eot = "\x04"
@@ -115,6 +104,9 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		koffsets = append(koffsets, l1, o1+keystart)
 		voffsets = append(voffsets, l2, o2+valuestart)
 	}
+
+	magicNumber := mc.Config.Endianess.MagicNumber()
+	order := mc.Config.Endianess.Order()
 
 	// Write the data to the file
 	data := []any{

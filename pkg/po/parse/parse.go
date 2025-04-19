@@ -51,8 +51,8 @@ func PoFromBytes(b []byte, name string, opts ...PoOption) (*po.File, error) {
 	return file, parser.Error()
 }
 
-func Mo(path string) (*po.File, error) {
-	parser, err := NewMo(path)
+func Mo(path string, opts ...MoOption) (*po.File, error) {
+	parser, err := NewMo(path, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,8 @@ func Mo(path string) (*po.File, error) {
 	return file, parser.Error()
 }
 
-func MoFromReader(r io.Reader, name string) (*po.File, error) {
-	parser, err := NewMoFromReader(r, name)
+func MoFromReader(r io.Reader, name string, opts ...MoOption) (*po.File, error) {
+	parser, err := NewMoFromReader(r, name, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +70,8 @@ func MoFromReader(r io.Reader, name string) (*po.File, error) {
 	return file, parser.Error()
 }
 
-func MoFromFile(f *os.File) (*po.File, error) {
-	parser, err := NewMoFromFile(f)
+func MoFromFile(f *os.File, opts ...MoOption) (*po.File, error) {
+	parser, err := NewMoFromFile(f, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func MoFromFile(f *os.File) (*po.File, error) {
 	return file, parser.Error()
 }
 
-func MoFromBytes(b []byte, name string) (*po.File, error) {
+func MoFromBytes(b []byte, name string, opts ...MoOption) (*po.File, error) {
 	parser := NewMoFromBytes(b, name)
 	file := parser.Parse()
 	return file, parser.Error()

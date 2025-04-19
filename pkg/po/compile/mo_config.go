@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
@@ -16,8 +17,17 @@ type MoConfig struct {
 	IgnoreErrors bool
 	Sort         bool
 	SortMode     po.SortMode
+	Endianess    Endianness
 	// HashTable    bool
 }
+
+type Endianness = util.Endianness
+
+const (
+	LittleEndian = util.LittleEndian
+	BigEndian    = util.BigEndian
+	NativeEndian = util.NativeEndian
+)
 
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 	mc.lastCfg = *mc
@@ -35,7 +45,9 @@ func (mc *MoConfig) RestoreLastCfg() {
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
-		Logger: log.New(io.Discard, "", 0),
+		Logger:    log.New(io.Discard, "", 0),
+		Sort:      true,
+		Endianess: NativeEndian,
 	}
 
 	c.ApplyOptions(opts...)
@@ -44,6 +56,12 @@ func DefaultMoConfig(opts ...MoOption) MoConfig {
 }
 
 type MoOption func(c *MoConfig)
+
+func MoWithEndianness(e Endianness) MoOption {
+	return func(c *MoConfig) {
+		c.Endianess = e
+	}
+}
 
 func MoWithConfig(n MoConfig) MoOption {
 	return func(c *MoConfig) {
