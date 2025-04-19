@@ -5,6 +5,7 @@ vendor
 *.log
 *.diff
 *.po
+*.mo
 *.pot
 *.test
 default.pot

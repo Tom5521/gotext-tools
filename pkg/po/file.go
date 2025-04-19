@@ -1,9 +1,6 @@
 package po
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
@@ -14,19 +11,6 @@ type File struct {
 
 func NewFile(name string, entries ...Entry) *File {
 	return &File{name, entries}
-}
-
-func (f File) Validate() error {
-	if f.HasDuplicates() {
-		return errors.New("there are duplicate entries")
-	}
-	for i, entry := range f.Entries {
-		if err := entry.Validate(); err != nil {
-			return fmt.Errorf("entry nº%d is invalid: %w", i, err)
-		}
-	}
-
-	return nil
 }
 
 func (f File) Equal(f2 File) bool {

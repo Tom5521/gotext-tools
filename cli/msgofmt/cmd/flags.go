@@ -15,7 +15,7 @@ func init() {
 	flags := root.Flags()
 	flags.StringVarP(&directory, "directory", "D", "",
 		`add DIRECTORY to list for input files search`)
-	flags.StringVarP(&output, "output-file", "o", "-",
+	flags.StringVarP(&output, "output-file", "o", "messages.mo",
 		`write output to specified file
 If output file is -, output is written to standard output.`)
 	flags.StringVar(&endianness, "endianness", "native",

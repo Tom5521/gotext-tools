@@ -1,6 +1,9 @@
 package po
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
@@ -234,4 +237,17 @@ func (e Entries) FuzzyFind(id, context string) int {
 	return e.IndexFunc(
 		func(e Entry) bool { return util.FuzzyEqual(id, e.ID) && util.FuzzyEqual(e.Context, context) },
 	)
+}
+
+func (e Entries) Validate() error {
+	if e.HasDuplicates() {
+		return errors.New("there are duplicate entries")
+	}
+	for i, entry := range e {
+		if err := entry.Validate(); err != nil {
+			return fmt.Errorf("entry nº%d is invalid: %w", i, err)
+		}
+	}
+
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
 	"github.com/spf13/cobra"
@@ -32,40 +33,69 @@ If input file is -, standard input is read.`,
 		if directory != "" {
 			output = filepath.Join(directory, output)
 			for i, v := range args {
+				if v == "-" {
+					continue
+				}
 				args[i] = filepath.Join(directory, v)
 			}
-			if len(args) == 0 {
-				entries, err := os.ReadDir(directory)
+			if len(args) >= 0 {
+				var entries []os.DirEntry
+				entries, err = os.ReadDir(directory)
 				if err != nil {
-					return err
+					return
 				}
-				for _, de := range entries {
-					if !de.IsDir() && filepath.Ext(de.Name()) == ".po" {
-						args = append(args, filepath.Join(directory, de.Name()))
+				if len(args) > 0 {
+					for _, de := range entries {
+						if !de.IsDir() && filepath.Ext(de.Name()) == ".po" {
+							args = append(args, filepath.Join(directory, de.Name()))
+						}
 					}
+				} else {
+					for _, de := range entries {
+						if de.IsDir() {
+							continue
+						}
+						basename := strings.TrimSuffix(de.Name(), filepath.Ext(de.Name()))
+						newMo := filepath.Join(directory, basename+".mo")
+
+						var poFile *po.File
+						poFile, err = parse.Po(filepath.Join(directory, de.Name()))
+						if err != nil {
+							return
+						}
+						if err = poFile.Validate(); err != nil {
+							return
+						}
+						err = compile.MoToFile(poFile, newMo)
+						if err != nil {
+							return
+						}
+					}
+					return
 				}
 			}
 		}
 
+		var allEntries po.Entries
 		for _, arg := range args {
-			path, file := filepath.Split(arg)
-			basename := strings.TrimSuffix(file, filepath.Ext(file))
-			moPath := filepath.Join(path, basename+".mo")
-			poPath := filepath.Join(path, file)
-
-			poFile, err := parse.Po(poPath)
+			var poFile *po.File
+			if arg == "-" {
+				poFile, err = parse.PoFromReader(os.Stdin, "stdin")
+			} else {
+				poFile, err = parse.Po(arg)
+			}
 			if err != nil {
-				return err
+				return
 			}
 
-			err = compile.MoToFile(poFile, moPath, compile.MoWithConfig(compilerCfg))
-			if err != nil {
-				return err
-			}
-
+			allEntries = append(allEntries, poFile.Entries...)
 		}
 
-		return
+		if err = allEntries.Validate(); err != nil {
+			return
+		}
+
+		return compile.MoToFile(allEntries, output, compile.MoWithConfig(compilerCfg))
 	},
 }
 
