@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	EntriesOrFile interface{ Entries | *File }
+	EntriesOrFile interface{ Entries | *File | File }
 	Cmp[X any]    func(a, b X) int
 	Parser        interface {
 		Parse() *File

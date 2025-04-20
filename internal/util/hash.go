@@ -1,20 +1,16 @@
-//go:build ignore
-// +build ignore
-
 package util
 
-func PJWHash(s string) uint {
-	var h uint
-	var high uint
+// PJWHash computes a hash value for a string using the PJW (Elf) hash algorithm.
+func PJWHash(str string) uint32 {
+	var h, g uint32
 
-	for _, c := range s {
-		h = (h << 4) + uint(c)
-		high = h & 0xF0000000
-		if high != 0 {
-			h ^= high >> 24
+	for _, c := range str {
+		h = (h << 4) + uint32(c)
+		g = h & 0xF0000000 // Check the top 4 bits
+		if g != 0 {
+			h ^= g >> 24 // XOR with the high bits
+			h &= ^g      // Clear the top 4 bits
 		}
-		h &= ^high
 	}
-
 	return h
 }

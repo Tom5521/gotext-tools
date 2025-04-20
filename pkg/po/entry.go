@@ -70,7 +70,7 @@ func (e Entry) UnifiedStr() string {
 }
 
 // Returns the unified msgid, msgid_plural and context according
-// to MO format (CTXT \x04 ID \x00 PLURAL).
+// to MO format (CTXT \x04 ID (\x00 PLURAL)...).
 func (e Entry) UnifiedID() string {
 	id := e.ID
 	if e.HasContext() {
@@ -83,8 +83,15 @@ func (e Entry) UnifiedID() string {
 	return id
 }
 
+func (e Entry) Hash() uint32 {
+	return util.PJWHash(e.UnifiedID())
+}
+
 func (e Entry) Equal(x Entry) bool {
-	return util.Equal(e, x)
+	ok1 := e.UnifiedID() == x.UnifiedID() && e.UnifiedStr() == x.UnifiedStr()
+	ok2 := slices.CompareFunc(e.Flags, x.Flags, strings.Compare) == 0
+	ok3 := e.Obsolete && x.Obsolete
+	return ok1 && ok2 && ok3
 }
 
 func (e Entry) IsPlural() bool {

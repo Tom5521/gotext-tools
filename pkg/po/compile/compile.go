@@ -7,12 +7,14 @@ import (
 )
 
 func file[T po.EntriesOrFile](i T) *po.File {
-	var f *po.File
+	f := new(po.File)
 	switch v := any(i).(type) {
 	case *po.File:
 		f = v
 	case po.Entries:
-		f = &po.File{Entries: v}
+		f.Entries = v
+	case po.File:
+		*f = v
 	}
 
 	return f
