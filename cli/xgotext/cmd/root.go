@@ -55,9 +55,7 @@ Similarly for optional arguments.`,
 			return join(parser, out)
 		}
 
-		compiler := compile.NewPo(parsedFile, compile.PoWithConfig(CompilerCfg))
-
-		err = compiler.ToWriter(out)
+		err = compile.PoToWriter(parsedFile, out, compile.PoWithConfig(CompilerCfg))
 		if err != nil {
 			return fmt.Errorf("error compiling translations: %w", err)
 		}
