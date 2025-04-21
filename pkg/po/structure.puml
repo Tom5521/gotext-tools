@@ -8,10 +8,12 @@ namespace po {
     }
     class Entries << (S,Aquamarine) >> {
         + Equal(e2 Entries) bool
+        + ContainsFunc(f <font color=blue>func</font>(Entry) bool) bool
         + ContainsUnifiedID(uid string) bool
         + CutHeader() Entries
         + BestIDRatio(e1 Entry) (int, int)
         + BestStrRatio(e1 Entry) (int, int)
+        + IndexFunc(f <font color=blue>func</font>(Entry) bool) int
         + IndexByUnifiedID(uid string) int
         + Index(id string, context string) int
         + IsSorted() bool
@@ -26,6 +28,7 @@ namespace po {
         + Solve() Entries
         + CleanFuzzy() Entries
         + FuzzyFind(id string, context string) int
+        + Validate() error
         + Header() Header
 
     }
@@ -51,6 +54,7 @@ namespace po {
         + Validate() error
         + UnifiedStr() string
         + UnifiedID() string
+        + Hash() uint32
         + Equal(x Entry) bool
         + IsPlural() bool
         + HasContext() bool
@@ -61,7 +65,6 @@ namespace po {
     class File << (S,Aquamarine) >> {
         + Name string
 
-        + Validate() error
         + Equal(f2 File) bool
         + Set(id string, context string, e Entry) 
         + LoadByUnifiedID(uid string) string

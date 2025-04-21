@@ -195,7 +195,7 @@ func (p *Parser) Parse() (file *po.File) {
 	}
 
 	if p.Config.CleanDuplicates {
-		file.Entries = file.Entries.CleanDuplicates()
+		file.Entries = file.CleanDuplicates()
 	}
 
 	return
