@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,12 +13,10 @@ import (
 )
 
 var root = &cobra.Command{
-	Use: os.Args[0],
-	Short: `Generate binary message catalog from textual translation descript
-ion.`,
+	Use:   os.Args[0],
+	Short: `Generate binary message catalog from textual translation description.`,
 	Long: `Usage: msgfmt [OPTION] filename.po ...
-Mandatory arguments to long options are mandatory for short optio
-ns too.
+Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.
 If input file is -, standard input is read.`,
 	Args: func(cmd *cobra.Command, args []string) error {
@@ -26,6 +25,11 @@ If input file is -, standard input is read.`,
 		}
 		return cobra.MinimumNArgs(1)(cmd, args)
 	},
+	Example: fmt.Sprintf(`%s -o my-messages.mo - < my-file.po
+%s es.po -o es.mo
+%s -D domains/es -f
+%s -D inside-this-directory es.po -o es.mo`,
+		os.Args[0], os.Args[0], os.Args[0], os.Args[0]),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		initCfg()
 	},
@@ -77,12 +81,13 @@ If input file is -, standard input is read.`,
 		}
 
 		var allEntries po.Entries
+		opts := []parse.PoOption{parse.PoWithCleanDuplicates(false)}
 		for _, arg := range args {
 			var poFile *po.File
 			if arg == "-" {
-				poFile, err = parse.PoFromReader(os.Stdin, "stdin")
+				poFile, err = parse.PoFromReader(os.Stdin, "stdin", opts...)
 			} else {
-				poFile, err = parse.Po(arg)
+				poFile, err = parse.Po(arg, opts...)
 			}
 			if err != nil {
 				return

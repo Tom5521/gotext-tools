@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,15 +15,21 @@ import (
 var root = &cobra.Command{
 	Use:   os.Args[0],
 	Short: "Merges two Uniforum style .po files together.",
-	Long: `Merges two Uniforum style .po files together.  The def.po file is an
-existing PO file with translations which will be taken over to the newly
-created file as long as they still match; comments will be preserved,
-but extracted comments and file positions will be discarded.  The ref.pot
-file is the last created PO file with up-to-date source references but
+	Long: `Merges two Uniforum style .po files together.  
+The def.po file is an existing PO file with translations which will be
+taken over to the newly created file as long as they still match;
+comments will be preserved, but extracted comments and file positions will
+be discarded.
+The ref.pot file is the last created PO file with up-to-date source references but
 old translations, or a PO Template file (generally created by xgettext);
 any translations or comments in the file will be discarded, however dot
-comments and file positions will be preserved.  Where an exact match
-cannot be found, fuzzy matching is used to produce better results.`,
+comments and file positions will be preserved.
+Where an exact match cannot be found, fuzzy matching is used to produce better results.`,
+	Example: fmt.Sprintf(`%s es.po en.pot -o -
+%s es.po en.pot -o merged.po
+%s es.po en.pot -U`,
+		os.Args[0], os.Args[0], os.Args[0],
+	),
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 && len(compendium) < 1 {
 			return cobra.ExactArgs(2)(cmd, args)
