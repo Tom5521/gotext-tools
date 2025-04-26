@@ -5,10 +5,11 @@ import (
 )
 
 var (
-	directory  string
-	output     string
-	endianness string
-	force      bool
+	directory   string
+	output      string
+	endianness  string
+	force       bool
+	noHashTable bool
 )
 
 func init() {
@@ -23,12 +24,13 @@ If output file is -, output is written to standard output.`)
 (big or little, default depends on platform)`,
 	)
 	flags.BoolVarP(&force, "force", "f", false, "Overwrites generated files if they already exist")
+	flags.BoolVar(&noHashTable, "no-hash", false, "binary file will not include the hash table")
 }
 
 var compilerCfg = compile.DefaultMoConfig()
 
 func initCfg() {
-	compilerCfg.Endianess = func() compile.Endianness {
+	compilerCfg.Endianness = func() compile.Endianness {
 		switch endianness {
 		case "big":
 			return compile.BigEndian
@@ -39,4 +41,5 @@ func initCfg() {
 		}
 	}()
 	compilerCfg.Force = force
+	compilerCfg.HashTable = !noHashTable
 }

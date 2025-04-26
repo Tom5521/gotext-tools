@@ -49,16 +49,19 @@ func CompareEntriesFunc(a, b Entries, cmp Cmp[Entry]) int {
 }
 
 func CompareEntry(a, b Entry) int {
-	obsolete := CompareEntryByObsolete(a, b)
-	if obsolete != 0 {
-		return obsolete
-	}
-	fuzzy := CompareEntryByFuzzy(a, b)
-	if fuzzy != 0 {
-		return fuzzy
+	if cmp := CompareEntryByObsolete(a, b); cmp != 0 {
+		return cmp
 	}
 
-	return CompareEntryByLocation(a, b)
+	if cmp := CompareEntryByFuzzy(a, b); cmp != 0 {
+		return cmp
+	}
+
+	if cmp := CompareEntryByLocation(a, b); cmp != 0 {
+		return cmp
+	}
+
+	return CompareEntryByID(a, b)
 }
 
 func CompareEntryByObsolete(a, b Entry) int {

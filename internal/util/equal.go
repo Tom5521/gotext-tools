@@ -18,17 +18,24 @@ func Equal[X, Y any](x X, y Y) bool {
 }
 
 func equal(v1, v2 reflect.Value, visited visitedPairs) bool {
-	if v1.Kind() == reflect.Pointer || v1.Kind() == reflect.Interface {
-		if v1.IsNil() || v2.IsNil() {
-			return v1.IsNil() == v2.IsNil()
-		}
-		return equal(v1.Elem(), v2.Elem(), visited)
+	if v1.Kind() == reflect.Interface {
+		v1 = v1.Elem()
 	}
-
+	if v2.Kind() == reflect.Interface {
+		v2 = v2.Elem()
+	}
+	if v1.Kind() == reflect.Pointer && !v1.IsNil() {
+		v1 = v1.Elem()
+	}
+	if v2.Kind() == reflect.Pointer && !v2.IsNil() {
+		v2 = v2.Elem()
+	}
+	if !v1.IsValid() || !v2.IsValid() {
+		return v1.IsValid() == v2.IsValid()
+	}
 	if v1.Type() != v2.Type() {
 		return false
 	}
-
 	if v1.CanAddr() && v2.CanAddr() {
 		addr1, addr2 := v1.UnsafeAddr(), v2.UnsafeAddr()
 		pair := [2]uintptr{addr1, addr2}
@@ -37,7 +44,6 @@ func equal(v1, v2 reflect.Value, visited visitedPairs) bool {
 		}
 		visited[pair] = struct{}{}
 	}
-
 	switch v1.Kind() {
 	case reflect.Bool:
 		return v1.Bool() == v2.Bool()

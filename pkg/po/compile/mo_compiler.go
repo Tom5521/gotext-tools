@@ -3,12 +3,15 @@ package compile
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	bin "encoding/binary"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
 
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
@@ -63,12 +66,36 @@ func flen(value any) u32 {
 	return u32(reflect.ValueOf(value).Len())
 }
 
+func max[T slices.Ordered](values ...T) T {
+	return slices.Max(values)
+}
+
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
+	entries = entries.SortFunc(po.CompareEntryByID)
 
-	if mc.Config.Sort {
-		entries = mc.Config.SortMode.SortMethod(entries)()
+	var hashTabSize u32
+	if mc.Config.HashTable {
+		hashTabSize = max(3, util.NextPrime((flen(entries)*4)/3))
+	}
+
+	header := struct {
+		magic          u32 // 0
+		revision       u32 // 4
+		nstrings       u32 // 8
+		origTabOffset  u32 // 12
+		transTabOffset u32 // 16
+		hashTabSize    u32 // 20
+		hashTabOffset  u32 // 24
+	}{
+		magic:          mc.Config.Endianness.MagicNumber(),
+		revision:       0,
+		nstrings:       flen(entries),
+		origTabOffset:  7 * 4,
+		transTabOffset: 7*4 + flen(entries)*8,
+		hashTabSize:    hashTabSize,
+		hashTabOffset:  7*4 + 16*flen(entries),
 	}
 
 	var (
@@ -90,34 +117,28 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		strs += msgstr + nul
 	}
 
-	keystart := 7*4 + 16*flen(entries)
-	valuestart := keystart + flen(ids)
+	origStart := header.hashTabOffset + hashTabSize*4
+	transStart := origStart + flen(ids)
 
-	var koffsets, voffsets []u32
-
+	var origOffsets, transOffsets []u32
 	for i := 0; i < len(offsets); i += 4 {
 		o1 := offsets[i]
 		l1 := offsets[i+1]
 		o2 := offsets[i+2]
 		l2 := offsets[i+3]
 
-		koffsets = append(koffsets, l1, o1+keystart)
-		voffsets = append(voffsets, l2, o2+valuestart)
+		origOffsets = append(origOffsets, l1, o1+origStart)
+		transOffsets = append(transOffsets, l2, o2+transStart)
 	}
 
-	magicNumber := mc.Config.Endianess.MagicNumber()
-	order := mc.Config.Endianess.Order()
+	order := mc.Config.Endianness.Order()
+	hashTable := buildHashTable(entries, hashTabSize, order)
 
-	// Write the data to the file
 	data := []any{
-		magicNumber,
-		u32(0),
-		flen(entries),
-		u32(7 * 4),            // Offset of the original strings table
-		7*4 + flen(entries)*8, // Offset of the translated strings table
-		u32(0), keystart,
-		koffsets,
-		voffsets,
+		header,
+		origOffsets,
+		transOffsets,
+		hashTable,
 		[]byte(ids),
 		[]byte(strs),
 	}
@@ -130,6 +151,44 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	}
 
 	return nil
+}
+
+func buildHashTable(entries po.Entries, size u32, order binary.ByteOrder) []byte {
+	var (
+		nulWord = []byte{0, 0, 0, 0}
+		hashMap = make([][]byte, size)
+	)
+	for i := range hashMap {
+		hashMap[i] = nulWord
+	}
+
+	var seq u32 = 1
+	for _, e := range entries {
+		hashVal := e.Hash()
+		idx := hashVal % size
+
+		if !bytes.Equal(hashMap[idx], nulWord) {
+			incr := 1 + (hashVal % (size - 2))
+			for {
+				diff := size - incr
+				if idx >= diff {
+					idx -= diff
+				} else {
+					idx += incr
+				}
+				if bytes.Equal(hashMap[idx], nulWord) {
+					break
+				}
+			}
+		}
+
+		buf := make([]byte, 4)
+		order.PutUint32(buf, seq)
+		hashMap[idx] = buf
+		seq++
+	}
+
+	return bytes.Join(hashMap, nil)
 }
 
 func (mc MoCompiler) ToWriter(w io.Writer) error {

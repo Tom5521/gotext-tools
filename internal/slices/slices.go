@@ -1,6 +1,40 @@
 package slices
 
-import "sort"
+import (
+	"sort"
+)
+
+type Ordered interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64 |
+		~string
+}
+
+func Equal[S ~[]E, E comparable](s1, s2 S) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func Max[S ~[]E, E Ordered](x S) E {
+	if len(x) < 1 {
+		panic("slices.Max: empty list")
+	}
+	m := x[0]
+	for i := 1; i < len(x); i++ {
+		if x[i] > m {
+			m = x[i]
+		}
+	}
+	return m
+}
 
 func IndexFunc[S ~[]E, E any](s S, f func(E) bool) int {
 	for i := range s {
@@ -87,4 +121,9 @@ func Clone[S ~[]E, E any](s S) S {
 		return nil
 	}
 	return append(S([]E{}), s...)
+}
+
+// Clip removes unused capacity from the slice, returning s[:len(s):len(s)].
+func Clip[S ~[]E, E any](s S) S {
+	return s[:len(s):len(s)]
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
-	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 type MoConfig struct {
@@ -15,10 +14,8 @@ type MoConfig struct {
 	Force        bool
 	Verbose      bool
 	IgnoreErrors bool
-	Sort         bool
-	SortMode     po.SortMode
-	Endianess    Endianness
-	// HashTable    bool
+	Endianness   Endianness
+	HashTable    bool
 }
 
 type Endianness = util.Endianness
@@ -45,9 +42,8 @@ func (mc *MoConfig) RestoreLastCfg() {
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
-		Logger:    log.New(io.Discard, "", 0),
-		Sort:      true,
-		Endianess: NativeEndian,
+		Logger:     log.New(io.Discard, "", 0),
+		Endianness: NativeEndian,
 	}
 
 	c.ApplyOptions(opts...)
@@ -59,7 +55,7 @@ type MoOption func(c *MoConfig)
 
 func MoWithEndianness(e Endianness) MoOption {
 	return func(c *MoConfig) {
-		c.Endianess = e
+		c.Endianness = e
 	}
 }
 
@@ -69,23 +65,11 @@ func MoWithConfig(n MoConfig) MoOption {
 	}
 }
 
-func MoWithSortMode(m po.SortMode) MoOption {
+func MoWithHashTable(h bool) MoOption {
 	return func(c *MoConfig) {
-		c.SortMode = m
+		c.HashTable = h
 	}
 }
-
-func MoWithSort(s bool) MoOption {
-	return func(c *MoConfig) {
-		c.Sort = s
-	}
-}
-
-// func MoWithHashTable(h bool) MoOption {
-// 	return func(c *MoConfig) {
-// 		c.HashTable = h
-// 	}
-// }
 
 func MoWithForce(f bool) MoOption {
 	return func(c *MoConfig) {
