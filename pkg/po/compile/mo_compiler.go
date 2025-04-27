@@ -71,7 +71,7 @@ func max[T slices.Ordered](values ...T) T {
 
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
-	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes().CleanEmpties()
+	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
 	entries = entries.SortFunc(po.CompareEntryByID)
 
 	var hashTabSize u32
@@ -130,7 +130,6 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		transOffsets = append(transOffsets, l2, o2+transStart)
 	}
 
-	order := mc.Config.Endianness.Order()
 	var hashTable []u32
 	if mc.Config.HashTable {
 		hashTable = buildHashTable(entries, hashTabSize)
@@ -146,7 +145,7 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	}
 
 	for _, v := range data {
-		err := bin.Write(writer, order, v)
+		err := bin.Write(writer, mc.Config.Endianness.Order(), v)
 		if err != nil && !mc.Config.IgnoreErrors {
 			return err
 		}
@@ -156,17 +155,14 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 }
 
 func buildHashTable(entries po.Entries, size u32) []u32 {
-	var (
-		nulWord u32
-		hashMap = make([]u32, size)
-	)
+	hashMap := make([]u32, size)
 
 	var seq u32 = 1
 	for _, e := range entries {
 		hashVal := e.Hash()
 		idx := hashVal % size
 
-		if hashMap[idx] != nulWord {
+		if hashMap[idx] != 0 {
 			incr := 1 + (hashVal % (size - 2))
 			for {
 				diff := size - incr
@@ -175,7 +171,7 @@ func buildHashTable(entries po.Entries, size u32) []u32 {
 				} else {
 					idx += incr
 				}
-				if hashMap[idx] == nulWord {
+				if hashMap[idx] == 0 {
 					break
 				}
 			}
