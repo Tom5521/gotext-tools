@@ -76,7 +76,7 @@ func (e Entry) UnifiedID() string {
 	if e.HasContext() {
 		id = e.Context + "\x04" + id
 	}
-	if e.IsPlural() {
+	if e.IsPlural() && e.Plural != "" {
 		id += "\x00" + e.Plural
 	}
 
@@ -84,7 +84,16 @@ func (e Entry) UnifiedID() string {
 }
 
 func (e Entry) Hash() uint32 {
-	return util.PJWHash(e.UnifiedID())
+	id := e.ID
+	if e.HasContext() {
+		id = e.Context + "\x04" + id
+	}
+	// IDK, why tf if I remove this code, magically works
+	// if e.IsPlural() && e.Plural != "" {
+	// 	id += "\x00" + e.Plural
+	// }
+
+	return util.PJWHash(id)
 }
 
 func (e Entry) Equal(x Entry) bool {

@@ -1,9 +1,9 @@
 package compile_test
 
 import (
+	"bytes"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -33,7 +33,7 @@ func TestMoWithMsgfmt(t *testing.T) {
 			},
 		},
 		{ID: "id3", Str: "Hello3"},
-	}
+	}.SortFunc(po.CompareEntryByID)
 
 	tests := []struct {
 		name string
@@ -51,33 +51,33 @@ func TestMoWithMsgfmt(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var stdout, stderr strings.Builder
-
 			test.opts = append(test.opts, compile.MoWithForce(true))
+
 			err = compile.MoToFile(input, outFile, test.opts...)
 			if err != nil {
 				t.Error(err)
 				return
 			}
 
+			var stderr, stdout bytes.Buffer
 			cmd := exec.Command(msgunfmtPath, outFile)
-			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
+			cmd.Stdout = &stdout
 
 			err = cmd.Run()
 			if err != nil {
-				t.Error(cmd.Stderr)
+				t.Error(stderr.String())
 				return
 			}
 
-			parsed, err := parse.PoFromString(stdout.String(), "test.po")
+			parsed, err := parse.PoFromReader(&stdout, "test.po", parse.PoWithSkipHeader(true))
 			if err != nil {
 				t.Error(err)
 				return
 			}
 
 			if !util.Equal(parsed.Entries, input) {
-				t.Fail()
+				t.Error(err)
 			}
 		})
 	}

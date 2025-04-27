@@ -44,6 +44,7 @@ func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
 		Logger:     log.New(io.Discard, "", 0),
 		Endianness: NativeEndian,
+		HashTable:  true,
 	}
 
 	c.ApplyOptions(opts...)

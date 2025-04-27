@@ -3,7 +3,6 @@ package compile
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	bin "encoding/binary"
 	"fmt"
 	"io"
@@ -72,7 +71,7 @@ func max[T slices.Ordered](values ...T) T {
 
 // Code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
-	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
+	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes().CleanEmpties()
 	entries = entries.SortFunc(po.CompareEntryByID)
 
 	var hashTabSize u32
@@ -117,7 +116,7 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		strs += msgstr + nul
 	}
 
-	origStart := header.hashTabOffset + hashTabSize*4
+	origStart := header.hashTabOffset + (hashTabSize * 4)
 	transStart := origStart + flen(ids)
 
 	var origOffsets, transOffsets []u32
@@ -132,7 +131,10 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	}
 
 	order := mc.Config.Endianness.Order()
-	hashTable := buildHashTable(entries, hashTabSize, order)
+	var hashTable []u32
+	if mc.Config.HashTable {
+		hashTable = buildHashTable(entries, hashTabSize)
+	}
 
 	data := []any{
 		header,
@@ -153,21 +155,18 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	return nil
 }
 
-func buildHashTable(entries po.Entries, size u32, order binary.ByteOrder) []byte {
+func buildHashTable(entries po.Entries, size u32) []u32 {
 	var (
-		nulWord = []byte{0, 0, 0, 0}
-		hashMap = make([][]byte, size)
+		nulWord u32
+		hashMap = make([]u32, size)
 	)
-	for i := range hashMap {
-		hashMap[i] = nulWord
-	}
 
 	var seq u32 = 1
 	for _, e := range entries {
 		hashVal := e.Hash()
 		idx := hashVal % size
 
-		if !bytes.Equal(hashMap[idx], nulWord) {
+		if hashMap[idx] != nulWord {
 			incr := 1 + (hashVal % (size - 2))
 			for {
 				diff := size - incr
@@ -176,19 +175,17 @@ func buildHashTable(entries po.Entries, size u32, order binary.ByteOrder) []byte
 				} else {
 					idx += incr
 				}
-				if bytes.Equal(hashMap[idx], nulWord) {
+				if hashMap[idx] == nulWord {
 					break
 				}
 			}
 		}
 
-		buf := make([]byte, 4)
-		order.PutUint32(buf, seq)
-		hashMap[idx] = buf
+		hashMap[idx] = seq
 		seq++
 	}
 
-	return bytes.Join(hashMap, nil)
+	return hashMap
 }
 
 func (mc MoCompiler) ToWriter(w io.Writer) error {

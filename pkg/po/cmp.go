@@ -106,7 +106,7 @@ func CompareEntryByLine(a, b Entry) int {
 }
 
 func CompareEntryByID(a, b Entry) int {
-	return strings.Compare(a.ID, b.ID)
+	return strings.Compare(a.UnifiedID(), b.UnifiedID())
 }
 
 func CompareEntryByFile(a, b Entry) int {

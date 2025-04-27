@@ -116,6 +116,10 @@ func (e Entries) CleanDuplicates() Entries {
 	})
 }
 
+func (e Entries) CleanEmpties() Entries {
+	return slices.DeleteFunc(e, func(e Entry) bool { return e.ID == "" })
+}
+
 // MergeFunc defines a function type that takes two Entry objects and returns a merged Entry pointer.
 type MergeFunc func(a, b Entry) *Entry
 
