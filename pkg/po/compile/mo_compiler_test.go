@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -50,7 +51,16 @@ func TestMoCompiler(t *testing.T) {
 	}
 }
 
-func TestMoCompilerWithMsgunfmt(t *testing.T) {
+func TestMoWithMsgunfmt(t *testing.T) {
+	msgunfmtPath, err := exec.LookPath("msgunfmt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tmpDir := t.TempDir()
+	outFile := filepath.Join(tmpDir, "out.mo")
+
 	input := po.Entries{
 		{Context: "My context :3", ID: "id1", Str: "HELLO"},
 		{
@@ -62,38 +72,52 @@ func TestMoCompilerWithMsgunfmt(t *testing.T) {
 			},
 		},
 		{ID: "id3", Str: "Hello3"},
+	}.SortFunc(po.CompareEntryByID)
+
+	tests := []struct {
+		name string
+		opts []compile.MoOption
+	}{
+		{
+			"Normal",
+			nil,
+		},
+		{
+			"With hash table",
+			[]compile.MoOption{compile.MoWithHashTable(true)},
+		},
 	}
 
-	c := compile.NewMo(
-		&po.File{Entries: input},
-	)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.opts = append(test.opts, compile.MoWithForce(true))
 
-	_, err := exec.LookPath("msgunfmt")
-	if err != nil {
-		t.Skip("gettext-tools isn't in the PATH")
-		return
-	}
+			err = compile.MoToFile(input, outFile, test.opts...)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 
-	var stdout bytes.Buffer
+			var stderr, stdout bytes.Buffer
+			cmd := exec.Command(msgunfmtPath, outFile)
+			cmd.Stderr = &stderr
+			cmd.Stdout = &stdout
 
-	cmd := exec.Command("msgunfmt")
-	cmd.Stdin = bytes.NewReader(c.ToBytes())
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stdout
+			err = cmd.Run()
+			if err != nil {
+				t.Error(stderr.String())
+				return
+			}
 
-	err = cmd.Run()
-	if err != nil {
-		t.Error(stdout.String())
-		return
-	}
+			parsed, err := parse.PoFromReader(&stdout, "test.po", parse.PoWithSkipHeader(true))
+			if err != nil {
+				t.Error(err)
+				return
+			}
 
-	parser, _ := parse.NewPoFromReader(&stdout, "lol.po", parse.PoWithSkipHeader(true))
-	parsedFile := parser.Parse()
-	if err = parser.Error(); err != nil {
-		t.Error(err)
-		return
-	}
-	if !util.Equal(parsedFile.Entries, input) {
-		t.Fail()
+			if !util.Equal(parsed.Entries, input) {
+				t.Error(err)
+			}
+		})
 	}
 }
