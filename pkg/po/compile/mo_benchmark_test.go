@@ -21,10 +21,27 @@ func BenchmarkMoCompiler(b *testing.B) {
 		{ID: "id3", Str: "Hello3"},
 	}
 
-	comp := compile.NewMo(&po.File{Entries: input})
+	benchmarks := []struct {
+		name string
+		opts []compile.MoOption
+	}{
+		{
+			"WithHashTable",
+			[]compile.MoOption{compile.MoWithHashTable(true)},
+		},
+		{
+			"WithoutHashTable",
+			[]compile.MoOption{compile.MoWithHashTable(false)},
+		},
+	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		comp.ToBytes()
+	for _, bench := range benchmarks {
+		b.Run(bench.name, func(b *testing.B) {
+			comp := compile.NewMo(&po.File{Entries: input}, bench.opts...)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				comp.ToBytes()
+			}
+		})
 	}
 }
