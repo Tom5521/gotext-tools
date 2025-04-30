@@ -17,7 +17,8 @@ const (
 #
 ` + headerEntry
 	headerEntry = `msgid ""
-msgstr ""`
+msgstr ""
+`
 	headerFieldFormat = `"%s: %s\n"`
 )
 

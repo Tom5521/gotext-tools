@@ -49,7 +49,7 @@ func initConfig() {
 		WordWrap:        wordWrap,
 	}
 
-	if term.IsTerminal(int(os.Stdout.Fd())) {
+	if term.IsTerminal(int(os.Stdout.Fd())) && output == "-" {
 		CompilerCfg.Highlight = compile.DefaultHighligh
 	}
 

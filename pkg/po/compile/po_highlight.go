@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"strconv"
+	"regexp"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -66,6 +66,7 @@ func colorStrings(tokens []lexer.Token, offset int, unq, comment color.Color) in
 	for i := offset; i < len(tokens); i++ {
 		t := tokens[i]
 
+		regex := regexp.MustCompile(`"(.*)"`)
 		var unquoted string
 
 		if t.Type == util.PoSymbols["WS"] {
@@ -80,7 +81,7 @@ func colorStrings(tokens []lexer.Token, offset int, unq, comment color.Color) in
 			break
 		}
 
-		unquoted, _ = strconv.Unquote(t.Value)
+		unquoted = regex.FindStringSubmatch(t.Value)[1]
 		t.Value = fmt.Sprintf(`"%s"`, unq.Render(unquoted))
 
 	finish:

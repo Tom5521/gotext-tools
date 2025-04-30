@@ -125,7 +125,7 @@ be in the public domain.`,
 		"messages",
 		"use NAME.pot for output (instead of messages.pot)",
 	)
-	flag.StringVarP(&output, "output", "o", "", "write output to specified file")
+	flag.StringVarP(&output, "output", "o", "-", "write output to specified file")
 	flag.StringVarP(
 		&outputDir,
 		"output-dir",
