@@ -1,5 +1,9 @@
 @startuml
 namespace compile {
+    class HighlightConfig << (S,Aquamarine) >> {
+        + ID color.Color
+
+    }
     class MoCompiler << (S,Aquamarine) >> {
         + File *po.File
         + Config MoConfig
@@ -22,9 +26,8 @@ namespace compile {
         + Force bool
         + Verbose bool
         + IgnoreErrors bool
-        + Sort bool
-        + SortMode po.SortMode
-        + Endianess Endianness
+        + Endianness Endianness
+        + HashTable bool
 
         + ApplyOptions(opts ...MoOption) 
         + RestoreLastCfg() 
@@ -80,6 +83,7 @@ namespace compile {
         + WordWrap bool
         + UseCustomObsoletePrefix bool
         + CustomObsoletePrefixRune rune
+        + Highlight *HighlightConfig
 
         + ApplyOptions(opts ...PoOption) 
         + RestoreLastCfg() 

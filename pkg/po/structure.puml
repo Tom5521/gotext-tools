@@ -24,6 +24,7 @@ namespace po {
         + HasDuplicates() bool
         + CleanObsoletes() Entries
         + CleanDuplicates() Entries
+        + CleanEmpties() Entries
         + SolveFunc(merger MergeFunc) Entries
         + Solve() Entries
         + CleanFuzzy() Entries
