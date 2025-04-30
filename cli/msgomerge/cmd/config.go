@@ -22,7 +22,7 @@ func initConfig() {
 		OmitHeader:  true,
 	}
 
-	if term.IsTerminal(int(os.Stdout.Fd())) {
+	if term.IsTerminal(int(os.Stdout.Fd())) && outputPath == "-" {
 		compilerCfg.Highlight = compile.DefaultHighligh
 	}
 
