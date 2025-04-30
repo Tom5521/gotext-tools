@@ -17,7 +17,7 @@ A Go library and CLI toolkit for working with Gettext `.po` and `.mo` files. Thi
 
 ## CLI Tools
 
-Located in `cli/`, these tools provide command-line utilities for managing `.po` files.
+Located in `cli/`, these tools provide command-line utilities for managing `.po` and `.mo` files.
 
 ### `msgomerge`
 
@@ -30,6 +30,18 @@ msgomerge [old.po] [new.po] -o [output.po]
 ```
 
 [More information here](/cli/msgomerge/README.md)
+
+### `msgofmt`
+
+A cross-platform alternative to `msgfmt`, used for compiling `.po` files into binary `.mo` files.
+
+**Usage:**
+
+```sh
+msgofmt [input.po] -o [output.mo]
+```
+
+[More information here](/cli/msgofmt/README.md)
 
 ### `xgotext`
 
@@ -204,8 +216,7 @@ msgstr "mundo"`
 ```sh
 git clone https://github.com/Tom5521/gotext-tools
 cd gotext-tools
-go build ./cli/msgomerge
-go build ./cli/xgotext
+just # Now check ./builds!
 ```
 
 ### Pre-built Binaries

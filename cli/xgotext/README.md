@@ -18,7 +18,7 @@ A command-line tool for extracting translatable strings from Go source code that
 ## Installation
 
 ```bash
-go install github.com/Tom5521/gotext-tools/v2/cli/xgotext@latest
+curl -L -o ~/go/bin/xgotext https://github.com/Tom5521/gotext-tools/releases/latest/download/xgotext-$(go env GOOS)-$(go env GOARCH)
 ```
 
 ## Usage
