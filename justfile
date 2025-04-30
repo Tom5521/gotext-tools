@@ -10,13 +10,16 @@ default:
     set -euo pipefail
 
     for app in ./cli/*; do
-      just build $(basename $app)
+        if [[ -d "$app" ]]; then
+            echo -n {{BOLD}}$(basename $app)-{{NORMAL}}
+            just build $(basename $app)
+        fi
     done
 
 run app args:
-    GOOS={{ goos }} GOARCH={{ goarch }} {{ gocmd }} run \
+    GOOS={{ goos }} GOARCH={{ goarch }} {{ gocmd }} run -C ./cli \
     $([[ "{{ verbose }}" == "1" ]] && echo "-v") \
-    ./cli/{{ app }} {{ args }}
+    ./{{ app }} {{ args }}
 
 test:
     {{ gocmd }} clean -testcache
@@ -37,23 +40,23 @@ puml:
     #!/usr/bin/env bash
 
     paths=( 
-      ./pkg/go/parse
-      ./pkg/po/parse
-      ./pkg/po/compile
-      ./pkg/po
+        ./pkg/go/parse
+        ./pkg/po/parse
+        ./pkg/po/compile
+        ./pkg/po
     )
 
     for path in "${paths[@]}"; do
-      echo -n {{ BOLD }}"Generating PUML's of $path..."{{ NORMAL }}
-      structure="$path/structure.puml"
-      goplantuml "$path" > "$structure"
-      plantuml -theme spacelab "$structure"
+        echo -n {{ BOLD }}"Generating PUML's of $path..."{{ NORMAL }}
+        structure="$path/structure.puml"
+        goplantuml "$path" > "$structure"
+        plantuml -theme spacelab "$structure"
 
-      if [[ $? == 0 ]]; then
-      echo {{ GREEN }}"OK"{{ NORMAL }}
-      else
-        echo {{ RED }}"ERROR: $?"{{ NORMAL }}
-      fi
+        if [[ $? == 0 ]]; then
+            echo {{ GREEN }}"OK"{{ NORMAL }}
+        else
+            echo {{ RED }}"ERROR: $?"{{ NORMAL }}
+        fi
     done
 
 clean:
@@ -68,7 +71,7 @@ diff:
     git diff --staged > diff.log
 
 go-install app:
-    {{ gocmd }} install -v -ldflags '-s -w' ./cli/{{ app }}
+    {{ gocmd }} install -C ./cli -v -ldflags '-s -w' ./{{ app }}
 
 go-uninstall app:
     rm {{ gopath }}/bin/{{ app }}{{ ext }} -f
@@ -92,20 +95,21 @@ root-uninstall app:
     sudo rm /usr/local/bin/{{ app }}
 
 build app:
-    #!/usr/bin/env bash 
+    #!/usr/bin/env bash
+
     echo -n {{ BOLD }}"{{ goos }}-{{ goarch }}..."{{ NORMAL }}
 
     GOOS={{ goos }} GOARCH={{ goarch }} \
-    {{ gocmd }} build \
+    {{ gocmd }} build -C cli \
     $([[ "{{ verbose }}" == "1" ]] && echo "-v") \
-    -o builds/{{ app }}-{{ goos }}-{{ goarch }}{{ ext }} \
+    -o ../builds/{{ app }}-{{ goos }}-{{ goarch }}{{ ext }} \
     -ldflags '-s -w' \
-    ./cli/{{ app }}
+    ./{{ app }}
 
     if [[ $? == 0 ]]; then
-      echo {{ GREEN }}"OK"{{ NORMAL }}
+        echo {{ GREEN }}"OK"{{ NORMAL }}
     else
-      echo {{ RED }}"ERROR: $?"{{ NORMAL }}
+        echo {{ RED }}"ERROR: $?"{{ NORMAL }}
     fi
 
 build-all-app app:
@@ -143,11 +147,11 @@ build-all-app app:
     valid=$({{ gocmd }} tool dist list)
 
     for os in "${oses[@]}"; do
-      for arch in "${archs[@]}"; do
+        for arch in "${archs[@]}"; do
         if echo $valid | grep -qw "$os/$arch"; then
-          just goos="$os" goarch="$arch" build {{ app }}
+            just goos="$os" goarch="$arch" build {{ app }}
         fi
-      done
+        done
     done
 
 build-all: clean
@@ -157,9 +161,11 @@ build-all: clean
     export GOCMD={{ gocmd }}
 
     for app in ./cli/*; do
-      name=$(basename "$app")
-      echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- $name -----"{{ NORMAL }}
-      just build-all-app "$name"
+      if [[ -d "$app" ]];then
+            name=$(basename "$app")
+            echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- $name -----"{{ NORMAL }}
+            just build-all-app "$name"
+        fi
     done
     echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- FINISHED -----"{{ NORMAL }}
 

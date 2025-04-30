@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -99,7 +100,7 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 
 	var cleanedLines []string
 	for _, token := range tokens {
-		if token.Type != symbols["Comment"] {
+		if token.Type != util.PoSymbols["Comment"] {
 			continue
 		}
 		if !comp.MatchString(token.String()) {
@@ -135,7 +136,7 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 
 func parseComments(entry *po.Entry, tokens []lexer.Token) (err error) {
 	for _, t := range tokens {
-		if t.Type != symbols["Comment"] {
+		if t.Type != util.PoSymbols["Comment"] {
 			continue
 		}
 		if obsoleteRegex.MatchString(t.String()) {
@@ -196,7 +197,7 @@ func (p *PoParser) Parse() *po.File {
 	p.data = append(p.data, []byte(`msgid "---"
 msgstr "---"`)...)
 
-	pFile, err := poParser.ParseBytes(p.filename, p.data)
+	pFile, err := util.PoParser.ParseBytes(p.filename, p.data)
 	if err != nil {
 		p.Config.Logger.Println("ERROR:", err)
 		p.errors = append(p.errors, err)
@@ -208,14 +209,14 @@ msgstr "---"`)...)
 
 	if p.Config.IgnoreAllComments {
 		pFile.Tokens = slices.DeleteFunc(pFile.Tokens, func(t lexer.Token) bool {
-			return t.Type == symbols["Comment"]
+			return t.Type == util.PoSymbols["Comment"]
 		})
 	}
 
 	for _, e := range pFile.Entries {
 		if p.Config.IgnoreAllComments {
 			e.Tokens = slices.DeleteFunc(e.Tokens, func(t lexer.Token) bool {
-				return t.Type == symbols["Comment"]
+				return t.Type == util.PoSymbols["Comment"]
 			})
 		}
 
@@ -253,7 +254,7 @@ msgstr "---"`)...)
 	}
 
 	if slices.ContainsFunc(pFile.Tokens, func(t lexer.Token) bool {
-		return t.Type == symbols["Comment"] && obsoleteRegex.MatchString(t.String())
+		return t.Type == util.PoSymbols["Comment"] && obsoleteRegex.MatchString(t.String())
 	}) && p.Config.ParseObsoletes {
 		entries = append(entries, p.parseObsoleteEntries(pFile.Tokens)...)
 	}

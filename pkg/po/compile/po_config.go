@@ -30,6 +30,7 @@ type PoConfig struct {
 
 	UseCustomObsoletePrefix  bool
 	CustomObsoletePrefixRune rune
+	Highlight                *HighlightConfig
 }
 
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {
@@ -74,6 +75,12 @@ func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
 }
 
 type PoOption func(*PoConfig)
+
+func PoWithHighlight(h *HighlightConfig) PoOption {
+	return func(pc *PoConfig) {
+		pc.Highlight = h
+	}
+}
 
 func PoWithUseCustomObsoletePrefix(u bool) PoOption {
 	return func(pc *PoConfig) {

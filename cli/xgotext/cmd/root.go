@@ -13,7 +13,7 @@ import (
 var logger = log.New(os.Stdout, "", log.Ltime)
 
 var root = &cobra.Command{
-	Use:   os.Args[0],
+	Use:   "xgotext",
 	Short: "Extract translatable strings from given input files.",
 	Long: `Extract translatable strings from given input files.
 Mandatory arguments to long options are mandatory for short options too.

@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
@@ -65,13 +64,18 @@ func (c *PoCompiler) init() {
 func (c PoCompiler) ToWriter(w io.Writer) error {
 	c.init()
 
+	var reader bytes.Buffer
 	buf := bufio.NewWriter(w)
+	var writer io.Writer = buf
+	if c.Config.Highlight != nil {
+		writer = io.MultiWriter(buf, &reader)
+	}
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Writing header...")
 	}
 
-	c.writeHeader(buf)
+	c.writeHeader(writer)
 
 	if c.Config.Verbose {
 		c.Config.Logger.Println("Cleaning duplicates...")
@@ -82,12 +86,14 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		c.Config.Logger.Println("Writing entries...")
 	}
 
-	entries = slices.DeleteFunc(entries, func(e po.Entry) bool {
-		return e.Context == "" && e.ID == ""
-	})
-
 	for _, e := range entries {
-		c.writeEntry(buf, e)
+		c.writeEntry(writer, e)
+	}
+
+	if c.Config.Highlight != nil {
+		h, _ := HighlighOutput(c.Config.Highlight, c.File.Name, bytes.NewReader(reader.Bytes()))
+		buf.Reset(w)
+		buf.Write(h)
 	}
 
 	err := buf.Flush()

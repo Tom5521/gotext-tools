@@ -13,7 +13,7 @@ import (
 )
 
 var root = &cobra.Command{
-	Use:   os.Args[0],
+	Use:   "msgomerge",
 	Short: "Merges two Uniforum style .po files together.",
 	Long: `Merges two Uniforum style .po files together.  
 The def.po file is an existing PO file with translations which will be
