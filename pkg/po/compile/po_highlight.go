@@ -6,7 +6,6 @@ import (
 	"io"
 	"regexp"
 
-	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/gookit/color"
@@ -16,11 +15,20 @@ type HighlightConfig struct {
 	ID, Str, Comment color.Color
 }
 
-var DefaultHighligh = &HighlightConfig{
-	color.Magenta, color.Blue, color.Green,
+var DefaultHighlight = &HighlightConfig{color.Magenta, color.Blue, color.Green}
+
+var idTokensMap = map[lexer.TokenType]bool{
+	util.PoSymbols["Msgid"]:   false,
+	util.PoSymbols["Msgctxt"]: false,
+	util.PoSymbols["Plural"]:  false,
 }
 
-func HighlighOutput(cfg *HighlightConfig, name string, input io.Reader) ([]byte, error) {
+var strTokensMap = map[lexer.TokenType]bool{
+	util.PoSymbols["Msgstr"]: false,
+	util.PoSymbols["RB"]:     false,
+}
+
+func HighlightOutput(cfg *HighlightConfig, name string, input io.Reader) ([]byte, error) {
 	lex, err := util.PoLexer.Lex(name, input)
 	if err != nil {
 		return nil, err
@@ -31,60 +39,50 @@ func HighlighOutput(cfg *HighlightConfig, name string, input io.Reader) ([]byte,
 		return nil, err
 	}
 
-	idTokens := []lexer.TokenType{
-		util.PoSymbols["Msgid"],
-		util.PoSymbols["Msgctxt"],
-		util.PoSymbols["Plural"],
-	}
-
-	strTokens := []lexer.TokenType{
-		util.PoSymbols["Msgstr"],
-		util.PoSymbols["RB"],
-	}
-
 	for i := 0; i < len(tokens); i++ {
-		if tokens[i].Type == util.PoSymbols["Comment"] {
+		ttype := tokens[i].Type
+
+		if ttype == util.PoSymbols["Comment"] {
 			tokens[i].Value = cfg.Comment.Render(tokens[i].Value)
+			continue
 		}
-		switch {
-		case slices.Contains(idTokens, tokens[i].Type):
+
+		if _, ok := idTokensMap[ttype]; ok {
 			i += colorStrings(tokens, i+1, cfg.ID, cfg.Comment)
-		case slices.Contains(strTokens, tokens[i].Type):
+		} else if _, ok := strTokensMap[ttype]; ok {
 			i += colorStrings(tokens, i+1, cfg.Str, cfg.Comment)
 		}
 	}
 
+	// Rebuild file.
 	var builder bytes.Buffer
 	for _, t := range tokens {
 		builder.WriteString(t.Value)
 	}
+
 	return builder.Bytes(), nil
 }
 
+var strRegex = regexp.MustCompile(`"(.*)"`)
+
 func colorStrings(tokens []lexer.Token, offset int, unq, comment color.Color) int {
 	var mod int
+
 	for i := offset; i < len(tokens); i++ {
 		t := tokens[i]
 
-		regex := regexp.MustCompile(`"(.*)"`)
-		var unquoted string
-
-		if t.Type == util.PoSymbols["WS"] {
-			goto finish
-		}
-
-		if t.Type == util.PoSymbols["Comment"] {
+		switch t.Type {
+		case util.PoSymbols["WS"]:
+			continue
+		case util.PoSymbols["Comment"]:
 			t.Value = comment.Render(t.Value)
-			goto finish
-		}
-		if t.Type != util.PoSymbols["String"] {
-			break
+		case util.PoSymbols["String"]:
+			unquoted := strRegex.FindStringSubmatch(t.Value)[1]
+			t.Value = fmt.Sprintf(`"%s"`, unq.Render(unquoted))
+		default:
+			return mod
 		}
 
-		unquoted = regex.FindStringSubmatch(t.Value)[1]
-		t.Value = fmt.Sprintf(`"%s"`, unq.Render(unquoted))
-
-	finish:
 		mod++
 		tokens[i] = t
 	}

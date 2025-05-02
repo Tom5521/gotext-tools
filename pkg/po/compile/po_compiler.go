@@ -91,7 +91,7 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 	}
 
 	if c.Config.Highlight != nil {
-		h, _ := HighlighOutput(c.Config.Highlight, c.File.Name, bytes.NewReader(reader.Bytes()))
+		h, _ := HighlightOutput(c.Config.Highlight, c.File.Name, bytes.NewReader(reader.Bytes()))
 		buf.Reset(w)
 		buf.Write(h)
 	}
