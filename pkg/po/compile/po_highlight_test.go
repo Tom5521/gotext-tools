@@ -35,6 +35,11 @@ msgstr[1] "LOL"`
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		compile.HighlightOutput(compile.DefaultHighlight, "input.po", input)
+		_, err := compile.HighlightOutput(compile.DefaultHighlight, "input.po", input)
+		b.StopTimer()
+		if err != nil {
+			b.Error(err)
+		}
+		b.StartTimer()
 	}
 }

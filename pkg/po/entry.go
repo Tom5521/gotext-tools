@@ -88,7 +88,8 @@ func (e Entry) Hash() uint32 {
 	if e.HasContext() {
 		id = e.Context + "\x04" + id
 	}
-	// IDK, why tf if I remove this code, magically works
+	// IDK, why tf if I remove this code, magically works the MO compilation.
+	// TODO: Understand this thing.
 	// if e.IsPlural() && e.Plural != "" {
 	// 	id += "\x00" + e.Plural
 	// }
