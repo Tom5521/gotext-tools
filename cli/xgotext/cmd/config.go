@@ -50,7 +50,7 @@ func initConfig() {
 	}
 
 	if term.IsTerminal(int(os.Stdout.Fd())) && output == "-" {
-		CompilerCfg.Highlight = compile.DefaultHighligh
+		CompilerCfg.Highlight = compile.DefaultHighlight
 	}
 
 	PoParserCfg = poparse.PoConfig{

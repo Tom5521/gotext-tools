@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 )
 
@@ -10,6 +12,7 @@ var (
 	endianness  string
 	force       bool
 	noHashTable bool
+	verbose     bool
 )
 
 func init() {
@@ -25,6 +28,7 @@ If output file is -, output is written to standard output.`)
 	)
 	flags.BoolVarP(&force, "force", "f", false, "Overwrites generated files if they already exist")
 	flags.BoolVar(&noHashTable, "no-hash", false, "binary file will not include the hash table")
+	flags.BoolVar(&verbose, "verbose", false, "")
 }
 
 var compilerCfg = compile.DefaultMoConfig()
@@ -42,4 +46,6 @@ func initCfg() {
 	}()
 	compilerCfg.Force = force
 	compilerCfg.HashTable = !noHashTable
+	compilerCfg.Logger = log.Default()
+	compilerCfg.Verbose = verbose
 }

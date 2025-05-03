@@ -16,11 +16,13 @@ var (
 	addLocation     string
 	compendium      []string
 	noWrap          bool
+	verbose         bool
 )
 
 func init() {
 	flags := root.Flags()
 
+	flags.BoolVar(&verbose, "verbose", false, "")
 	flags.BoolVar(&noWrap, "no-wrap", false, `do not break long message lines, longer than
 the output page width, into several lines`)
 	flags.StringSliceVarP(

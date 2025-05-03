@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"os"
 
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
@@ -20,10 +21,12 @@ func initConfig() {
 		WordWrap:    !noWrap,
 		ForcePo:     forcePo,
 		OmitHeader:  true,
+		Verbose:     verbose,
+		Logger:      log.Default(),
 	}
 
 	if term.IsTerminal(int(os.Stdout.Fd())) && outputPath == "-" {
-		compilerCfg.Highlight = compile.DefaultHighligh
+		compilerCfg.Highlight = compile.DefaultHighlight
 	}
 
 	mergeCfg = po.MergeConfig{
