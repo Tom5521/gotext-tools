@@ -1,7 +1,6 @@
 package compile_test
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
@@ -13,11 +12,8 @@ msgctxt "WAOS"
 msgid "Lol"
 msgstr "waos"
 msgstr[1] "LOL"`
-	highlighted, err := compile.HighlightOutput(
-		compile.DefaultHighlight,
-		"test.po",
-		bytes.NewBufferString(input),
-	)
+
+	highlighted, err := compile.Highlight(compile.DefaultHighlight, "input.po", input)
 	if err != nil {
 		t.Error(err)
 		return
@@ -26,16 +22,15 @@ msgstr[1] "LOL"`
 }
 
 func BenchmarkHighlight(b *testing.B) {
-	str := `# This is a comment
+	input := `# This is a comment
 msgctxt "WAOS"
 msgid "Lol"
 msgstr "waos"
 msgstr[1] "LOL"`
-	input := bytes.NewReader([]byte(str))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := compile.HighlightOutput(compile.DefaultHighlight, "input.po", input)
+		_, err := compile.Highlight(compile.DefaultHighlight, "input.po", input)
 		b.StopTimer()
 		if err != nil {
 			b.Error(err)

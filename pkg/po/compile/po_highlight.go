@@ -17,23 +17,43 @@ type HighlightConfig struct {
 
 var DefaultHighlight = &HighlightConfig{color.Magenta, color.Blue, color.Green}
 
-var idTokensMap = map[lexer.TokenType]bool{
-	util.PoSymbols["Msgid"]:   false,
-	util.PoSymbols["Msgctxt"]: false,
-	util.PoSymbols["Plural"]:  false,
+func Highlight(cfg *HighlightConfig, name, input string) ([]byte, error) {
+	lex, err := util.PoLexer.LexString(name, input)
+	if err != nil {
+		return nil, err
+	}
+	return highlight(cfg, lex)
 }
 
-var strTokensMap = map[lexer.TokenType]bool{
-	util.PoSymbols["Msgstr"]: false,
-	util.PoSymbols["RB"]:     false,
+func HighlightFromBytes(cfg *HighlightConfig, name string, input []byte) ([]byte, error) {
+	lex, err := util.PoLexer.LexString(name, string(input))
+	if err != nil {
+		return nil, err
+	}
+	return highlight(cfg, lex)
 }
 
-func HighlightOutput(cfg *HighlightConfig, name string, input io.Reader) ([]byte, error) {
+func HighlightFromReader(cfg *HighlightConfig, name string, input io.Reader) ([]byte, error) {
 	lex, err := util.PoLexer.Lex(name, input)
 	if err != nil {
 		return nil, err
 	}
 
+	return highlight(cfg, lex)
+}
+
+var idTokensMap = map[lexer.TokenType]struct{}{
+	util.PoSymbols["Msgid"]:   {},
+	util.PoSymbols["Msgctxt"]: {},
+	util.PoSymbols["Plural"]:  {},
+}
+
+var strTokensMap = map[lexer.TokenType]struct{}{
+	util.PoSymbols["Msgstr"]: {},
+	util.PoSymbols["RB"]:     {},
+}
+
+func highlight(cfg *HighlightConfig, lex lexer.Lexer) ([]byte, error) {
 	tokens, err := lexer.ConsumeAll(lex)
 	if err != nil {
 		return nil, err
@@ -77,6 +97,9 @@ func colorStrings(tokens []lexer.Token, offset int, unq, comment color.Color) in
 		case util.PoSymbols["Comment"]:
 			t.Value = comment.Render(t.Value)
 		case util.PoSymbols["String"]:
+			// NOTE:
+			// The lexer guarantees that tokens of type "String" are always properly quoted.
+			// Therefore, it's safe to access the first capture group without additional checks.
 			unquoted := strRegex.FindStringSubmatch(t.Value)[1]
 			t.Value = fmt.Sprintf(`"%s"`, unq.Render(unquoted))
 		default:

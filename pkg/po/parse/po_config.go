@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"io"
 	"log"
 )
 
@@ -11,6 +10,7 @@ type PoConfig struct {
 	IgnoreComments    bool
 	IgnoreAllComments bool
 	Logger            *log.Logger
+	Verbose           bool
 	SkipHeader        bool
 	CleanDuplicates   bool
 
@@ -36,7 +36,6 @@ func (p *PoConfig) ApplyOptions(opts ...PoOption) {
 
 func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
-		Logger:          log.New(io.Discard, "", 0),
 		CleanDuplicates: true,
 		ParseObsoletes:  true,
 	}
@@ -51,6 +50,12 @@ type PoOption func(*PoConfig)
 func poWithMarkAllAsObsolete(m bool) PoOption {
 	return func(pc *PoConfig) {
 		pc.markAllAsObsolete = m
+	}
+}
+
+func PoWithVerbose(v bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.Verbose = v
 	}
 }
 

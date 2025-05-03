@@ -26,9 +26,7 @@ func TestMoParse(t *testing.T) {
 		{ID: "How are you?", Str: "Como estás?"},
 	}.SortFunc(po.CompareEntryByID)
 
-	com := compile.NewMo(&po.File{Entries: entries}, compile.MoWithHashTable(false))
-	moFile := com.ToBytes()
-
+	moFile := compile.MoToBytes(entries, compile.MoWithHashTable(false))
 	parser := parse.NewMoFromBytes(moFile, "test.mo")
 
 	parsedEntries := parser.Parse()

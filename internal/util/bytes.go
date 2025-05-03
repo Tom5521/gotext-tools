@@ -68,3 +68,13 @@ func (e Endianness) String() string {
 		return "Native"
 	}
 }
+
+type MoHeader struct {
+	Magic          u32 // 0
+	Revision       u32 // 4
+	Nstrings       u32 // 8
+	OrigTabOffset  u32 // 12
+	TransTabOffset u32 // 16
+	HashTabSize    u32 // 20
+	HashTabOffset  u32 // 24
+}

@@ -2,6 +2,7 @@ package compile
 
 import (
 	bin "encoding/binary"
+	"fmt"
 	"io"
 	"reflect"
 
@@ -18,6 +19,25 @@ const (
 	nul = "\x00"
 )
 
+func (mc MoCompiler) info(format string, a ...any) {
+	if mc.Config.Logger != nil && mc.Config.Verbose {
+		mc.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
+	}
+}
+
+func (mc MoCompiler) error(format string, a ...any) error {
+	if mc.Config.IgnoreErrors {
+		return nil
+	}
+	format = "compile: " + format
+	err := fmt.Errorf(format, a...)
+	if mc.Config.Logger != nil {
+		mc.Config.Logger.Println("ERROR:", err)
+	}
+
+	return err
+}
+
 // A len() function with fixed-size return.
 func flen(value any) u32 {
 	return u32(reflect.ValueOf(value).Len())
@@ -31,29 +51,23 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
 	entries = entries.SortFunc(po.CompareEntryByID)
 
+	mc.info("creating header...")
 	var hashTabSize u32
 	if mc.Config.HashTable {
 		hashTabSize = max(3, util.NextPrime((flen(entries)*4)/3))
 	}
 
-	header := struct {
-		magic          u32 // 0
-		revision       u32 // 4
-		nstrings       u32 // 8
-		origTabOffset  u32 // 12
-		transTabOffset u32 // 16
-		hashTabSize    u32 // 20
-		hashTabOffset  u32 // 24
-	}{
-		magic:          mc.Config.Endianness.MagicNumber(),
-		revision:       0,
-		nstrings:       flen(entries),
-		origTabOffset:  7 * 4,
-		transTabOffset: 7*4 + flen(entries)*8,
-		hashTabSize:    hashTabSize,
-		hashTabOffset:  7*4 + 16*flen(entries),
+	header := util.MoHeader{
+		Magic:          mc.Config.Endianness.MagicNumber(),
+		Revision:       0,
+		Nstrings:       flen(entries),
+		OrigTabOffset:  7 * 4,
+		TransTabOffset: 7*4 + flen(entries)*8,
+		HashTabSize:    hashTabSize,
+		HashTabOffset:  7*4 + 16*flen(entries),
 	}
 
+	mc.info("creating offsets...")
 	// Original code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 	var (
 		offsets   []u32
@@ -74,7 +88,7 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		strs += msgstr + nul
 	}
 
-	origStart := header.hashTabOffset + (hashTabSize * 4)
+	origStart := header.HashTabOffset + (hashTabSize * 4)
 	transStart := origStart + flen(ids)
 
 	var origOffsets, transOffsets []u32
@@ -88,6 +102,7 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		transOffsets = append(transOffsets, l2, o2+transStart)
 	}
 
+	mc.info("making hashes...")
 	var hashTable []u32
 	if mc.Config.HashTable {
 		hashTable = buildHashTable(entries, hashTabSize)
@@ -104,8 +119,8 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 
 	for _, v := range data {
 		err := bin.Write(writer, mc.Config.Endianness.Order(), v)
-		if err != nil && !mc.Config.IgnoreErrors {
-			return err
+		if err != nil {
+			return mc.error("error writing binary data: %w", err)
 		}
 	}
 

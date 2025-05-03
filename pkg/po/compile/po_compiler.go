@@ -21,6 +21,26 @@ type PoCompiler struct {
 	header   po.Header
 }
 
+func (p PoCompiler) error(format string, a ...any) error {
+	if p.Config.IgnoreErrors {
+		return nil
+	}
+
+	format = "compile: " + format
+	err := fmt.Errorf(format, a...)
+	if p.Config.Logger != nil {
+		p.Config.Logger.Println("ERROR:", err)
+	}
+
+	return err
+}
+
+func (p PoCompiler) info(format string, a ...any) {
+	if p.Config.Logger != nil && p.Config.Verbose {
+		p.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
+	}
+}
+
 func NewPo(file *po.File, options ...PoOption) PoCompiler {
 	return PoCompiler{
 		File:   file,
@@ -71,34 +91,34 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		writer = io.MultiWriter(buf, &reader)
 	}
 
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Writing header...")
-	}
-
+	c.info("writing header...")
 	c.writeHeader(writer)
-
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Cleaning duplicates...")
-	}
+	c.info("cleaning duplicates...")
 	// Remove duplicate entries and write each entry to the writer.
-	entries := c.File.CutHeader()
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Writing entries...")
-	}
+	entries := c.File.CutHeader().CleanDuplicates()
+	c.info("writing entries...")
 
 	for _, e := range entries {
 		c.writeEntry(writer, e)
 	}
 
 	if c.Config.Highlight != nil {
-		h, _ := HighlightOutput(c.Config.Highlight, c.File.Name, bytes.NewReader(reader.Bytes()))
+		c.info("highlighting info...")
+		h, err := HighlightFromBytes(
+			c.Config.Highlight,
+			c.File.Name,
+			reader.Bytes(),
+		)
+		if err != nil {
+			c.error("error highlighting output: %w", err)
+		}
 		buf.Reset(w)
 		buf.Write(h)
 	}
 
 	err := buf.Flush()
-	if err != nil && !c.Config.IgnoreErrors {
-		return err
+	if err != nil {
+		return c.error("error flushing buffer: %w", err)
 	}
 
 	return nil
@@ -110,16 +130,12 @@ func (c PoCompiler) ToFile(f string) error {
 		flags |= os.O_EXCL
 	}
 
-	if c.Config.Verbose {
-		c.Config.Logger.Println("Opening file...")
-	}
+	c.info("opening file...")
 
 	// Open the file with the determined flags.
 	file, err := os.OpenFile(f, flags, os.ModePerm)
-	if err != nil && !c.Config.IgnoreErrors {
-		err = fmt.Errorf("error opening file: %w", err)
-		c.Config.Logger.Println("ERROR:", err)
-		return err
+	if err != nil {
+		return c.error("error opening file: %w", err)
 	}
 	defer file.Close()
 

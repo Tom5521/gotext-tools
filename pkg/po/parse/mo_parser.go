@@ -4,6 +4,7 @@ import (
 	"bytes"
 	bin "encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 
@@ -13,7 +14,6 @@ import (
 
 type (
 	u32 = uint32
-	u16 = uint16
 	i64 = int64
 	i32 = int32
 )
@@ -30,6 +30,23 @@ type MoParser struct {
 	filename string
 	errors   []error
 	Config   MoConfig
+}
+
+// This function MUST be used to log any errors inside this structure.
+func (m *MoParser) error(format string, a ...any) {
+	var err error
+	format = "parse: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if m.Config.Logger != nil {
+		m.Config.Logger.Println("ERROR:", err)
+	}
+
+	m.errors = append(m.errors, err)
 }
 
 func NewMo(path string, opts ...MoOption) (*MoParser, error) {
@@ -75,13 +92,12 @@ func (m MoParser) Errors() []error {
 	return m.errors
 }
 
-func (m *MoParser) genBasics() (reader *bytes.Reader, order bin.ByteOrder, err error) {
-	reader = bytes.NewReader(m.data)
-
+func (m *MoParser) genBasics(reader *bytes.Reader) (order bin.ByteOrder, err error) {
 	var magicNumber u32
 	if m.Config.Endianness == NativeEndian {
 		if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
-			return nil, nil, err
+			m.error("error reading magic number: %w", err)
+			return
 		}
 		switch magicNumber {
 		case util.LittleEndianMagicNumber:
@@ -89,30 +105,23 @@ func (m *MoParser) genBasics() (reader *bytes.Reader, order bin.ByteOrder, err e
 		case util.BigEndianMagicNumber:
 			order = bin.BigEndian
 		default:
-			m.errors = append(m.errors, errors.New("invalid magic number"))
+			m.error("invalid magic number")
 			return
 		}
 	} else {
 		order = m.Config.Endianness.Order()
 		if err = bin.Read(reader, order, &magicNumber); err != nil {
-			return nil, nil, err
+			m.error("error reading magic number: %w", err)
+			return
 		}
 		if magicNumber != m.Config.Endianness.MagicNumber() {
-			m.errors = append(m.errors, errors.New("invalid magic number"))
+			m.error("invalid magic number")
 		}
 	}
 
-	return
-}
+	reader.Seek(0, 0)
 
-type moHeader struct {
-	MajorVersion u16
-	MinorVersion u16
-	MsgIDCount   u32
-	MsgIDOffset  u32
-	MsgStrOffset u32
-	HashSize     u32
-	HashOffset   u32
+	return
 }
 
 func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
@@ -123,52 +132,61 @@ func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
 }
 
 func (m *MoParser) Parse() (file *po.File) {
-	r, bo, err := m.genBasics()
+	r := bytes.NewReader(m.data)
+
+	bo, err := m.genBasics(r)
 	if err != nil {
-		m.errors = append(m.errors, err)
 		return
 	}
 
-	var header moHeader
+	var header util.MoHeader
 	if err = bin.Read(r, bo, &header); err != nil {
-		m.errors = append(m.errors, err)
+		m.error("error reading header: %w", err)
 		return
 	}
 
-	if v := header.MajorVersion; v != 0 && v != 1 {
-		m.errors = append(m.errors, errors.New("invalid version number"))
+	if v := header.Revision >> 16; v != 0 && v != 1 {
+		m.error("invalid major version number (%d)", v)
 	}
 
-	if v := header.MinorVersion; v != 0 && v != 1 {
-		m.errors = append(m.errors, errors.New("invalid version number"))
+	if v := header.Revision & 0xFFFF; v != 0 && v != 1 {
+		m.error("invalid minor version number (%d)", v)
 	}
 
-	msgIDStart := make([]u32, header.MsgIDCount)
-	msgIDLen := make([]u32, header.MsgIDCount)
-	r.Seek(i64(header.MsgIDOffset), 0)
+	msgIDStart := make([]u32, header.Nstrings)
+	msgIDLen := make([]u32, header.Nstrings)
+	_, err = r.Seek(i64(header.OrigTabOffset), 0)
+	if err != nil {
+		m.error("bad original table offset(%d): %w", header.OrigTabOffset, err)
+		return
+	}
 
-	for i := u32(0); i < header.MsgIDCount; i++ {
+	for i := u32(0); i < header.Nstrings; i++ {
 		if err = bin.Read(r, bo, &msgIDLen[i]); err != nil {
-			m.errors = append(m.errors, err)
+			m.error("error reading msgid len[%d]: %w", i, err)
 			return
 		}
 		if err = bin.Read(r, bo, &msgIDStart[i]); err != nil {
-			m.errors = append(m.errors, err)
+			m.error("error reading msgid start[%d]: %w", i, err)
 			return
 		}
 	}
 
-	msgStrStart := make([]i32, header.MsgIDCount)
-	msgStrLen := make([]i32, header.MsgIDCount)
-	r.Seek(i64(header.MsgStrOffset), 0)
+	msgStrStart := make([]i32, header.Nstrings)
+	msgStrLen := make([]i32, header.Nstrings)
+	_, err = r.Seek(i64(header.TransTabOffset), 0)
+	if err != nil {
+		m.error("bad translation table offset(%d): %w", header.TransTabOffset, err)
+		return
+	}
 
-	for i := u32(0); i < header.MsgIDCount; i++ {
+	for i := u32(0); i < header.Nstrings; i++ {
 		if err = bin.Read(r, bo, &msgStrLen[i]); err != nil {
-			m.errors = append(m.errors, err)
+			m.error("error reading msgstr len[%d]: %w", i, err)
 			return
 		}
 		if err = bin.Read(r, bo, &msgStrStart[i]); err != nil {
-			m.errors = append(m.errors, err)
+			m.error("error reading msgstr start[%d]: %w", i, err)
 			return
 		}
 	}
@@ -190,17 +208,45 @@ func (m *MoParser) Parse() (file *po.File) {
 
 func (m *MoParser) makeEntries(
 	r *bytes.Reader,
-	header *moHeader,
+	header *util.MoHeader,
 	msgIDStart, msgIDLen []u32,
 	msgStrStart, msgStrLen []i32,
 ) (entries po.Entries) {
-	for i := u32(0); i < header.MsgIDCount; i++ {
-		r.Seek(i64(msgIDStart[i]), 0)
-		msgIDData := make([]byte, msgIDLen[i])
-		r.Read(msgIDData)
-		r.Seek(i64(msgStrStart[i]), 0)
-		msgStrData := make([]byte, msgStrLen[i])
-		r.Read(msgStrData)
+	for i := u32(0); i < header.Nstrings; i++ {
+		idStart := i64(msgIDStart[i])
+		idLen := msgIDLen[i]
+		strStart := i64(msgStrStart[i])
+		strLen := msgStrLen[i]
+
+		_, err := r.Seek(idStart, 0)
+		if err != nil {
+			m.error("bad msgid start[%d]: %w", idStart, err)
+		}
+
+		msgIDData := make([]byte, idLen)
+		_, err = r.Read(msgIDData)
+		if err != nil {
+			m.error(
+				"error reading msgid data[start: %d len: %d]: %w",
+				idStart,
+				idLen,
+				err,
+			)
+		}
+
+		_, err = r.Seek(strStart, 0)
+		if err != nil {
+			m.error("bad msgstr start[%d]: %w", strStart, err)
+		}
+		msgStrData := make([]byte, strLen)
+		_, err = r.Read(msgStrData)
+		if err != nil {
+			m.error("error reading msgstr data[start: %d len: %d]: %w",
+				strStart,
+				strLen,
+				err,
+			)
+		}
 
 		entries = append(entries, makeEntry(msgIDData, msgStrData))
 	}

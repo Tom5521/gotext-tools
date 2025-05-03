@@ -1,7 +1,6 @@
 package compile
 
 import (
-	"io"
 	"log"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -42,7 +41,6 @@ func (mc *MoConfig) RestoreLastCfg() {
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
-		Logger:     log.New(io.Discard, "", 0),
 		Endianness: NativeEndian,
 		HashTable:  true,
 	}

@@ -3,6 +3,7 @@ namespace parse {
     class MoConfig << (S,Aquamarine) >> {
         - lastCfg any
 
+        + Logger *log.Logger
         + Endianness Endianness
 
         + RestoreLastCfg() 
@@ -16,8 +17,9 @@ namespace parse {
 
         + Config MoConfig
 
-        - genBasics() (*bytes.Reader, binary.ByteOrder, error)
-        - makeEntries(r *bytes.Reader, header *moHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
+        - error(format string, a ...any) 
+        - genBasics(reader *bytes.Reader) (binary.ByteOrder, error)
+        - makeEntries(r *bytes.Reader, header *util.MoHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
 
         + Error() error
         + Errors() []error
@@ -32,6 +34,7 @@ namespace parse {
         + IgnoreComments bool
         + IgnoreAllComments bool
         + Logger *log.Logger
+        + Verbose bool
         + SkipHeader bool
         + CleanDuplicates bool
         + ParseObsoletes bool
@@ -51,6 +54,8 @@ namespace parse {
 
         + Config PoConfig
 
+        - error(format string, a ...any) 
+        - warn(format string, a ...any) 
         - parseObsoleteEntries(tokens []lexer.Token) po.Entries
 
         + Error() error
@@ -58,16 +63,6 @@ namespace parse {
         + Errors() []error
         + ParseWithOptions(opts ...PoOption) *po.File
         + Parse() *po.File
-
-    }
-    class moHeader << (S,Aquamarine) >> {
-        + MajorVersion u16
-        + MinorVersion u16
-        + MsgIDCount u32
-        + MsgIDOffset u32
-        + MsgStrOffset u32
-        + HashSize u32
-        + HashOffset u32
 
     }
     class parse.Endianness << (T, #FF7700) >>  {
@@ -80,8 +75,6 @@ namespace parse {
     }
     class parse.i64 << (T, #FF7700) >>  {
     }
-    class parse.u16 << (T, #FF7700) >>  {
-    }
     class parse.u32 << (T, #FF7700) >>  {
     }
     class "util.Endianness" as utilEndianness {
@@ -92,7 +85,6 @@ namespace parse {
 
 "__builtin__.int32" #.. "parse.i32"
 "__builtin__.int64" #.. "parse.i64"
-"__builtin__.uint16" #.. "parse.u16"
 "__builtin__.uint32" #.. "parse.u32"
 "parse.<font color=blue>func</font>(*MoConfig) " #.. "parse.MoOption"
 "parse.<font color=blue>func</font>(*PoConfig) " #.. "parse.PoOption"

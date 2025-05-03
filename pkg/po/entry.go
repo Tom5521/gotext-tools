@@ -83,6 +83,12 @@ func (e Entry) UnifiedID() string {
 	return id
 }
 
+// Returns the complete hash of the input ID's, including the msgctxt, msgid and msgid_plural.
+// WARNING: This is NOT compatible with the original gettext.
+func (e Entry) FullHash() uint32 {
+	return util.PJWHash(e.UnifiedID())
+}
+
 func (e Entry) Hash() uint32 {
 	id := e.ID
 	if e.HasContext() {

@@ -8,6 +8,8 @@ namespace compile {
         + File *po.File
         + Config MoConfig
 
+        - info(format string, a ...any) 
+        - error(format string, a ...any) error
         - writeTo(writer io.Writer) error
 
         + SetFile(f *po.File) 
@@ -40,6 +42,8 @@ namespace compile {
         + File *po.File
         + Config PoConfig
 
+        - error(format string, a ...any) error
+        - info(format string, a ...any) 
         - init() 
         - writeHeader(w io.Writer) 
         - fprintfln(w io.Writer, e po.Entry, format string, args ...any) 

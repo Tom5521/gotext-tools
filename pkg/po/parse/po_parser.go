@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -25,6 +26,39 @@ type PoParser struct {
 
 	errors []error
 	warns  []error
+}
+
+// This function MUST be used to log any errors inside this structure.
+func (p *PoParser) error(format string, a ...any) {
+	var err error
+	format = "parse: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if p.Config.Logger != nil {
+		p.Config.Logger.Println("ERROR: ", err)
+	}
+
+	p.errors = append(p.errors, err)
+}
+
+func (p *PoParser) warn(format string, a ...any) {
+	var err error
+	format = "warning: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if p.Config.Logger != nil && p.Config.Verbose {
+		p.Config.Logger.Println(err)
+	}
+
+	p.errors = append(p.errors, err)
 }
 
 func NewPo(path string, options ...PoOption) (*PoParser, error) {
@@ -92,7 +126,7 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 		var err error
 		comp, err = regexp.Compile(fmt.Sprintf(`#%s *(.*)`, string(p.Config.CustomObsoletePrefix)))
 		if err != nil {
-			p.warns = append(p.warns, fmt.Errorf("WARN: %w", err))
+			p.warn(err.Error())
 			return nil
 		}
 
@@ -124,10 +158,6 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 	f := parser.Parse()
 	err := parser.Error()
 	if err != nil {
-		for _, err2 := range parser.Errors() {
-			err2 = fmt.Errorf("WARN: %w", err2)
-			p.warns = append(p.warns, err2)
-		}
 		return nil
 	}
 
@@ -199,8 +229,7 @@ msgstr "---"`)...)
 
 	pFile, err := util.PoParser.ParseBytes(p.filename, p.data)
 	if err != nil {
-		p.Config.Logger.Println("ERROR:", err)
-		p.errors = append(p.errors, err)
+		p.error(err.Error())
 		return nil
 	}
 
@@ -240,8 +269,7 @@ msgstr "---"`)...)
 		// Parse Comments.
 		err = parseComments(&newEntry, e.Tokens)
 		if err != nil {
-			p.Config.Logger.Println("ERROR:", err)
-			p.errors = append(p.errors, err)
+			p.error(err.Error())
 		}
 
 		if p.Config.IgnoreComments {
@@ -257,10 +285,6 @@ msgstr "---"`)...)
 		return t.Type == util.PoSymbols["Comment"] && obsoleteRegex.MatchString(t.String())
 	}) && p.Config.ParseObsoletes {
 		entries = append(entries, p.parseObsoleteEntries(pFile.Tokens)...)
-	}
-
-	for _, err := range p.errors {
-		p.Config.Logger.Println("ERROR:", err)
 	}
 
 	if p.Config.SkipHeader {

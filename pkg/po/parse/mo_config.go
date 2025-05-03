@@ -1,9 +1,14 @@
 package parse
 
-import "github.com/Tom5521/gotext-tools/v2/internal/util"
+import (
+	"log"
+
+	"github.com/Tom5521/gotext-tools/v2/internal/util"
+)
 
 type MoConfig struct {
 	lastCfg    any
+	Logger     *log.Logger
 	Endianness Endianness
 }
 

@@ -1,6 +1,8 @@
 package util
 
-type u32 = uint32
+type (
+	u32 = uint32
+)
 
 func NextPrime(n u32) u32 {
 	if n <= 2 {

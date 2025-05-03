@@ -55,6 +55,7 @@ namespace po {
         + Validate() error
         + UnifiedStr() string
         + UnifiedID() string
+        + FullHash() uint32
         + Hash() uint32
         + Equal(x Entry) bool
         + IsPlural() bool
