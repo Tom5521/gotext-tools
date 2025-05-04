@@ -67,7 +67,7 @@ func processInput(inputFiles []string) (*parse.Parser, error) {
 }
 
 func readFiles(paths []string) ([]*os.File, error) {
-	seenFiles := make(map[string]bool)
+	seenFiles := make(map[string]struct{})
 
 	var files []*os.File
 	for _, path := range paths {

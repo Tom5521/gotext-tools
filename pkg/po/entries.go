@@ -89,7 +89,7 @@ func (e Entries) SortFunc(cmp Cmp[Entry]) Entries {
 }
 
 func (e Entries) HasDuplicates() bool {
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 
 	for _, entry := range e {
 		uid := entry.UnifiedID()
@@ -98,7 +98,7 @@ func (e Entries) HasDuplicates() bool {
 			return true
 		}
 
-		seen[uid] = true
+		seen[uid] = struct{}{}
 	}
 
 	return false

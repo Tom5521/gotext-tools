@@ -1,7 +1,7 @@
 package po
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -23,16 +23,15 @@ func (p PluralEntries) Equal(p2 PluralEntries) bool {
 }
 
 func (p PluralEntries) Solve() PluralEntries {
-	seen := make(map[string]bool)
-	var cleaned PluralEntries
+	seen := make(map[string]struct{}, len(p))
+	cleaned := make(PluralEntries, 0, len(p))
 
 	for _, pe := range p {
-		id := pe.Str + "\x00" + strconv.Itoa(pe.ID)
-		_, seened := seen[id]
-		if seened {
-			continue
+		id := fmt.Sprintf("%s\x00%d", pe.Str, pe.ID)
+		if _, exists := seen[id]; !exists {
+			seen[id] = struct{}{}
+			cleaned = append(cleaned, pe)
 		}
-		cleaned = append(cleaned, pe)
 	}
 
 	return cleaned

@@ -12,7 +12,7 @@ import (
 func ShouldSkipFile(
 	w *krfs.Walker,
 	excludedPaths []string,
-	seenMap *map[string]bool,
+	seenMap *map[string]struct{},
 	logger *log.Logger,
 ) bool {
 	if w.Err() != nil || w.Stat().IsDir() {
@@ -30,10 +30,12 @@ func ShouldSkipFile(
 
 	_, seen := (*seenMap)[abs]
 	if seen {
-		logger.Printf("skipping duplicated file: %s\n", w.Path())
+		if logger != nil {
+			logger.Printf("skipping duplicated file: %s\n", w.Path())
+		}
 		return true
 	}
-	(*seenMap)[abs] = true
+	(*seenMap)[abs] = struct{}{}
 
 	return isExcludedPath(w.Path(), excludedPaths)
 }

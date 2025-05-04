@@ -17,9 +17,9 @@ import (
 var _ po.Parser = (*Parser)(nil)
 
 type Parser struct {
-	Config Config          // Configuration settings for parsing.
-	files  []*File         // List of parsed files.
-	seen   map[string]bool // Tracks already processed files to avoid duplication.
+	Config Config              // Configuration settings for parsing.
+	files  []*File             // List of parsed files.
+	seen   map[string]struct{} // Tracks already processed files to avoid duplication.
 
 	errors []error
 }
@@ -91,7 +91,7 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 func baseParser(options ...Option) *Parser {
 	p := &Parser{
 		Config: DefaultConfig(options...),
-		seen:   make(map[string]bool),
+		seen:   make(map[string]struct{}),
 	}
 
 	return p

@@ -101,7 +101,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 		return
 	}
 
-	f.seenNodes[lit] = true
+	f.seenNodes[lit] = struct{}{}
 
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil {
@@ -180,7 +180,7 @@ func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 
 	switch t := n.(type) {
 	case *ast.ImportSpec:
-		f.seenNodes[t.Path] = true
+		f.seenNodes[t.Path] = struct{}{}
 	case *ast.CallExpr:
 		if f.isGotextCall(t) {
 			processPoCall(t)
@@ -190,7 +190,7 @@ func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 		if t.Kind != token.STRING || ok || t.Value == `""` {
 			break
 		}
-		f.seenNodes[t] = true
+		f.seenNodes[t] = struct{}{}
 		entry, err := f.basicLitToEntry(t)
 		if err != nil {
 			errors = append(errors, err)
