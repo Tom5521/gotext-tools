@@ -7,15 +7,14 @@ import (
 )
 
 type MoConfig struct {
-	lastCfg    any
-	Logger     *log.Logger
-	Endianness Endianness
+	lastCfg      any
+	Logger       *log.Logger
+	Endianness   Endianness
+	MustBeSorted bool
 }
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
-	mc := MoConfig{
-		Endianness: NativeEndian,
-	}
+	mc := MoConfig{}
 
 	mc.ApplyOptions(opts...)
 	return mc
@@ -44,6 +43,18 @@ const (
 )
 
 type MoOption func(*MoConfig)
+
+func MoWithMustBeSorted(m bool) MoOption {
+	return func(mc *MoConfig) {
+		mc.MustBeSorted = m
+	}
+}
+
+func MoWithLogger(logger *log.Logger) MoOption {
+	return func(mc *MoConfig) {
+		mc.Logger = logger
+	}
+}
 
 func MoWithConfig(c MoConfig) MoOption {
 	return func(mc *MoConfig) { *mc = c }

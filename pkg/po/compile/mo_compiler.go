@@ -50,14 +50,13 @@ func (mc *MoCompiler) ToFileWithOptions(f string, options ...MoOption) error {
 func (mc MoCompiler) ToWriter(w io.Writer) error {
 	buf := bufio.NewWriter(w)
 	err := mc.writeTo(buf)
-
-	if err != nil && !mc.Config.IgnoreErrors {
+	if err != nil {
 		return mc.error("error writing to buffer: %w", err)
 	}
 
 	mc.info("writing...")
 	err = buf.Flush()
-	if err != nil && !mc.Config.IgnoreErrors {
+	if err != nil {
 		return mc.error("error flushing buffer: %w", err)
 	}
 
@@ -65,20 +64,18 @@ func (mc MoCompiler) ToWriter(w io.Writer) error {
 }
 
 func (mc MoCompiler) ToFile(f string) error {
-	mc.info("oppening file...")
 	// Open the file with the determined flags.
 	flags := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 	if !mc.Config.Force {
 		flags |= os.O_EXCL
 	}
+	mc.info("opening file...")
 	file, err := os.OpenFile(f, flags, os.ModePerm)
 	if err != nil && !mc.Config.IgnoreErrors {
 		err = mc.error("error opening file: %w", err)
 		return err
 	}
 	defer file.Close()
-
-	mc.info("cleaning file contents...")
 
 	// Write compiled translations to the file.
 	return mc.ToWriter(file)

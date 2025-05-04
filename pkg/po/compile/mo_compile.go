@@ -48,6 +48,7 @@ func max[T slices.Ordered](values ...T) T {
 }
 
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
+	mc.info("cleaning & sorting entries...")
 	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
 	entries = entries.SortFunc(po.CompareEntryByID)
 
@@ -117,10 +118,11 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		[]byte(strs),
 	}
 
+	mc.info("encoding...")
 	for _, v := range data {
 		err := bin.Write(writer, mc.Config.Endianness.Order(), v)
 		if err != nil {
-			return mc.error("error writing binary data: %w", err)
+			return mc.error("error encoding binary data: %w", err)
 		}
 	}
 

@@ -41,8 +41,7 @@ func (mc *MoConfig) RestoreLastCfg() {
 
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
-		Endianness: NativeEndian,
-		HashTable:  true,
+		HashTable: true,
 	}
 
 	c.ApplyOptions(opts...)

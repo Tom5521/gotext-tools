@@ -11,21 +11,23 @@ const (
 	SortByObsolete
 )
 
+var sortMap = map[SortMode]Cmp[Entry]{
+	SortByAll:      CompareEntry,
+	SortByID:       CompareEntryByID,
+	SortByFile:     CompareEntryByFile,
+	SortByLine:     CompareEntryByLine,
+	SortByFuzzy:    CompareEntryByFuzzy,
+	SortByObsolete: CompareEntryByObsolete,
+}
+
 func (mode SortMode) SortMethod(entries Entries) func() Entries {
-	method, ok := map[SortMode]func() Entries{
-		SortByAll:      entries.Sort,
-		SortByID:       entries.PrepareSorter(CompareEntryByID),
-		SortByFile:     entries.PrepareSorter(CompareEntryByFile),
-		SortByLine:     entries.PrepareSorter(CompareEntryByLine),
-		SortByFuzzy:    entries.PrepareSorter(CompareEntryByFuzzy),
-		SortByObsolete: entries.PrepareSorter(CompareEntryByObsolete),
-	}[mode]
+	method, ok := sortMap[mode]
 
 	if !ok {
 		return entries.Sort
 	}
 
-	return method
+	return entries.PrepareSorter(method)
 }
 
 type MergeConfig struct {

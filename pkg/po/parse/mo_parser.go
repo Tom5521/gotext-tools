@@ -32,7 +32,7 @@ type MoParser struct {
 	Config   MoConfig
 }
 
-// This function MUST be used to log any errors inside this structure.
+// This method MUST be used to log any errors inside this structure.
 func (m *MoParser) error(format string, a ...any) {
 	var err error
 	format = "parse: " + format
@@ -201,6 +201,13 @@ func (m *MoParser) Parse() (file *po.File) {
 			msgStrStart,
 			msgStrLen,
 		),
+	}
+
+	if m.Config.MustBeSorted {
+		if !file.IsSortedFunc(po.CompareEntryByID) {
+			m.error("entries must be sorted")
+			return
+		}
 	}
 
 	return
