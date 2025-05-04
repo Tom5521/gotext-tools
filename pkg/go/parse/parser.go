@@ -3,6 +3,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +24,36 @@ type Parser struct {
 	errors []error
 }
 
+func (p *Parser) error(format string, a ...any) {
+	var err error
+	format = "go/parse: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if p.Config.Logger != nil {
+		p.Config.Logger.Println("ERROR:", err)
+	}
+
+	p.errors = append(p.errors, err)
+}
+
+func (p *Parser) lastErr() error {
+	if len(p.errors) == 0 {
+		return nil
+	}
+
+	return p.errors[len(p.errors)-1]
+}
+
+func (p *Parser) info(format string, a ...any) {
+	if p.Config.Logger != nil && p.Config.Verbose {
+		p.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
+	}
+}
+
 func (p *Parser) appendFiles(files ...string) error {
 	for _, file := range files {
 		walker := krfs.Walk(file)
@@ -31,14 +62,11 @@ func (p *Parser) appendFiles(files ...string) error {
 				continue
 			}
 
-			if p.Config.Verbose {
-				p.Config.Logger.Println("Reading", walker.Path(), "...")
-			}
+			p.info("Reading %s...", walker.Path())
 			f, err := NewFileFromPath(walker.Path(), &p.Config)
 			if err != nil {
-				err = fmt.Errorf("error reading file %s: %w", walker.Path(), err)
-				p.Config.Logger.Println("ERROR:", err.Error())
-				return err
+				p.error("error reading file %s: %w", walker.Path(), err)
+				return p.lastErr()
 			}
 			p.files = append(p.files, f)
 		}
@@ -52,9 +80,8 @@ func NewParser(path string, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	err := p.appendFiles(path)
 	if err != nil {
-		err = fmt.Errorf("error parsing files: %w", err)
-		p.Config.Logger.Println("ERROR:", err)
-		return nil, err
+		p.error("error parsing files: %w", err)
+		return nil, p.lastErr()
 	}
 
 	return p, nil
@@ -76,12 +103,11 @@ func NewParserFromReader(
 	name string,
 	options ...Option,
 ) (*Parser, error) {
-	logger := DefaultConfig(options...).Logger
 	data, err := io.ReadAll(r)
 	if err != nil {
-		err = fmt.Errorf("error reading: %w", err)
-		logger.Println("ERROR:", err)
-		return nil, err
+		p := &Parser{Config: DefaultConfig(options...)}
+		p.error("error reading: %w", err)
+		return nil, p.lastErr()
 	}
 	return NewParserFromBytes(data, name, options...)
 }
@@ -103,9 +129,8 @@ func NewParserFromBytes(
 	p := baseParser(options...)
 	f, err := NewFileFromBytes(b, name, &p.Config)
 	if err != nil {
-		err = fmt.Errorf("error configuring file: %w", err)
-		p.Config.Logger.Println("ERROR:", err)
-		return nil, err
+		p.error("error configuring file: %w", err)
+		return nil, p.lastErr()
 	}
 	p.files = append(p.files, f)
 
@@ -117,9 +142,8 @@ func NewParserFromFiles(files []*os.File, options ...Option) (*Parser, error) {
 	for _, file := range files {
 		f, err := NewFile(file, file.Name(), &p.Config)
 		if err != nil {
-			err = fmt.Errorf("error configuring file: %w", err)
-			p.Config.Logger.Println("ERROR:", err)
-			return nil, err
+			p.error("error configuring file: %w", err)
+			return nil, p.lastErr()
 		}
 		f.config = &p.Config
 		p.files = append(p.files, f)
@@ -138,9 +162,8 @@ func NewParserFromPaths(files []string, options ...Option) (*Parser, error) {
 	p := baseParser(options...)
 	err := p.appendFiles(files...)
 	if err != nil {
-		err = fmt.Errorf("error parsing files: %w", err)
-		p.Config.Logger.Println("ERROR:", err)
-		return nil, err
+		p.error("error parsing files: %w", err)
+		return nil, p.lastErr()
 	}
 
 	return p, nil
@@ -177,18 +200,9 @@ func (p *Parser) Parse() (file *po.File) {
 	}
 
 	for _, f := range p.files {
-		if p.Config.Verbose {
-			p.Config.Logger.Println("Parsing", f.name, "...")
-		}
+		p.info("parsing %s...", f.name)
 		entries := f.Entries()
 		if err := f.Error(); err != nil {
-			p.errors = append(p.errors, f.Errors()...)
-			for _, err := range f.Errors() {
-				p.Config.Logger.Println(
-					"ERROR:",
-					fmt.Errorf("error parsing file %s: %w", f.name, err),
-				)
-			}
 			continue
 		}
 		file.Entries = append(file.Entries, entries...)

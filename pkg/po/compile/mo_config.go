@@ -7,14 +7,20 @@ import (
 )
 
 type MoConfig struct {
+	// It is used to restore the configuration using the method [MoConfig.RestoreLastCfg]
+	// and is saved when using the asd method [MoConfig.ApplyOptions]
 	lastCfg any
 
-	Logger       *log.Logger
-	Force        bool
+	// The logger can be nil, otherwise this logger will be used to print all errors by default.
+	Logger *log.Logger
+	// If true, it still writes to the file if it already exists, in the method [MoCompiler.ToFile].
+	Force bool
+	// If true, process information and warnings are also printed.
 	Verbose      bool
 	IgnoreErrors bool
 	Endianness   Endianness
-	HashTable    bool
+	// If true, compiles the hash table.
+	HashTable bool
 }
 
 type Endianness = util.Endianness
@@ -25,6 +31,9 @@ const (
 	NativeEndian = util.NativeEndian
 )
 
+// Overwrite the configuration with the options provided,
+// saving the previous state so that it can be restored
+// later with [MoConfig.RestoreLastCfg] if desired.
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 	mc.lastCfg = *mc
 
@@ -33,6 +42,8 @@ func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 	}
 }
 
+// Restores the configuration state prior to the last
+// [MoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (mc *MoConfig) RestoreLastCfg() {
 	if mc.lastCfg != nil {
 		*mc = mc.lastCfg.(MoConfig)

@@ -5,6 +5,7 @@ namespace parse {
 
         + Logger *log.Logger
         + Endianness Endianness
+        + MustBeSorted bool
 
         + RestoreLastCfg() 
         + ApplyOptions(opts ...MoOption) 
@@ -18,7 +19,7 @@ namespace parse {
         + Config MoConfig
 
         - error(format string, a ...any) 
-        - genBasics(reader *bytes.Reader) (binary.ByteOrder, error)
+        - defineOrder(reader *bytes.Reader) binary.ByteOrder
         - makeEntries(r *bytes.Reader, header *util.MoHeader, msgIDStart []u32, msgIDLen []u32, msgStrStart []i32, msgStrLen []i32) po.Entries
 
         + Error() error

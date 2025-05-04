@@ -8,8 +8,11 @@ import (
 
 // PoConfig holds the settings for the compiler, affecting how translations are processed.
 type PoConfig struct {
+	// It is used to restore the configuration using the method [PoConfig.RestoreLastCfg]
+	// and is saved when using the asd method [PoConfig.ApplyOptions]
 	lastCfg any
 
+	// The logger can be nil, otherwise this logger will be used to print all errors by default.
 	Logger          *log.Logger
 	ForcePo         bool           // If true, forces the creation of a `.po` file, even if not strictly needed.
 	OmitHeader      bool           // If true, omits the header section in the generated `.po` file.
@@ -33,6 +36,9 @@ type PoConfig struct {
 	Highlight                *HighlightConfig
 }
 
+// Overwrite the configuration with the options provided,
+// saving the previous state so that it can be restored
+// later with [PoConfig.RestoreLastCfg] if desired.
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {
 	c.lastCfg = *c
 	for _, po := range opts {
@@ -40,6 +46,8 @@ func (c *PoConfig) ApplyOptions(opts ...PoOption) {
 	}
 }
 
+// Restores the configuration state prior to the last
+// [PoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (c *PoConfig) RestoreLastCfg() {
 	*c = c.lastCfg.(PoConfig)
 }

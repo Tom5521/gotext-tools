@@ -27,6 +27,7 @@ namespace parse {
         - hasGotext bool
         - errors []error
 
+        - error(format string, a ...any) error
         - parse() error
         - determinePackageInfo() 
         - isGotextCall(n ast.Node) bool
@@ -48,6 +49,9 @@ namespace parse {
 
         + Config Config
 
+        - error(format string, a ...any) 
+        - lastErr() error
+        - info(format string, a ...any) 
         - appendFiles(files ...string) error
 
         + ParseWithOptions(options ...Option) *po.File

@@ -8,7 +8,9 @@ import (
 )
 
 type Config struct {
-	lastCfg any // Any type to not refer itself.
+	// It is used to restore the configuration using the method [Config.RestoreLastCfg]
+	// and is saved when using the asd method [Config.ApplyOptions]
+	lastCfg any
 
 	Exclude         []string
 	ExtractAll      bool
@@ -21,12 +23,17 @@ type Config struct {
 	CleanDuplicates bool
 }
 
+// Restores the configuration state prior to the last
+// [Config.ApplyOptions] if it exists, otherwise it does nothing.
 func (c *Config) RestoreLastCfg() {
 	if c.lastCfg != nil {
 		*c = c.lastCfg.(Config)
 	}
 }
 
+// Overwrite the configuration with the options provided,
+// saving the previous state so that it can be restored
+// later with [Config.RestoreLastCfg] if desired.
 func (c *Config) ApplyOptions(opts ...Option) {
 	c.lastCfg = *c
 

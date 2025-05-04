@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"strconv"
@@ -59,7 +58,7 @@ func (f *File) isGotextCall(n ast.Node) bool {
 func (f *File) basicLitToEntry(n *ast.BasicLit) (po.Entry, error) {
 	str, err := strconv.Unquote(n.Value)
 	if err != nil {
-		return po.Entry{}, fmt.Errorf("error unquoting basic literal: %w", err)
+		return po.Entry{}, f.error("error unquoting basic literal: %w", err)
 	}
 
 	return po.Entry{
@@ -85,7 +84,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 		return
 	}
 	if index < 0 || index >= len(call.Args) {
-		a.err = fmt.Errorf("index (%d) out of range", index)
+		a.err = f.error("index (%d) out of range", index)
 		return
 	}
 	lit, ok := call.Args[index].(*ast.BasicLit)
@@ -94,7 +93,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 	}
 
 	if lit.Kind != token.STRING {
-		a.err = fmt.Errorf("the specified argument (%d) is not a string", index)
+		a.err = f.error("the specified argument (%d) is not a string", index)
 		return
 	}
 
@@ -106,7 +105,7 @@ func (f *File) extractArg(index int, call *ast.CallExpr) (a argumentData) {
 
 	str, err := strconv.Unquote(lit.Value)
 	if err != nil {
-		a.err = fmt.Errorf("error unquoting basic literal: %w", err)
+		a.err = f.error("error unquoting basic literal: %w", err)
 		return
 	}
 
@@ -163,12 +162,10 @@ func (f *File) processNode(n ast.Node) (po.Entries, []error) {
 
 	processPoCall := func(call *ast.CallExpr) {
 		t, valid, err := f.processPoCall(call)
-		if err != nil {
-			errors = append(errors, err)
-		}
-		if !valid {
+		if err != nil || !valid {
 			return
 		}
+
 		entries = append(entries, t)
 	}
 

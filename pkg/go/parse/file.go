@@ -2,6 +2,7 @@ package parse
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -34,6 +35,24 @@ type File struct {
 	hasGotext bool   // Indicates if the file imports the desired "gotext" package.
 
 	errors []error
+}
+
+func (f *File) error(format string, a ...any) error {
+	var err error
+	format = "go/parse: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if f.config.Logger != nil {
+		f.config.Logger.Println("ERROR:", err)
+	}
+
+	f.errors = append(f.errors, err)
+
+	return err
 }
 
 func (f *File) Reset(d io.Reader, name string, config *Config) error {

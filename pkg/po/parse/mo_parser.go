@@ -26,16 +26,17 @@ var (
 var _ po.Parser = (*MoParser)(nil)
 
 type MoParser struct {
+	Config MoConfig
+
 	data     []byte
 	filename string
 	errors   []error
-	Config   MoConfig
 }
 
 // This method MUST be used to log any errors inside this structure.
 func (m *MoParser) error(format string, a ...any) {
 	var err error
-	format = "parse: " + format
+	format = "po/parse: " + format
 	if len(a) == 0 {
 		err = errors.New(format)
 	} else {
@@ -92,30 +93,34 @@ func (m MoParser) Errors() []error {
 	return m.errors
 }
 
-func (m *MoParser) genBasics(reader *bytes.Reader) (order bin.ByteOrder, err error) {
-	var magicNumber u32
+func (m *MoParser) defineOrder(reader *bytes.Reader) (order bin.ByteOrder) {
+	var magic u32
+
 	if m.Config.Endianness == NativeEndian {
-		if err = bin.Read(reader, bin.LittleEndian, &magicNumber); err != nil {
+		err := bin.Read(reader, NativeEndian.Order(), &magic)
+		if err != nil {
 			m.error("error reading magic number: %w", err)
 			return
 		}
-		switch magicNumber {
+		switch magic {
 		case util.LittleEndianMagicNumber:
 			order = bin.LittleEndian
 		case util.BigEndianMagicNumber:
 			order = bin.BigEndian
 		default:
-			m.error("invalid magic number")
+			m.error("invalid magic number, this isn't a MO file")
 			return
 		}
 	} else {
-		order = m.Config.Endianness.Order()
-		if err = bin.Read(reader, order, &magicNumber); err != nil {
+		endian := m.Config.Endianness
+		order = endian.Order()
+		err := bin.Read(reader, order, &magic)
+		if err != nil {
 			m.error("error reading magic number: %w", err)
 			return
 		}
-		if magicNumber != m.Config.Endianness.MagicNumber() {
-			m.error("invalid magic number")
+		if magic != endian.MagicNumber() {
+			m.error("invalid magic number, this isn't a MO file")
 		}
 	}
 
@@ -132,10 +137,11 @@ func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
 }
 
 func (m *MoParser) Parse() (file *po.File) {
+	var err error
 	r := bytes.NewReader(m.data)
 
-	bo, err := m.genBasics(r)
-	if err != nil {
+	bo := m.defineOrder(r)
+	if m.Error() != nil {
 		return
 	}
 

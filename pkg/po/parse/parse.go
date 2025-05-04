@@ -1,3 +1,5 @@
+// The parse package contains structures and functions
+// for parsing Mo/Po files with the respective options.
 package parse
 
 import (
