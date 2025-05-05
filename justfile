@@ -10,10 +10,10 @@ default:
     set -euo pipefail
 
     for app in ./cli/*; do
-        if ! ([[ -d "$app" ]] && find "$app" | grep -q "main.go"); then
+        if ! ([[ -d "$app" ]] && find "$app" -maxdepth 1 -name "*.go"| grep -q .); then
             continue
         fi
-        echo -n {{BOLD}}$(basename $app)-{{NORMAL}}
+        echo -n {{ BOLD }}$(basename $app)-{{ NORMAL }}
         just build $(basename $app)
     done
 
@@ -163,7 +163,7 @@ build-all: clean
     export GOCMD={{ gocmd }}
 
     for app in ./cli/*; do
-        if ! ([[ -d "$app" ]] && find "$app" | grep -q "main.go"); then
+        if ! ([[ -d "$app" ]] && find "$app" -maxdepth 1 -name "*.go"| grep -q .); then
             continue
         fi
 
@@ -177,6 +177,7 @@ build-all: clean
 release: clean build-all
     gh release create {{ `git describe --tags --abbrev=0` }} \
     --generate-notes --fail-on-no-commits builds/*
+
 cli-docs:
     #!/usr/bin/env bash
     cd cli
