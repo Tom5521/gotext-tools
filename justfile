@@ -6,14 +6,15 @@ verbose := env("VERBOSE", "0")
 ext := if goos == "windows" { ".exe" } else { "" }
 
 default:
-    #!/bin/env bash
+    #!/usr/bin/env bash
     set -euo pipefail
 
     for app in ./cli/*; do
-        if [[ -d "$app" ]]; then
-            echo -n {{BOLD}}$(basename $app)-{{NORMAL}}
-            just build $(basename $app)
+        if ! ([[ -d "$app" ]] && find "$app" | grep -q "main.go"); then
+            continue
         fi
+        echo -n {{BOLD}}$(basename $app)-{{NORMAL}}
+        just build $(basename $app)
     done
 
 run app args:
@@ -31,7 +32,7 @@ test:
     just verbose={{ verbose }} bench ./...
 
 bench path:
-    #!/bin/env bash
+    #!/usr/bin/env bash
     {{ gocmd }} test \
     $([[ "{{ verbose }}" == "1" ]] && echo "-v") \
     -bench=. {{ path }}
@@ -60,7 +61,7 @@ puml:
     done
 
 clean:
-    #!/bin/env bash
+    #!/usr/bin/env bash
     echo -n {{ BOLD }}"Cleaning..."{{ NORMAL }}
     rm -rf \
     $(find . \( -name "*.po" -o -name "*.mo" -o -name "*.pot" -o -name "*.log" \)) \
@@ -120,37 +121,38 @@ build-all-app app:
     export GOCMD={{ gocmd }}
 
     archs=(
-      386 # Ahem...
+      # 386 # Ahem...
       amd64
-      arm
+      # arm
       arm64
 
       # WHO TF USE THIS ARCHITECTURES?!?!?!?!
-      ppc64
-      ppc64le
-      riscv64
+      # ppc64
+      # ppc64le
+      # riscv64
     )
     oses=(
       linux
-      netbsd
-      freebsd
+      # netbsd
+      # freebsd
       windows
       darwin
 
       # And... the distros that nobody uses
-      openbsd
-      plan9
-      solaris
-      dragonfly
+      # openbsd
+      # plan9
+      # solaris
+      # dragonfly
     )
 
     valid=$({{ gocmd }} tool dist list)
 
     for os in "${oses[@]}"; do
         for arch in "${archs[@]}"; do
-        if echo $valid | grep -qw "$os/$arch"; then
+            if ! echo $valid | grep -qw "$os/$arch"; then
+                continue
+            fi
             just goos="$os" goarch="$arch" build {{ app }}
-        fi
         done
     done
 
@@ -161,11 +163,13 @@ build-all: clean
     export GOCMD={{ gocmd }}
 
     for app in ./cli/*; do
-      if [[ -d "$app" ]];then
-            name=$(basename "$app")
-            echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- $name -----"{{ NORMAL }}
-            just build-all-app "$name"
+        if ! ([[ -d "$app" ]] && find "$app" | grep -q "main.go"); then
+            continue
         fi
+
+        name=$(basename "$app")
+        echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- $name -----"{{ NORMAL }}
+        just build-all-app "$name"
     done
     echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- FINISHED -----"{{ NORMAL }}
 
@@ -173,3 +177,8 @@ build-all: clean
 release: clean build-all
     gh release create {{ `git describe --tags --abbrev=0` }} \
     --generate-notes --fail-on-no-commits builds/*
+cli-docs:
+    #!/usr/bin/env bash
+    cd cli
+    rm -rf docs
+    go run ./gotext-tools doc-tree -D docs
