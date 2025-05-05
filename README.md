@@ -19,6 +19,16 @@ A Go library and CLI toolkit for working with Gettext `.po` and `.mo` files. Thi
 
 Located in `cli/`, these tools provide command-line utilities for managing `.po` and `.mo` files.
 
+### `gotext-tools`
+
+It is a wrapper of all the utilities that will be mentioned below, if you don't want to install all of them one by one, or you want to save disk space, I recommend you install this one.
+
+**Usage:**
+
+```sh
+gotext-tools [tool] [option]... [arg]...
+```
+
 ### `msgomerge`
 
 A cross-platform alternative to `msgmerge`, used for updating `.po` files with new translations while preserving existing ones.
@@ -168,8 +178,8 @@ func main(){
         Str: "Hola Mundo!",
       },
       {
-        ID: "Bye World!"
-        Str: "Adios Mundo!"
+        ID: "Bye World!",
+        Str: "Adios Mundo!",
       },
     },
   }
@@ -217,6 +227,14 @@ msgstr "mundo"`
 git clone https://github.com/Tom5521/gotext-tools
 cd gotext-tools
 just # Now check ./builds!
+```
+
+#### Or...
+
+```sh
+git clone https://github.com/Tom5521/gotext-tools
+cd gotext-tools
+just go-install app
 ```
 
 ### Pre-built Binaries
