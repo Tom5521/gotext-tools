@@ -12,8 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var use = "msgomerge"
+
 var root = &cobra.Command{
-	Use:   "msgomerge",
+	Use:   use,
 	Short: "Merges two Uniforum style .po files together.",
 	Long: `Merges two Uniforum style .po files together.  
 The def.po file is an existing PO file with translations which will be
@@ -28,7 +30,7 @@ Where an exact match cannot be found, fuzzy matching is used to produce better r
 	Example: fmt.Sprintf(`%s es.po en.pot -o -
 %s es.po en.pot -o merged.po
 %s es.po en.pot -U`,
-		os.Args[0], os.Args[0], os.Args[0],
+		use, use, use,
 	),
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 && len(compendium) < 1 {

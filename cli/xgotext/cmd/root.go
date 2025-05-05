@@ -12,8 +12,10 @@ import (
 
 var logger = log.New(os.Stdout, "", log.Ltime)
 
+var use = "xgotext"
+
 var root = &cobra.Command{
-	Use:   "xgotext",
+	Use:   use,
 	Short: "Extract translatable strings from given input files.",
 	Long: `Extract translatable strings from given input files.
 Mandatory arguments to long options are mandatory for short options too.
@@ -21,7 +23,7 @@ Similarly for optional arguments.`,
 	Example: fmt.Sprintf(`%s -a my-go-proyect/ -o -
 %s -a my-go-proyect/ -o en.pot -lang en
 %s main.go -o main.pot -lang en`,
-		os.Args[0], os.Args[0], os.Args[0],
+		use, use, use,
 	),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		initConfig()

@@ -12,8 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var use = "msgofmt"
+
 var root = &cobra.Command{
-	Use:   "msgofmt",
+	Use:   use,
 	Short: `Generate binary message catalog from textual translation description.`,
 	Long: `Usage: msgfmt [OPTION] filename.po ...
 Mandatory arguments to long options are mandatory for short options too.
@@ -29,7 +31,7 @@ If input file is -, standard input is read.`,
 %s es.po -o es.mo
 %s -D domains/es -f
 %s -D inside-this-directory es.po -o es.mo`,
-		os.Args[0], os.Args[0], os.Args[0], os.Args[0]),
+		use, use, use, use),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		initCfg()
 	},
