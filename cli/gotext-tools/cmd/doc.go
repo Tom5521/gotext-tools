@@ -33,11 +33,16 @@ func genRunners(cmd *cobra.Command) (*os.File, *cobra.Command, error) {
 	command, _ := cmd.Flags().GetString("command")
 
 	var toDescribe *cobra.Command
-	commands := cmd.Parent().Parent().Commands()
-	for _, c := range commands {
-		if c.Use == command {
-			toDescribe = c
-			break
+	rootCmd := cmd.Parent().Parent()
+	commands := rootCmd.Commands()
+	if command == rootCmd.Use {
+		toDescribe = rootCmd
+	} else {
+		for _, c := range commands {
+			if c.Use == command {
+				toDescribe = c
+				break
+			}
 		}
 	}
 
@@ -63,6 +68,7 @@ var (
 	markdown = &cobra.Command{
 		Use:   "markdown",
 		Short: "Generate documentation in markdown.",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			file, d, err := genRunners(cmd)
 			if err != nil {
@@ -78,6 +84,7 @@ var (
 	man = &cobra.Command{
 		Use:   "man",
 		Short: "Generate documentation for man.",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			file, d, err := genRunners(cmd)
 			if err != nil {

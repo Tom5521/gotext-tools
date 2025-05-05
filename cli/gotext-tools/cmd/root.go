@@ -13,7 +13,7 @@ var root = &cobra.Command{
 }
 
 func init() {
-	root.AddCommand(msgofmt, msgomerge, xgotext, docs)
+	root.AddCommand(msgofmt, msgomerge, xgotext, docs, docTree)
 }
 
 func Execute() {
