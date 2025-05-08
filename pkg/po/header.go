@@ -1,11 +1,11 @@
 package po
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -19,7 +19,8 @@ type HeaderField struct {
 
 // Header represents a collection of header fields.
 type Header struct {
-	Fields []HeaderField // A slice storing all registered header fields.
+	Template bool
+	Fields   []HeaderField // A slice storing all registered header fields.
 }
 
 func NewHeader(options ...HeaderOption) Header {
@@ -31,70 +32,175 @@ func NewHeader(options ...HeaderOption) Header {
 	return h.ToHeader()
 }
 
+var (
+	headerRegex = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
+	exprRegex   = regexp.MustCompile(
+		`(?: *(\S+?) *= *(.+?) *; *)`,
+	)
+)
+
+func parseAdvHeaderField(str string) map[string]string {
+	table := make(map[string]string)
+	str = strings.TrimSpace(str)
+	if !strings.HasSuffix(str, ";") {
+		str += ";"
+	}
+	smatchs := exprRegex.FindAllStringSubmatch(str, -1)
+	for _, matches := range smatchs {
+		key := matches[len(matches)-2]
+		value := matches[len(matches)-1]
+
+		table[key] = value
+	}
+
+	return table
+}
+
+func (h Header) ToConfig() HeaderConfig {
+	mime := h.Load("MIME-Version")
+	if mime == "" {
+		mime = "1.0"
+	}
+
+	charset := "UTF-8"
+	{
+		if parsed, ok := parseAdvHeaderField(h.Load("Content-Type"))["charset"]; ok {
+			if util.IsSupportedCharset(parsed) {
+				charset = parsed
+			}
+		}
+	}
+
+	var nplurals uint = 2
+	var plural string
+	{
+		pluralForms := h.Load("Plural-Forms")
+		matches := parseAdvHeaderField(pluralForms)
+		if npluralsStr, ok := matches["nplurals"]; ok {
+			np, err := strconv.ParseUint(npluralsStr, 10, strconv.IntSize)
+			if err == nil {
+				nplurals = uint(np)
+			}
+		}
+		if pluralStr, ok := matches["plural"]; ok {
+			plural = pluralStr
+		}
+	}
+
+	return HeaderConfig{
+		Template:                h.Template,
+		ProjectIDVersion:        h.Load("Project-Id-Version"),
+		ReportMsgidBugsTo:       h.Load("Report-Msgid-Bugs-To"),
+		POTCreationDate:         h.Load("POT-Creation-Date"),
+		PORevisionDate:          h.Load("PO-Revision-Date"),
+		LastTranslator:          h.Load("Last-Translator"),
+		LanguageTeam:            h.Load("Language-Team"),
+		Language:                h.Load("Language"),
+		MimeVersion:             mime,
+		ContentType:             "text/plain",
+		Charset:                 charset,
+		ContentTransferEncoding: "8bit",
+		Plural:                  plural,
+		Nplurals:                nplurals,
+		XGenerator:              h.Load("XGenerator"),
+	}
+}
+
 func (h Header) Nplurals() (nplurals uint) {
 	nplurals = 2
 	value := h.Load("Plural-Forms")
-	if value == "" {
-		return
-	}
-	if !npluralsRegex.MatchString(value) {
-		return
-	}
-	matches := npluralsRegex.FindStringSubmatch(value)
-	n, err := strconv.ParseUint(util.SafeSliceAccess(matches, 1), 10, 64)
-	if err != nil {
-		return
-	}
 
-	nplurals = uint(n)
+	if np, ok := parseAdvHeaderField(value)["nplurals"]; ok {
+		n, err := strconv.ParseUint(np, 10, 64)
+		if err != nil {
+			return
+		}
+
+		nplurals = uint(n)
+	}
 
 	return
 }
 
-func (h Header) ToEntry() (e Entry) {
+func (h Header) ToEntry() Entry {
 	var b strings.Builder
 
 	for _, field := range h.Fields {
-		fmt.Fprintf(&b, "\n%s: %s\n", field.Key, field.Value)
+		if field.Value != " " {
+			field.Value = " " + field.Value
+		}
+		fmt.Fprintf(&b, "\n%s:%s\n", field.Key, field.Value)
+	}
+	entry := Entry{Str: b.String()}
+	if h.Template {
+		entry.markAsFuzzy()
 	}
 
-	e.Str = b.String()
-	return
+	return entry
 }
 
 type HeaderConfig struct {
-	Nplurals          uint
-	ProjectIDVersion  string
-	ReportMsgidBugsTo string
-	Language          string
-	LanguageTeam      string
-	LastTranslator    string
+	Template                bool
+	ProjectIDVersion        string
+	ReportMsgidBugsTo       string
+	POTCreationDate         string
+	PORevisionDate          string
+	LastTranslator          string
+	LanguageTeam            string
+	Language                string
+	MimeVersion             string
+	ContentType             string
+	Charset                 string
+	ContentTransferEncoding string
+	Nplurals                uint
+	Plural                  string
+	XGenerator              string
 }
 
-func (cfg HeaderConfig) ToHeaderWithDefaults() (h Header) {
-	h = DefaultTemplateHeader()
+func (h HeaderConfig) Validate() []error {
+	var errs []error
 
-	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
-	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
-	h.Set("Language-Team", cfg.LanguageTeam)
-	h.Set("Language", cfg.Language)
-	h.Set(
-		"Plural-Forms",
-		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
-	)
+	if h.Plural == "" {
+		errs = append(errs, errors.New("plural not specified"))
+	}
+	if h.Nplurals == 0 {
+		errs = append(errs, errors.New("nplurals can't be zero"))
+	}
+	if h.ContentType != "text/plain" {
+		errs = append(errs, fmt.Errorf("content-type(%s) must be text/plain", h.ContentType))
+	}
+	if h.ContentTransferEncoding != "8bit" {
+		errs = append(
+			errs,
+			fmt.Errorf("content-transfer-encoding(%s) must be 8bit", h.ContentTransferEncoding),
+		)
+	}
+	if !util.IsSupportedCharset(h.Charset) {
+		errs = append(errs, fmt.Errorf("%s isn't a supported charset", h.Charset))
+	}
 
-	return
+	return errs
 }
 
 func (cfg HeaderConfig) ToHeader() (h Header) {
-	h.Set("Project-Id-Version", cfg.ProjectIDVersion)
-	h.Set("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
-	h.Set("Language-Team", cfg.LanguageTeam)
-	h.Set("Language", cfg.Language)
-	h.Set(
+	h.Template = cfg.Template
+	h.sSet("Project-Id-Version", cfg.ProjectIDVersion)
+	h.sSet("Report-Msgid-Bugs-To", cfg.ReportMsgidBugsTo)
+	if cfg.Template {
+		h.sSet("POT-Creation-Date", cfg.POTCreationDate)
+	}
+	h.sSet("PO-Revision-Date", cfg.PORevisionDate)
+	h.sSet("Last-Translator", cfg.LastTranslator)
+	h.sSet("Language-Team", cfg.LanguageTeam)
+	h.sSet("Language", cfg.Language)
+	h.sSet("MIME-Version", cfg.MimeVersion)
+	h.sSet("Content-Type", fmt.Sprintf("%s; charset=%s", cfg.ContentType, cfg.Charset))
+	h.sSet("Content-Transfer-Encoding", cfg.ContentTransferEncoding)
+	h.sSet(
 		"Plural-Forms",
-		fmt.Sprintf("nplurals=%d; plural=(n != 1);", cfg.Nplurals),
+		fmt.Sprintf("nplurals=%d; plural=%s;", cfg.Nplurals, cfg.Plural),
 	)
+	h.sSet("X-Generator", cfg.XGenerator)
 
 	return
 }
@@ -108,18 +214,47 @@ func HeaderConfigFromOptions(options ...HeaderOption) HeaderConfig {
 	return h
 }
 
-func DefaultHeaderConfig() HeaderConfig {
-	return HeaderConfig{
-		Nplurals:         2,
-		ProjectIDVersion: "PACKAGE VERSION",
-		Language:         "en",
-	}
+var defaultHeaderConfig = HeaderConfig{
+	Language:                " ",
+	MimeVersion:             "1.0",
+	ContentType:             "text/plain",
+	Charset:                 "UTF-8",
+	ContentTransferEncoding: "8bit",
+	Nplurals:                2,
+	Plural:                  "(n != 1)",
 }
 
-var (
-	npluralsRegex = regexp.MustCompile(`nplurals=(\d*)`)
-	headerRegex   = regexp.MustCompile(`(.*)\s*:\s*(.*)`)
-)
+func DefaultHeaderConfig(opts ...HeaderOption) HeaderConfig {
+	h := defaultHeaderConfig
+	for _, ho := range opts {
+		ho(&h)
+	}
+	return h
+}
+
+var defaultTemplateHeaderConfig = HeaderConfig{
+	Template:                true,
+	ProjectIDVersion:        "PACKAGE VERSION",
+	ReportMsgidBugsTo:       " ",
+	PORevisionDate:          "YEAR-MO-DA HO:MI+ZONE",
+	LastTranslator:          "FULL NAME <EMAIL@ADDRESS>",
+	LanguageTeam:            "LANGUAGE <LL@li.org>",
+	Language:                " ",
+	MimeVersion:             "1.0",
+	ContentType:             "text/plain",
+	Charset:                 "CHARSET",
+	ContentTransferEncoding: "8bit",
+	Nplurals:                2,
+	Plural:                  "(n != 1)",
+}
+
+func DefaultTemplateHeaderConfig(opts ...HeaderOption) HeaderConfig {
+	h := defaultTemplateHeaderConfig
+	for _, opt := range opts {
+		opt(&h)
+	}
+	return h
+}
 
 func (e Entries) Header() (h Header) {
 	i := e.Index("", "")
@@ -136,39 +271,12 @@ func (e Entries) Header() (h Header) {
 		matches := headerRegex.FindStringSubmatch(line)
 		h.Fields = append(h.Fields,
 			HeaderField{
-				Key:   util.SafeSliceAccess(matches, 1),
-				Value: util.SafeSliceAccess(matches, 2),
+				Key:   matches[1],
+				Value: matches[2],
 			},
 		)
 	}
 	return
-}
-
-// DefaultTemplateHeader initializes a Header object with commonly used default fields.
-// These fields are typically found in .po files for localization.
-func DefaultTemplateHeader() (h Header) {
-	// Register standard header fields with optional default values.
-	h.Register("Project-Id-Version")   // No default value.
-	h.Register("Report-Msgid-Bugs-To") // No default value.
-	h.Register(
-		"POT-Creation-Date",
-		time.Now().Format("2006-01-02 15:04:05"),
-	) // Current date and time.
-	h.Register("PO-Revision-Date")    // No default value.
-	h.Register("Last-Translator")     // No default value.
-	h.Register("Language-Team")       // No default value.
-	h.Register("Language")            // No default value.
-	h.Register("MIME-Version", "1.0") // MIME version.
-	h.Register(
-		"Content-Type",
-		"text/plain; charset=CHARSET",
-	) // Content type with placeholder charset.
-	h.Register("Content-Transfer-Encoding", "8bit") // Encoding type.
-	h.Register(
-		"Plural-Forms",
-		"nplurals=2; plural=(n != 1);",
-	) // Placeholder plural form formula.
-	return h
 }
 
 // Register adds a new header field to the Header object if the key does not already exist.
@@ -239,4 +347,11 @@ func (h *Header) Set(key, value string) {
 			Value: value,
 		},
 	)
+}
+
+func (h *Header) sSet(key, value string) {
+	if value == "" || key == "" {
+		return
+	}
+	h.Set(key, value)
 }

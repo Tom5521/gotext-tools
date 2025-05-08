@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 	"log"
+
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 // PoConfig holds the settings for the compiler, affecting how translations are processed.
@@ -30,6 +32,7 @@ type PoConfig struct {
 	HeaderComments  bool
 	HeaderFields    bool
 	WordWrap        bool
+	HeaderConfig    *po.HeaderConfig
 
 	UseCustomObsoletePrefix  bool
 	CustomObsoletePrefixRune rune

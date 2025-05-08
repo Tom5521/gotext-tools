@@ -16,8 +16,7 @@ type Config struct {
 	ExtractAll      bool
 	NoHeader        bool
 	HeaderConfig    *po.HeaderConfig
-	HeaderOptions   []po.HeaderOption
-	Header          *po.Header
+	CustomHeader    *po.Header
 	Logger          *log.Logger
 	Verbose         bool
 	CleanDuplicates bool
@@ -44,10 +43,6 @@ func (c *Config) ApplyOptions(opts ...Option) {
 
 func DefaultConfig(opts ...Option) Config {
 	c := Config{
-		Header: func() *po.Header {
-			h := po.DefaultTemplateHeader()
-			return &h
-		}(),
 		Logger:          log.New(io.Discard, "", 0),
 		CleanDuplicates: true,
 	}
@@ -91,14 +86,10 @@ func WithExtractAll(e bool) Option {
 	return func(c *Config) { c.ExtractAll = e }
 }
 
+func WithCustomHeader(h *po.Header) Option {
+	return func(c *Config) { c.CustomHeader = h }
+}
+
 func WithHeaderConfig(h *po.HeaderConfig) Option {
 	return func(c *Config) { c.HeaderConfig = h }
-}
-
-func WithHeaderOptions(hopts ...po.HeaderOption) Option {
-	return func(c *Config) { c.HeaderOptions = hopts }
-}
-
-func WithHeader(h *po.Header) Option {
-	return func(c *Config) { c.Header = h }
 }

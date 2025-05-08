@@ -8,6 +8,60 @@ func HeaderWithConfig(c HeaderConfig) HeaderOption {
 	}
 }
 
+func HeaderWithTemplate(t bool) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.Template = t
+	}
+}
+
+func HeaderWithPlural(p string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.Plural = p
+	}
+}
+
+func HeaderWithPOTCreationDate(c string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.POTCreationDate = c
+	}
+}
+
+func HeaderWithPORevisionDate(r string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.PORevisionDate = r
+	}
+}
+
+func HeaderWithXGenerator(g string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.XGenerator = g
+	}
+}
+
+func HeaderWtihContentTransferEncoding(c string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.ContentTransferEncoding = c
+	}
+}
+
+func HeaderWithContentType(t string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.ContentType = t
+	}
+}
+
+func HeaderWithCharset(charset string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.Charset = charset
+	}
+}
+
+func HeaderWithMimeVersion(version string) HeaderOption {
+	return func(hc *HeaderConfig) {
+		hc.MimeVersion = version
+	}
+}
+
 func HeaderWithNplurals(n uint) HeaderOption {
 	return func(hc *HeaderConfig) {
 		hc.Nplurals = n

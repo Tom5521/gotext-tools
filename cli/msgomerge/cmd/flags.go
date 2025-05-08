@@ -8,7 +8,7 @@ var (
 	// backup           string
 	// suffix           string
 	// previous        	bool
-	color           bool
+	color           string
 	noFuzzyMatching bool
 	lang            string
 	forcePo         bool
@@ -63,5 +63,6 @@ If it is not given or ‘full’, it generates the lines with both
 file name and line number. If it is ‘file’, the line number part is omitted.
 If it is ‘never’, it completely suppresses the lines (same as --no-location).`,
 	)
-	flags.BoolVar(&color, "color", false, "use colors and other text attributes always")
+	flags.StringVar(&color, "color", "auto", `use colors and other text attributes if WHEN. 
+WHEN may be 'always', 'never', 'auto'`)
 }

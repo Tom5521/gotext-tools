@@ -23,10 +23,6 @@ msgstr ""
 )
 
 func (c PoCompiler) writeHeader(w io.Writer) {
-	if c.Config.OmitHeader {
-		return
-	}
-
 	if c.Config.HeaderComments {
 		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
 		if c.Config.ForeignUser {

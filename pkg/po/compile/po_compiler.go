@@ -92,7 +92,12 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 	}
 
 	c.info("writing header...")
-	c.writeHeader(writer)
+	if !c.Config.OmitHeader {
+		if c.Config.HeaderConfig != nil {
+			c.header = c.Config.HeaderConfig.ToHeader()
+		}
+		c.writeHeader(writer)
+	}
 	c.info("cleaning duplicates...")
 	// Remove duplicate entries and write each entry to the writer.
 	entries := c.File.CutHeader().CleanDuplicates()

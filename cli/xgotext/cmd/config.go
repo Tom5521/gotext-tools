@@ -49,7 +49,13 @@ func initConfig() {
 		WordWrap:        wordWrap,
 	}
 
-	if term.IsTerminal(int(os.Stdout.Fd())) && output == "-" {
+	switch color {
+	case "auto":
+		if !term.IsTerminal(int(os.Stdout.Fd())) || output != "-" {
+			break
+		}
+		fallthrough
+	case "always":
 		CompilerCfg.Highlight = compile.DefaultHighlight
 	}
 

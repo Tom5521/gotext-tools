@@ -3,6 +3,7 @@ package cmd
 var (
 	// CLI.
 
+	color        string
 	filesFrom    string
 	directory    string
 	output       string
@@ -200,4 +201,6 @@ This option has an effect only if the ‘--package-name’ option is also used.`
 		`Use string (or "" if not specified) as suffix for msgstr values.`,
 	)
 	flag.BoolVar(&wordWrap, "word-wrap", false, "Applies word wrapping to strings.")
+	flag.StringVar(&color, "color", "auto", `use colors and other text attributes if WHEN. 
+WHEN may be 'always', 'never', 'auto'`)
 }

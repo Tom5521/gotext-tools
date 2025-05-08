@@ -181,20 +181,21 @@ func (p *Parser) Parse() (file *po.File) {
 	p.errors = nil // Clean errors
 
 	if !p.Config.NoHeader {
-		header := po.DefaultTemplateHeader()
-		if p.Config.Header != nil {
-			header = *p.Config.Header
+		var header po.Header
+		var headerConfig po.HeaderConfig
+
+		if p.Config.HeaderConfig == nil {
+			headerConfig = po.DefaultTemplateHeaderConfig()
+		} else {
+			headerConfig = *p.Config.HeaderConfig
 		}
 
-		if p.Config.HeaderConfig != nil {
-			header = p.Config.HeaderConfig.ToHeaderWithDefaults()
+		if p.Config.CustomHeader != nil {
+			header = *p.Config.CustomHeader
+		} else {
+			headerConfig.XGenerator = "xgotext"
+			header = headerConfig.ToHeader()
 		}
-
-		if p.Config.HeaderOptions != nil {
-			header = po.HeaderConfigFromOptions(p.Config.HeaderOptions...).ToHeaderWithDefaults()
-		}
-
-		header.Fields = append(header.Fields, po.HeaderField{Key: "X-Generator", Value: "xgotext"})
 
 		file.Entries = append(file.Entries, header.ToEntry())
 	}

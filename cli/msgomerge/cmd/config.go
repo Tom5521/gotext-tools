@@ -25,7 +25,13 @@ func initConfig() {
 		Logger:      log.Default(),
 	}
 
-	if term.IsTerminal(int(os.Stdout.Fd())) && outputPath == "-" {
+	switch color {
+	case "auto":
+		if !term.IsTerminal(int(os.Stdout.Fd())) || outputPath != "-" {
+			break
+		}
+		fallthrough
+	case "always":
 		compilerCfg.Highlight = compile.DefaultHighlight
 	}
 
