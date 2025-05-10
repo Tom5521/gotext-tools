@@ -74,8 +74,13 @@ namespace po {
 
     }
     class Header << (S,Aquamarine) >> {
+        + Template bool
         + Fields []HeaderField
 
+        - sSet(key string, value string) 
+
+        + String() string
+        + ToConfig() HeaderConfig
         + Nplurals() uint
         + ToEntry() Entry
         + Register(key string, d ...string) 
@@ -84,14 +89,23 @@ namespace po {
 
     }
     class HeaderConfig << (S,Aquamarine) >> {
-        + Nplurals uint
+        + Template bool
         + ProjectIDVersion string
         + ReportMsgidBugsTo string
-        + Language string
-        + LanguageTeam string
+        + POTCreationDate string
+        + PORevisionDate string
         + LastTranslator string
+        + LanguageTeam string
+        + Language string
+        + MimeVersion string
+        + ContentType string
+        + Charset string
+        + ContentTransferEncoding string
+        + Nplurals uint
+        + Plural string
+        + XGenerator string
 
-        + ToHeaderWithDefaults() Header
+        + Validate() []error
         + ToHeader() Header
 
     }

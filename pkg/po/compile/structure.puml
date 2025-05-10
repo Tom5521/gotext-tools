@@ -85,6 +85,7 @@ namespace compile {
         + HeaderComments bool
         + HeaderFields bool
         + WordWrap bool
+        + HeaderConfig *po.HeaderConfig
         + UseCustomObsoletePrefix bool
         + CustomObsoletePrefixRune rune
         + Highlight *HighlightConfig

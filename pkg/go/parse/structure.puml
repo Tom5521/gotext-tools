@@ -7,8 +7,7 @@ namespace parse {
         + ExtractAll bool
         + NoHeader bool
         + HeaderConfig *po.HeaderConfig
-        + HeaderOptions []po.HeaderOption
-        + Header *po.Header
+        + CustomHeader *po.Header
         + Logger *log.Logger
         + Verbose bool
         + CleanDuplicates bool
@@ -19,7 +18,7 @@ namespace parse {
     }
     class File << (S,Aquamarine) >> {
         - config *Config
-        - seenNodes <font color=blue>map</font>[ast.Node]bool
+        - seenNodes <font color=blue>map</font>[ast.Node]<font color=blue>struct</font>{}
         - file *ast.File
         - reader *bytes.Reader
         - name string
@@ -44,7 +43,7 @@ namespace parse {
     }
     class Parser << (S,Aquamarine) >> {
         - files []*File
-        - seen <font color=blue>map</font>[string]bool
+        - seen <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - errors []error
 
         + Config Config
