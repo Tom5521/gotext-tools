@@ -151,11 +151,11 @@ func (m *MoParser) Parse() (file *po.File) {
 		return
 	}
 
-	if v := header.Revision >> 16; v != 0 && v != 1 {
+	if v := header.MajorVersion; v != 0 && v != 1 {
 		m.error("invalid major version number (%d)", v)
 	}
 
-	if v := header.Revision & 0xFFFF; v != 0 && v != 1 {
+	if v := header.MinorVersion; v != 0 && v != 1 {
 		m.error("invalid minor version number (%d)", v)
 	}
 

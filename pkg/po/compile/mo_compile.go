@@ -60,7 +60,6 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 
 	header := util.MoHeader{
 		Magic:          mc.Config.Endianness.MagicNumber(),
-		Revision:       0,
 		Nstrings:       flen(entries),
 		OrigTabOffset:  7 * 4,
 		TransTabOffset: 7*4 + flen(entries)*8,

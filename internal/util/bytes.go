@@ -2,7 +2,8 @@ package util
 
 import (
 	"encoding/binary"
-	"unsafe"
+
+	"golang.org/x/sys/cpu"
 )
 
 const (
@@ -10,7 +11,7 @@ const (
 	LittleEndianMagicNumber uint32 = 0x950412de
 )
 
-var IsBigEndian = (*[2]uint8)(unsafe.Pointer(&[]uint16{1}[0]))[0] == 0
+var IsBigEndian = cpu.IsBigEndian
 
 var NativeEndianOrder = func() binary.ByteOrder {
 	if IsBigEndian {
@@ -70,11 +71,12 @@ func (e Endianness) String() string {
 }
 
 type MoHeader struct {
-	Magic          u32 // 0
-	Revision       u32 // 4
-	Nstrings       u32 // 8
-	OrigTabOffset  u32 // 12
-	TransTabOffset u32 // 16
-	HashTabSize    u32 // 20
-	HashTabOffset  u32 // 24
+	Magic          u32    // 0
+	MajorVersion   uint16 // 2
+	MinorVersion   uint16 // 4
+	Nstrings       u32    // 8
+	OrigTabOffset  u32    // 12
+	TransTabOffset u32    // 16
+	HashTabSize    u32    // 20
+	HashTabOffset  u32    // 24
 }

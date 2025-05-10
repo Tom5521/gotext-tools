@@ -112,19 +112,7 @@ func (c PoCompiler) formatMultiline(str string) string {
 			}
 		}
 	} else {
-		builder.Grow(len(str) * 2)
-
-		builder.WriteRune('"')
-
-		for _, char := range str {
-			if char == '\n' {
-				builder.WriteString("\\n")
-				continue
-			}
-			builder.WriteRune(char)
-		}
-
-		builder.WriteRune('"')
+		fmt.Fprintf(&builder, "%q", str)
 	}
 
 	return builder.String()
