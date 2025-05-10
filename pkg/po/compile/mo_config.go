@@ -50,54 +50,62 @@ func (mc *MoConfig) RestoreLastCfg() {
 	}
 }
 
+// DefaultMoConfig creates a new MoConfig with default values.
+// Applies any provided options during creation.
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
 		HashTable: true,
 	}
-
 	c.ApplyOptions(opts...)
-
 	return c
 }
 
+// MoOption defines functions that modify MoConfig
 type MoOption func(c *MoConfig)
 
+// MoWithEndianness sets the byte order for MO file output
 func MoWithEndianness(e Endianness) MoOption {
 	return func(c *MoConfig) {
 		c.Endianness = e
 	}
 }
 
+// MoWithConfig replaces the entire configuration
 func MoWithConfig(n MoConfig) MoOption {
 	return func(c *MoConfig) {
 		*c = n
 	}
 }
 
+// MoWithHashTable toggles hash table generation
 func MoWithHashTable(h bool) MoOption {
 	return func(c *MoConfig) {
 		c.HashTable = h
 	}
 }
 
+// MoWithForce toggles file overwrite behavior
 func MoWithForce(f bool) MoOption {
 	return func(c *MoConfig) {
 		c.Force = f
 	}
 }
 
+// MoWithIgnoreErrors toggles error suppression
 func MoWithIgnoreErrors(i bool) MoOption {
 	return func(c *MoConfig) {
 		c.IgnoreErrors = i
 	}
 }
 
+// MoWithLogger sets the output logger
 func MoWithLogger(l *log.Logger) MoOption {
 	return func(c *MoConfig) {
 		c.Logger = l
 	}
 }
 
+// MoWithVerbose toggles detailed logging
 func MoWithVerbose(v bool) MoOption {
 	return func(c *MoConfig) {
 		c.Verbose = v

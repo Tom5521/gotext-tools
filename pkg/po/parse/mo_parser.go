@@ -12,28 +12,33 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
+// Type aliases for cleaner code
 type (
 	u32 = uint32
 	i64 = int64
 	i32 = int32
 )
 
+// Common byte sequences used in MO file parsing
 var (
-	eot = []byte{4}
-	nul = []byte{0}
+	eot = []byte{4} // End Of Transmission marker
+	nul = []byte{0} // Null byte separator
 )
 
+// Ensure MoParser implements the po.Parser interface
 var _ po.Parser = (*MoParser)(nil)
 
+// MoParser handles parsing of MO files into po.File structures.
 type MoParser struct {
-	Config MoConfig
+	Config MoConfig // Configuration for parsing behavior
 
-	data     []byte
-	filename string
-	errors   []error
+	data     []byte  // Raw MO file data
+	filename string  // Name of the source file
+	errors   []error // Collection of errors encountered during parsing
 }
 
-// This method MUST be used to log any errors inside this structure.
+// error logs an error message and adds it to the parser's error collection.
+// If a logger is configured in the parser's Config, it will also log the error.
 func (m *MoParser) error(format string, a ...any) {
 	var err error
 	format = "po/parse: " + format
@@ -50,6 +55,7 @@ func (m *MoParser) error(format string, a ...any) {
 	m.errors = append(m.errors, err)
 }
 
+// NewMo creates a new MoParser from a file path.
 func NewMo(path string, opts ...MoOption) (*MoParser, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -60,6 +66,7 @@ func NewMo(path string, opts ...MoOption) (*MoParser, error) {
 	return NewMoFromReader(f, path, opts...)
 }
 
+// NewMoFromReader creates a new MoParser from an io.Reader.
 func NewMoFromReader(r io.Reader, name string, opts ...MoOption) (*MoParser, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
@@ -68,10 +75,12 @@ func NewMoFromReader(r io.Reader, name string, opts ...MoOption) (*MoParser, err
 	return &MoParser{data: b, filename: name, Config: DefaultMoConfig(opts...)}, nil
 }
 
+// NewMoFromFile creates a new MoParser from an open *os.File.
 func NewMoFromFile(f *os.File, opts ...MoOption) (*MoParser, error) {
 	return NewMoFromReader(f, f.Name(), opts...)
 }
 
+// NewMoFromBytes creates a new MoParser from a byte slice.
 func NewMoFromBytes(b []byte, name string, opts ...MoOption) *MoParser {
 	return &MoParser{
 		data:     b,
@@ -80,19 +89,21 @@ func NewMoFromBytes(b []byte, name string, opts ...MoOption) *MoParser {
 	}
 }
 
-// Return the first error in the stack.
+// Error returns the first error encountered during parsing, if any.
 func (m MoParser) Error() error {
 	if len(m.errors) == 0 {
 		return nil
 	}
-
 	return m.errors[0]
 }
 
+// Errors returns all errors encountered during parsing.
 func (m MoParser) Errors() []error {
 	return m.errors
 }
 
+// defineOrder determines the byte order (endianness) of the MO file.
+// It reads the magic number from the file header to detect the byte order.
 func (m *MoParser) defineOrder(reader *bytes.Reader) (order bin.ByteOrder) {
 	var magic u32
 
@@ -129,6 +140,8 @@ func (m *MoParser) defineOrder(reader *bytes.Reader) (order bin.ByteOrder) {
 	return
 }
 
+// ParseWithOptions parses the MO file with temporary configuration options.
+// The original configuration is restored after parsing.
 func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
 	m.Config.ApplyOptions(opts...)
 	defer m.Config.RestoreLastCfg()
@@ -136,6 +149,7 @@ func (m *MoParser) ParseWithOptions(opts ...MoOption) (file *po.File) {
 	return m.Parse()
 }
 
+// Parse reads and parses the MO file into a po.File structure.
 func (m *MoParser) Parse() (file *po.File) {
 	var err error
 	r := bytes.NewReader(m.data)
@@ -151,6 +165,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		return
 	}
 
+	// Validate version numbers
 	if v := header.MajorVersion; v != 0 && v != 1 {
 		m.error("invalid major version number (%d)", v)
 	}
@@ -159,6 +174,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		m.error("invalid minor version number (%d)", v)
 	}
 
+	// Read message ID table
 	msgIDStart := make([]u32, header.Nstrings)
 	msgIDLen := make([]u32, header.Nstrings)
 	_, err = r.Seek(i64(header.OrigTabOffset), 0)
@@ -178,6 +194,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		}
 	}
 
+	// Read message string table
 	msgStrStart := make([]i32, header.Nstrings)
 	msgStrLen := make([]i32, header.Nstrings)
 	_, err = r.Seek(i64(header.TransTabOffset), 0)
@@ -197,6 +214,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		}
 	}
 
+	// Create the po.File structure with all entries
 	file = &po.File{
 		Name: m.filename,
 		Entries: m.makeEntries(
@@ -209,6 +227,7 @@ func (m *MoParser) Parse() (file *po.File) {
 		),
 	}
 
+	// Validate sorting if required by configuration
 	if m.Config.MustBeSorted {
 		if !file.IsSortedFunc(po.CompareEntryByID) {
 			m.error("entries must be sorted")
@@ -219,6 +238,7 @@ func (m *MoParser) Parse() (file *po.File) {
 	return
 }
 
+// makeEntries creates po.Entries from the parsed MO file data.
 func (m *MoParser) makeEntries(
 	r *bytes.Reader,
 	header *util.MoHeader,
@@ -231,6 +251,7 @@ func (m *MoParser) makeEntries(
 		strStart := i64(msgStrStart[i])
 		strLen := msgStrLen[i]
 
+		// Read message ID data
 		_, err := r.Seek(idStart, 0)
 		if err != nil {
 			m.error("bad msgid start[%d]: %w", idStart, err)
@@ -247,6 +268,7 @@ func (m *MoParser) makeEntries(
 			)
 		}
 
+		// Read message string data
 		_, err = r.Seek(strStart, 0)
 		if err != nil {
 			m.error("bad msgstr start[%d]: %w", strStart, err)
@@ -267,12 +289,14 @@ func (m *MoParser) makeEntries(
 	return
 }
 
+// makeEntry creates a single po.Entry from raw message ID and string data.
 func makeEntry(msgid, msgstr []byte) (entry po.Entry) {
 	var (
 		msgctxt  []byte
 		pluralID []byte
 	)
 
+	// Split context from message ID (separated by EOT)
 	d := bytes.Split(msgid, eot)
 	if len(d) == 1 {
 		msgid = d[0]
@@ -280,6 +304,7 @@ func makeEntry(msgid, msgstr []byte) (entry po.Entry) {
 		msgid, msgctxt = d[1], d[0]
 	}
 
+	// Handle plural forms in message ID (separated by NUL)
 	msgidParts := bytes.Split(msgid, nul)
 	if len(msgidParts) > 1 {
 		msgid = msgidParts[0]
@@ -291,6 +316,7 @@ func makeEntry(msgid, msgstr []byte) (entry po.Entry) {
 	entry.ID = string(msgid)
 	entry.Plural = string(pluralID)
 
+	// Handle plural forms in message string
 	msgstrParts := bytes.Split(msgstr, nul)
 	if len(msgstrParts) == 1 {
 		entry.Str = string(msgstrParts[0])
@@ -305,6 +331,7 @@ func makeEntry(msgid, msgstr []byte) (entry po.Entry) {
 		}
 	}
 
+	// Set context if present
 	if len(msgctxt) > 0 {
 		entry.Context = string(msgctxt)
 	}

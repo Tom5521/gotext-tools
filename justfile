@@ -9,6 +9,9 @@ default:
     #!/usr/bin/env bash
     set -euo pipefail
 
+    export VERBOSE={{ verbose }}
+    export GOCMD={{ gocmd }}
+
     for app in ./cli/*; do
         if ! ([[ -d "$app" ]] && find "$app" -maxdepth 1 -name "*.go"| grep -q .); then
             continue

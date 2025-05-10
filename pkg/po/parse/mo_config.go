@@ -6,6 +6,7 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
+// MoConfig holds configuration options for MO file parsing.
 type MoConfig struct {
 	// It is used to restore the configuration using the method [MoConfig.RestoreLastCfg]
 	// and is saved when using the asd method [MoConfig.ApplyOptions].
@@ -48,32 +49,38 @@ func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 	}
 }
 
+// Endianness represents byte order options for MO files.
 type Endianness = util.Endianness
 
 const (
-	LittleEndian = util.LittleEndian
-	BigEndian    = util.BigEndian
-	NativeEndian = util.NativeEndian
+	LittleEndian = util.LittleEndian // Force little-endian parsing
+	BigEndian    = util.BigEndian    // Force big-endian parsing
+	NativeEndian = util.NativeEndian // Auto-detect byte order
 )
 
+// MoOption defines a function type for modifying MoConfig.
 type MoOption func(*MoConfig)
 
+// MoWithMustBeSorted creates an option to enforce entry sorting.
 func MoWithMustBeSorted(m bool) MoOption {
 	return func(mc *MoConfig) {
 		mc.MustBeSorted = m
 	}
 }
 
+// MoWithLogger creates an option to set the error logger.
 func MoWithLogger(logger *log.Logger) MoOption {
 	return func(mc *MoConfig) {
 		mc.Logger = logger
 	}
 }
 
+// MoWithConfig creates an option to replace the entire configuration.
 func MoWithConfig(c MoConfig) MoOption {
 	return func(mc *MoConfig) { *mc = c }
 }
 
+// MoWithEndianness creates an option to set the byte order.
 func MoWithEndianness(e Endianness) MoOption {
 	return func(mc *MoConfig) { mc.Endianness = e }
 }

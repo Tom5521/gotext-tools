@@ -12,11 +12,19 @@ type PluralEntry struct {
 	Str string
 }
 
+func (p PluralEntry) String() string {
+	return util.Format(p)
+}
+
 func (p PluralEntry) Equal(p2 PluralEntry) bool {
 	return util.Equal(p, p2)
 }
 
 type PluralEntries []PluralEntry
+
+func (p PluralEntries) String() string {
+	return util.Format(p)
+}
 
 func (p PluralEntries) Equal(p2 PluralEntries) bool {
 	return util.Equal(p2, p)

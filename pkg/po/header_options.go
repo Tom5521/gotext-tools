@@ -44,9 +44,9 @@ func HeaderWtihContentTransferEncoding(c string) HeaderOption {
 	}
 }
 
-func HeaderWithContentType(t string) HeaderOption {
+func HeaderWithMediaType(t string) HeaderOption {
 	return func(hc *HeaderConfig) {
-		hc.ContentType = t
+		hc.MediaType = t
 	}
 }
 

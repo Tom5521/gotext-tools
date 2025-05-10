@@ -11,20 +11,26 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
-// Aliase this bc I'm too lazy to write "uint32" every time I want to use it.
+// u32 is an alias for uint32 used for convenience throughout the package.
 type u32 = uint32
 
 const (
+	// eot represents the End Of Transmission character (ASCII 0x04)
 	eot = "\x04"
+	// nul represents the null character (ASCII 0x00)
 	nul = "\x00"
 )
 
+// info logs an informational message if verbose logging is enabled.
+// It prepends "INFO:" to the message and sends it to the configured logger.
 func (mc MoCompiler) info(format string, a ...any) {
 	if mc.Config.Logger != nil && mc.Config.Verbose {
 		mc.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
 	}
 }
 
+// error creates and logs an error message. If IgnoreErrors is true, it returns nil.
+// The error message is prepended with "compile:" to indicate its origin.
 func (mc MoCompiler) error(format string, a ...any) error {
 	if mc.Config.IgnoreErrors {
 		return nil
@@ -38,15 +44,27 @@ func (mc MoCompiler) error(format string, a ...any) error {
 	return err
 }
 
-// A len() function with fixed-size return.
+// flen returns the length of the given value as a fixed-size u32.
+// It uses reflection to get the length of various types.
 func flen(value any) u32 {
 	return u32(reflect.ValueOf(value).Len())
 }
 
+// max returns the maximum value among the provided values of ordered types.
+// It uses generics to work with any type that satisfies the Ordered constraint.
 func max[T slices.Ordered](values ...T) T {
 	return slices.Max(values)
 }
 
+// writeTo writes the compiled MO file data to the provided writer.
+// It performs several steps:
+//  1. Cleans and sorts the PO entries
+//  2. Creates the MO file header
+//  3. Generates offsets for original and translated strings
+//  4. Optionally builds a hash table for faster lookups
+//  5. Encodes all data in the specified endianness
+//
+// Returns an error if any step fails, unless IgnoreErrors is true.
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	mc.info("cleaning & sorting entries...")
 	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
@@ -128,7 +146,12 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	return nil
 }
 
-// Translated from https://github.com/autotools-mirror/gettext/blob/master/gettext-tools/src/write-mo.c#L876
+// buildHashTable creates a hash table for the given PO entries using the specified size.
+// The implementation is translated from gettext's write-mo.c:
+// https://github.com/autotools-mirror/gettext/blob/master/gettext-tools/src/write-mo.c#L876
+//
+// It uses open addressing with double hashing to handle collisions.
+// Each entry's sequence number (1-based) is stored at its calculated position.
 func buildHashTable(entries po.Entries, size u32) []u32 {
 	hashMap := make([]u32, size)
 

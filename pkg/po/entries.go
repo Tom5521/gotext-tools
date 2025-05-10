@@ -11,6 +11,10 @@ import (
 // Entries represents a collection of Entry objects.
 type Entries []Entry
 
+func (e Entries) String() string {
+	return util.Format(e)
+}
+
 func (e Entries) Equal(e2 Entries) bool {
 	return util.Equal(e, e2)
 }

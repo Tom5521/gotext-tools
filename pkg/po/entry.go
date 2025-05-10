@@ -8,50 +8,57 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
-// Entry represents a translatable string, including its context, plural forms,
-// and source code locations.
+// Entry represents a single translatable message in a PO file.
+//
+// It may include context, plural forms, translation string(s),
+// comments, flags, and source code locations.
 type Entry struct {
-	// Comments.
+	// Metadata and comments.
 
-	Flags             []string
-	Comments          []string
-	ExtractedComments []string
-	Previous          []string
+	Flags             []string // List of flags (e.g., "fuzzy").
+	Comments          []string // Translator comments.
+	ExtractedComments []string // Automatically extracted comments.
+	Previous          []string // Previous msgid or msgstr lines.
 
-	// Fields.
+	// Main fields.
 
-	Obsolete  bool
-	ID        string // The original string to be translated.
-	Context   string // The context in which the string is used (optional).
-	Plural    string // The plural form of the string (optional).
-	Plurals   PluralEntries
-	Str       string
-	Locations Locations // A list of source code locations for the string.
+	Obsolete  bool          // Indicates whether the entry is obsolete.
+	ID        string        // The original string to be translated.
+	Context   string        // Context of the string, if any.
+	Plural    string        // The plural form of the original string, if applicable.
+	Plurals   PluralEntries // List of plural translations.
+	Str       string        // Translated string (singular).
+	Locations Locations     // List of source code references.
 }
 
+// markAsObsolete marks the entry as obsolete.
 func (e *Entry) markAsObsolete() { e.Obsolete = true }
 
+// markAsFuzzy adds the "fuzzy" flag to the entry if not already present.
 func (e *Entry) markAsFuzzy() {
 	if !e.IsFuzzy() {
 		e.Flags = append(e.Flags, "fuzzy")
 	}
 }
 
+// IsHeader reports whether the entry is a header (i.e., both ID and context are empty).
 func (e Entry) IsHeader() bool {
 	return e.ID == "" && e.Context == ""
 }
 
-// Check for possible errors and inconsistencies in the entry.
+// Validate checks the entry for internal inconsistencies.
+// It returns an error if the entry is both plural and singular.
 func (e Entry) Validate() error {
 	if e.Str != "" && e.IsPlural() && len(e.Plurals) > 0 {
-		return errors.New("the entry cant be plural and singular at the same time")
+		return errors.New("the entry can't be plural and singular at the same time")
 	}
 	return nil
 }
 
-// Returns the msgstr (STR) or plurals
-// (PluralStr1 \x00 PluralStr2 \x00 PluralStr3...)
-// unified according to the MO format.
+// UnifiedStr returns the translation string formatted for MO files.
+//
+// For plural entries, it joins all plural forms using '\x00'.
+// For singular entries, it returns the Str field.
 func (e Entry) UnifiedStr() string {
 	str := e.Str
 	if e.IsPlural() {
@@ -65,12 +72,13 @@ func (e Entry) UnifiedStr() string {
 		}
 		str = strings.Join(msgstrs, "\x00")
 	}
-
 	return str
 }
 
-// Returns the unified msgid, msgid_plural and context according
-// to MO format (CTXT \x04 ID (\x00 PLURAL)...).
+// UnifiedID returns the unique identifier for the entry formatted for MO files.
+//
+// This includes the context, msgid, and plural (if any),
+// separated by '\x04' and '\x00' as per gettext MO format.
 func (e Entry) UnifiedID() string {
 	id := e.ID
 	if e.HasContext() {
@@ -79,30 +87,30 @@ func (e Entry) UnifiedID() string {
 	if e.IsPlural() && e.Plural != "" {
 		id += "\x00" + e.Plural
 	}
-
 	return id
 }
 
-// Returns the complete hash of the input ID's, including the msgctxt, msgid and msgid_plural.
-// WARNING: This is NOT compatible with the original gettext.
+// FullHash returns a hash based on the unified ID including context and plural.
+//
+// WARNING: This is intended for internal use and is not compatible with gettext's hash.
 func (e Entry) FullHash() uint32 {
 	return util.PJWHash(e.UnifiedID())
 }
 
+// Hash returns a hash based on context and ID.
+//
+// This is useful for identifying entries with or without plural forms.
 func (e Entry) Hash() uint32 {
 	id := e.ID
 	if e.HasContext() {
 		id = e.Context + "\x04" + id
 	}
-	// IDK, why tf if I remove this code, magically works the MO compilation.
-	// TODO: Understand this thing.
-	// if e.IsPlural() && e.Plural != "" {
-	// 	id += "\x00" + e.Plural
-	// }
-
 	return util.PJWHash(id)
 }
 
+// Equal reports whether two entries are semantically equivalent.
+//
+// It compares ID, context, translation string, flags, and obsolete status.
 func (e Entry) Equal(x Entry) bool {
 	ok1 := e.UnifiedID() == x.UnifiedID() && e.UnifiedStr() == x.UnifiedStr()
 	ok2 := slices.CompareFunc(e.Flags, x.Flags, strings.Compare) == 0
@@ -110,18 +118,23 @@ func (e Entry) Equal(x Entry) bool {
 	return ok1 && ok2 && ok3
 }
 
+// IsPlural reports whether the entry is plural or contains plural forms.
 func (e Entry) IsPlural() bool {
 	return e.Plural != "" || len(e.Plurals) > 0
 }
 
+// HasContext reports whether the entry has a non-empty context.
 func (e Entry) HasContext() bool {
 	return e.Context != ""
 }
 
+// IsFuzzy reports whether the entry is marked as "fuzzy".
 func (e Entry) IsFuzzy() bool {
 	return slices.Contains(e.Flags, "fuzzy")
 }
 
+// String returns a formatted representation of the entry for debugging or display.
 func (e Entry) String() string {
 	return util.Format(e)
 }
+

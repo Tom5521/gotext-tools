@@ -8,20 +8,20 @@ import (
 	"github.com/sanity-io/litter"
 )
 
-var LitterConfig = litter.Options{
+var LitterOptions = litter.Options{
 	HidePrivateFields: true,
 	HideZeroValues:    true,
 }
 
 func Format[T any](args ...T) string {
 	if len(args) == 1 {
-		return LitterConfig.Sdump(args[0])
+		return LitterOptions.Sdump(args[0])
 	}
 	a := make([]any, len(args))
 	for i, arg := range args {
 		a[i] = arg
 	}
-	return LitterConfig.Sdump(a...)
+	return LitterOptions.Sdump(a...)
 }
 
 func NamedDiff(xname, yname string, x, y any) string {

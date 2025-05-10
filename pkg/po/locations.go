@@ -11,11 +11,19 @@ type Location struct {
 	File string
 }
 
+func (l Location) String() string {
+	return util.Format(l)
+}
+
 func (l Location) Equal(l2 Location) bool {
 	return util.Equal(l, l2)
 }
 
 type Locations []Location
+
+func (l Locations) String() string {
+	return util.Format(l)
+}
 
 func (l Locations) Equal(l2 Locations) bool {
 	return util.Equal(l, l2)

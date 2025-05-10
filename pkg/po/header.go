@@ -3,6 +3,7 @@ package po
 import (
 	"errors"
 	"fmt"
+	"mime"
 	"regexp"
 	"strconv"
 	"strings"
@@ -60,16 +61,27 @@ func (h Header) String() string {
 	return util.Format(h)
 }
 
+func (h HeaderConfig) String() string {
+	return util.Format(h)
+}
+
 func (h Header) ToConfig() HeaderConfig {
-	mime := h.Load("MIME-Version")
-	if mime == "" {
-		mime = "1.0"
+	mimeVersion := h.Load("MIME-Version")
+	if mimeVersion == "" {
+		mimeVersion = "1.0"
 	}
 
-	charset := "UTF-8"
-	if parsed, ok := parseAdvHeaderField(h.Load("Content-Type"))["charset"]; ok {
-		if util.SupportedCharsets[parsed] {
-			charset = parsed
+	var (
+		charset   = "UTF-8"
+		mediatype = "text/plain"
+	)
+
+	mtype, params, err := mime.ParseMediaType(h.Load("Content-Type"))
+	if err == nil {
+		mediatype = mtype
+		chset := params["charset"]
+		if util.SupportedCharsets[chset] {
+			charset = chset
 		}
 	}
 
@@ -98,8 +110,8 @@ func (h Header) ToConfig() HeaderConfig {
 		LastTranslator:          h.Load("Last-Translator"),
 		LanguageTeam:            h.Load("Language-Team"),
 		Language:                h.Load("Language"),
-		MimeVersion:             mime,
-		ContentType:             "text/plain",
+		MimeVersion:             mimeVersion,
+		MediaType:               mediatype,
 		Charset:                 charset,
 		ContentTransferEncoding: "8bit",
 		Plural:                  plural,
@@ -151,7 +163,7 @@ type HeaderConfig struct {
 	LanguageTeam            string
 	Language                string
 	MimeVersion             string
-	ContentType             string
+	MediaType               string
 	Charset                 string
 	ContentTransferEncoding string
 	Nplurals                uint
@@ -162,23 +174,26 @@ type HeaderConfig struct {
 func (h HeaderConfig) Validate() []error {
 	var errs []error
 
-	if h.Plural == "" {
-		errs = append(errs, errors.New("plural not specified"))
+	if h.Plural != "" || h.Nplurals != 0 {
+		if h.Plural == "" {
+			errs = append(errs, errors.New("plural not specified"))
+		}
+		if h.Nplurals == 0 {
+			errs = append(errs, errors.New("nplurals can't be zero"))
+		}
 	}
-	if h.Nplurals == 0 {
-		errs = append(errs, errors.New("nplurals can't be zero"))
+
+	if h.MediaType != "text/plain" && h.MediaType != "" {
+		errs = append(errs, fmt.Errorf("media type (%s) must be text/plain", h.MediaType))
 	}
-	if h.ContentType != "text/plain" {
-		errs = append(errs, fmt.Errorf("content-type(%s) must be text/plain", h.ContentType))
-	}
-	if h.ContentTransferEncoding != "8bit" {
+	if h.ContentTransferEncoding != "8bit" && h.ContentTransferEncoding != "" {
 		errs = append(
 			errs,
 			fmt.Errorf("content-transfer-encoding(%s) must be 8bit", h.ContentTransferEncoding),
 		)
 	}
-	if !util.SupportedCharsets[h.Charset] {
-		errs = append(errs, fmt.Errorf("%s isn't a supported charset", h.Charset))
+	if !util.SupportedCharsets[h.Charset] && h.Charset != "" {
+		errs = append(errs, fmt.Errorf("%q isn't a supported charset", h.Charset))
 	}
 
 	return errs
@@ -196,7 +211,12 @@ func (cfg HeaderConfig) ToHeader() (h Header) {
 	h.sSet("Language-Team", cfg.LanguageTeam)
 	h.sSet("Language", cfg.Language)
 	h.sSet("MIME-Version", cfg.MimeVersion)
-	h.sSet("Content-Type", fmt.Sprintf("%s; charset=%s", cfg.ContentType, cfg.Charset))
+	if cfg.MediaType != "" && cfg.Charset != "" {
+		h.sSet(
+			"Content-Type",
+			mime.FormatMediaType(cfg.MediaType, map[string]string{"charset": cfg.Charset}),
+		)
+	}
 	h.sSet("Content-Transfer-Encoding", cfg.ContentTransferEncoding)
 	if cfg.Nplurals != 0 && cfg.Plural != "" && !cfg.Template {
 		h.sSet(
@@ -221,7 +241,7 @@ func HeaderConfigFromOptions(options ...HeaderOption) HeaderConfig {
 var defaultHeaderConfig = HeaderConfig{
 	Language:                " ",
 	MimeVersion:             "1.0",
-	ContentType:             "text/plain",
+	MediaType:               "text/plain",
 	Charset:                 "UTF-8",
 	ContentTransferEncoding: "8bit",
 	Nplurals:                2,
@@ -245,7 +265,7 @@ var defaultTemplateHeaderConfig = HeaderConfig{
 	LanguageTeam:            "LANGUAGE <LL@li.org>",
 	Language:                " ",
 	MimeVersion:             "1.0",
-	ContentType:             "text/plain",
+	MediaType:               "text/plain",
 	Charset:                 "CHARSET",
 	ContentTransferEncoding: "8bit",
 }
@@ -263,8 +283,10 @@ func (e Entries) Header() (h Header) {
 	if i == -1 {
 		return
 	}
+	entry := e[i]
 
-	header := e[i].Str
+	h.Template = entry.IsFuzzy()
+	header := entry.Str
 	lines := strings.Split(header, "\n")
 	for _, line := range lines {
 		if !headerRegex.MatchString(line) {
