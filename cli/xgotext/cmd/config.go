@@ -14,11 +14,10 @@ var (
 	PoParserCfg poparse.PoConfig
 	GoParserCfg goparse.Config
 	CompilerCfg compile.PoConfig
-	HeadersCfg  po.HeaderConfig
+	HeadersCfg  = po.DefaultTemplateHeaderConfig()
 )
 
 func initConfig() {
-	HeadersCfg = po.DefaultHeaderConfig()
 	HeadersCfg.Nplurals = nplurals
 	HeadersCfg.ProjectIDVersion = packageVersion
 	HeadersCfg.ReportMsgidBugsTo = msgidBugsAddress

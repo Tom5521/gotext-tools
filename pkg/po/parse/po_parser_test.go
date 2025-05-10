@@ -8,7 +8,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
-	"github.com/rogpeppe/go-internal/diff"
 )
 
 func TestPoParser(t *testing.T) {
@@ -45,8 +44,6 @@ func TestPoParser(t *testing.T) {
 
 	if !util.Equal(parsed.Entries, input.Entries) {
 		t.Error("Compiled and parsed differ!")
-
-		d := diff.Diff("parsed", compile.PoToBytes(parsed), "expected", compile.PoToBytes(input))
-		fmt.Println(string(d))
+		fmt.Println(util.NamedDiff("parsed", "expected", parsed.Entries, input.Entries))
 	}
 }

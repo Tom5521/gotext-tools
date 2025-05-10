@@ -39,21 +39,25 @@ var (
 	)
 )
 
-func parseAdvHeaderField(str string) map[string]string {
-	table := make(map[string]string)
-	str = strings.TrimSpace(str)
-	if !strings.HasSuffix(str, ";") {
-		str += ";"
+func parseAdvHeaderField(header string) map[string]string {
+	keyValueMap := make(map[string]string)
+	header = strings.TrimSpace(header)
+	if !strings.HasSuffix(header, ";") {
+		header += ";"
 	}
-	smatchs := exprRegex.FindAllStringSubmatch(str, -1)
-	for _, matches := range smatchs {
-		key := matches[len(matches)-2]
-		value := matches[len(matches)-1]
+	matches := exprRegex.FindAllStringSubmatch(header, -1)
+	for _, match := range matches {
+		key := match[len(match)-2]
+		value := match[len(match)-1]
 
-		table[key] = value
+		keyValueMap[key] = value
 	}
 
-	return table
+	return keyValueMap
+}
+
+func (h Header) String() string {
+	return util.Format(h)
 }
 
 func (h Header) ToConfig() HeaderConfig {
@@ -63,11 +67,9 @@ func (h Header) ToConfig() HeaderConfig {
 	}
 
 	charset := "UTF-8"
-	{
-		if parsed, ok := parseAdvHeaderField(h.Load("Content-Type"))["charset"]; ok {
-			if util.IsSupportedCharset(parsed) {
-				charset = parsed
-			}
+	if parsed, ok := parseAdvHeaderField(h.Load("Content-Type"))["charset"]; ok {
+		if util.SupportedCharsets[parsed] {
+			charset = parsed
 		}
 	}
 
@@ -175,7 +177,7 @@ func (h HeaderConfig) Validate() []error {
 			fmt.Errorf("content-transfer-encoding(%s) must be 8bit", h.ContentTransferEncoding),
 		)
 	}
-	if !util.IsSupportedCharset(h.Charset) {
+	if !util.SupportedCharsets[h.Charset] {
 		errs = append(errs, fmt.Errorf("%s isn't a supported charset", h.Charset))
 	}
 
@@ -196,10 +198,12 @@ func (cfg HeaderConfig) ToHeader() (h Header) {
 	h.sSet("MIME-Version", cfg.MimeVersion)
 	h.sSet("Content-Type", fmt.Sprintf("%s; charset=%s", cfg.ContentType, cfg.Charset))
 	h.sSet("Content-Transfer-Encoding", cfg.ContentTransferEncoding)
-	h.sSet(
-		"Plural-Forms",
-		fmt.Sprintf("nplurals=%d; plural=%s;", cfg.Nplurals, cfg.Plural),
-	)
+	if cfg.Nplurals != 0 && cfg.Plural != "" && !cfg.Template {
+		h.sSet(
+			"Plural-Forms",
+			fmt.Sprintf("nplurals=%d; plural=%s;", cfg.Nplurals, cfg.Plural),
+		)
+	}
 	h.sSet("X-Generator", cfg.XGenerator)
 
 	return
@@ -244,8 +248,6 @@ var defaultTemplateHeaderConfig = HeaderConfig{
 	ContentType:             "text/plain",
 	Charset:                 "CHARSET",
 	ContentTransferEncoding: "8bit",
-	Nplurals:                2,
-	Plural:                  "(n != 1)",
 }
 
 func DefaultTemplateHeaderConfig(opts ...HeaderOption) HeaderConfig {

@@ -12,8 +12,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
-	"github.com/rogpeppe/go-internal/diff"
 )
 
 func TestMergeWithMsgmerge(t *testing.T) {
@@ -136,36 +134,13 @@ func TestMergeWithMsgmerge(t *testing.T) {
 				return
 			}
 
-			getted := po.Merge(defStruct.Entries, refStruct.Entries, test.mergeOpts...)
+			obtained := po.Merge(defStruct.Entries, refStruct.Entries, test.mergeOpts...)
 
-			if !util.Equal(expected.Entries, getted) {
-				x, y := formatFileOrEntries(getted), formatFileOrEntries(expected)
-				fmt.Println("--- STRUCT DIFF:")
-
-				d := diff.Diff(
-					"getted",
-					[]byte(util.Format(getted)),
-					"expected",
-					[]byte(util.Format(expected)),
-				)
-				fmt.Println(string(d))
-				ratio := fuzzy.Ratio(x, y)
-				fmt.Println("--- COMPILED MATCH RATIO:", ratio)
-				d = diff.Diff(
-					"getted",
-					compile.PoToBytes(getted),
-					"expected",
-					compile.PoToBytes(expected),
-				)
-				fmt.Println(string(d))
-
-				t.Fail()
+			if !util.Equal(expected.Entries, obtained) {
+				t.Error("obtained and expected differ!")
+				fmt.Println(util.NamedDiff("obtained", "expected", expected.Entries, obtained))
 				return
 			}
 		})
 	}
-}
-
-func formatFileOrEntries[X *po.File | po.Entries](a X) string {
-	return compile.PoToString(a, compile.PoWithOmitHeader(true))
 }

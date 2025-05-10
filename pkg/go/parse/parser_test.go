@@ -7,7 +7,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/go/parse"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
-	"github.com/kr/pretty"
 )
 
 func TestParse(t *testing.T) {
@@ -39,11 +38,11 @@ func main(){
 		t.Error(err)
 	}
 
-	if !file.Entries.Equal(expected) {
-		t.Log("Unexpected entries slice")
-		t.Log("got:", file.Entries)
-		t.Log("expected:", expected)
-		t.FailNow()
+	if !util.Equal(file.Entries, expected) {
+		t.Error("expected and parsed differ!")
+		fmt.Println(util.NamedDiff("expected", "parsed", expected, file.Entries))
+		t.Fail()
+		return
 	}
 }
 
@@ -114,14 +113,10 @@ func main(){
 		},
 	}
 
-	if !file.Entries.Equal(expected) {
-		t.Error("Unexpected translation")
-		t.Log("got:", file.Entries)
-		t.Log("expected:", expected)
-		t.Log("DIFF:")
-		for _, d := range pretty.Diff(file.Entries, expected) {
-			t.Log(d)
-		}
+	if !util.Equal(file.Entries, expected) {
+		t.Error("expected and parsed differ!")
+		fmt.Println(util.NamedDiff("expected", "parsed", expected, file.Entries))
+		return
 	}
 }
 
@@ -187,14 +182,14 @@ func main(){
 		"Hello from a value",
 	}
 
-	var ids []string
-	for _, e := range file.Entries {
-		ids = append(ids, e.ID)
+	ids := make([]string, len(file.Entries))
+	for i, e := range file.Entries {
+		ids[i] = e.ID
 	}
+
 	if !util.Equal(expectedIDs, ids) {
-		t.Error("Unexpected ids slice")
-		for _, d := range pretty.Diff(expectedIDs, ids) {
-			fmt.Println(d)
-		}
+		t.Error("expected and parsed differ!")
+		fmt.Println(util.NamedDiff("expected", "parsed", expectedIDs, ids))
+		return
 	}
 }

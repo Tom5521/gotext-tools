@@ -9,7 +9,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
-	"github.com/kr/pretty"
 )
 
 func TestSolve(t *testing.T) {
@@ -33,9 +32,8 @@ func TestSolve(t *testing.T) {
 		fmt.Println(
 			compile.PoToString(solved, compile.PoWithOmitHeader(true)),
 		)
-		for _, d := range pretty.Diff(solved, expected) {
-			fmt.Println(d)
-		}
+		fmt.Println(util.NamedDiff("solved", "expected", solved, expected))
+
 		t.Fail()
 	}
 }
@@ -103,6 +101,7 @@ func TestSort(t *testing.T) {
 			sorted = sorted.SortFunc(test.cmp)
 
 			if !util.Equal(sorted, test.expected) {
+				fmt.Println(util.NamedDiff("sorted", "expected", sorted, test.expected))
 				t.Fail()
 			}
 		})

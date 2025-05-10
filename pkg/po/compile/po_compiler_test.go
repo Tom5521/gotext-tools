@@ -8,7 +8,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
-	"github.com/kr/pretty"
 )
 
 func TestPoCompiler(t *testing.T) {
@@ -48,12 +47,8 @@ func TestPoCompiler(t *testing.T) {
 
 			if !util.Equal(parsed, input) {
 				t.Error("Input and output differ!")
-				fmt.Println("INPUT:\n", input)
-				fmt.Println("OUTPUT:\n", parsed)
-				fmt.Println("DIFF:")
-				for _, d := range pretty.Diff(input, parsed) {
-					fmt.Println(d)
-				}
+
+				fmt.Println(util.NamedDiff("input", "output", input, parsed))
 			}
 		})
 	}

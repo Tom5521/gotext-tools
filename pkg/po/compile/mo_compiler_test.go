@@ -11,7 +11,6 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
-	"github.com/kr/pretty"
 )
 
 func TestMoCompiler(t *testing.T) {
@@ -40,13 +39,7 @@ func TestMoCompiler(t *testing.T) {
 	parsed := parsedFile.Entries
 	if !util.Equal(parsed, input) {
 		t.Error("Sended and parsed differ!")
-		t.Logf("SENDED:\n%v", input)
-		t.Logf("PARSED:\n%v", parsed)
-		t.Log("DIFF:")
-
-		for _, d := range pretty.Diff(parsed, input) {
-			fmt.Println(d)
-		}
+		fmt.Println(util.NamedDiff("expected", "parsed", input, parsed))
 		return
 	}
 }
@@ -116,6 +109,7 @@ func TestMoWithMsgunfmt(t *testing.T) {
 			}
 
 			if !util.Equal(parsed.Entries, input) {
+				fmt.Println(util.NamedDiff("expected", "parsed", input, parsed.Entries))
 				t.Error(err)
 			}
 		})

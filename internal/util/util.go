@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"io"
 	"strings"
-
-	"github.com/kr/pretty"
 )
 
 func SafeSliceAccess[T any](slice []T, index int) T {
@@ -16,15 +14,6 @@ func SafeSliceAccess[T any](slice []T, index int) T {
 	}
 
 	return value
-}
-
-func Format[T any](args ...T) string {
-	var a []any
-	for _, arg := range args {
-		a = append(a, arg)
-	}
-
-	return pretty.Sprint(a...)
 }
 
 func CountRunes(slice []rune, target rune) int {
