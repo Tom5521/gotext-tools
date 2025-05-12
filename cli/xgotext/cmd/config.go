@@ -24,11 +24,12 @@ func initConfig() {
 	HeadersCfg.Language = lang
 
 	GoParserCfg = goparse.Config{
-		Exclude:      exclude,
-		ExtractAll:   extractAll,
-		HeaderConfig: &HeadersCfg,
-		Logger:       logger,
-		Verbose:      verbose,
+		CleanDuplicates: true,
+		Exclude:         exclude,
+		ExtractAll:      extractAll,
+		HeaderConfig:    &HeadersCfg,
+		Logger:          logger,
+		Verbose:         verbose,
 	}
 	CompilerCfg = compile.PoConfig{
 		Logger:          logger,

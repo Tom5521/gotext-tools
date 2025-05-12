@@ -1,16 +1,5 @@
 package slices
 
-import (
-	"sort"
-)
-
-type Ordered interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64 |
-		~string
-}
-
 func Equal[S ~[]E, E comparable](s1, s2 S) bool {
 	if len(s1) != len(s2) {
 		return false
@@ -47,12 +36,6 @@ func IndexFunc[S ~[]E, E any](s S, f func(E) bool) int {
 
 func ContainsFunc[S ~[]E, E any](s S, f func(E) bool) bool {
 	return IndexFunc(s, f) >= 0
-}
-
-func SortFunc[S ~[]E, E any](x S, cmp func(a, b E) int) {
-	sort.Slice(x, func(i, j int) bool {
-		return cmp(x[i], x[j]) < 0
-	})
 }
 
 func Contains[S ~[]E, E comparable](s S, v E) bool {

@@ -12,10 +12,11 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
+
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
-// Ensure PoParser implements the po.Parser interface
+// Ensure PoParser implements the po.Parser interface.
 var _ po.Parser = (*PoParser)(nil)
 
 // PoParser handles parsing of PO files into po.File structures.
@@ -28,42 +29,6 @@ type PoParser struct {
 
 	errors []error // Collection of errors encountered during parsing
 	warns  []error // Collection of non-critical warnings
-}
-
-// error logs an error message and adds it to the parser's error collection.
-// If a logger is configured, it will also log the error.
-func (p *PoParser) error(format string, a ...any) {
-	var err error
-	format = "parse: " + format
-	if len(a) == 0 {
-		err = errors.New(format)
-	} else {
-		err = fmt.Errorf(format, a...)
-	}
-
-	if p.Config.Logger != nil {
-		p.Config.Logger.Println("ERROR: ", err)
-	}
-
-	p.errors = append(p.errors, err)
-}
-
-// warn logs a warning message and adds it to the parser's warning collection.
-// If verbose logging is enabled, it will also log the warning.
-func (p *PoParser) warn(format string, a ...any) {
-	var err error
-	format = "warning: " + format
-	if len(a) == 0 {
-		err = errors.New(format)
-	} else {
-		err = fmt.Errorf(format, a...)
-	}
-
-	if p.Config.Logger != nil && p.Config.Verbose {
-		p.Config.Logger.Println(err)
-	}
-
-	p.errors = append(p.errors, err)
 }
 
 // NewPo creates a new PoParser from a file path.
@@ -105,6 +70,42 @@ func NewPoFromBytes(data []byte, name string, options ...PoOption) *PoParser {
 	}
 }
 
+// error logs an error message and adds it to the parser's error collection.
+// If a logger is configured, it will also log the error.
+func (p *PoParser) error(format string, a ...any) {
+	var err error
+	format = "parse: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if p.Config.Logger != nil {
+		p.Config.Logger.Println("ERROR: ", err)
+	}
+
+	p.errors = append(p.errors, err)
+}
+
+// warn logs a warning message and adds it to the parser's warning collection.
+// If verbose logging is enabled, it will also log the warning.
+func (p *PoParser) warn(format string, a ...any) {
+	var err error
+	format = "warning: " + format
+	if len(a) == 0 {
+		err = errors.New(format)
+	} else {
+		err = fmt.Errorf(format, a...)
+	}
+
+	if p.Config.Logger != nil && p.Config.Verbose {
+		p.Config.Logger.Println(err)
+	}
+
+	p.errors = append(p.errors, err)
+}
+
 // Error returns the first error encountered during parsing, if any.
 func (p PoParser) Error() error {
 	if len(p.errors) == 0 {
@@ -123,7 +124,7 @@ func (p PoParser) Errors() []error {
 	return p.errors
 }
 
-// Regular expressions for parsing different types of PO file comments
+// Regular expressions for parsing different types of PO file comments.
 var (
 	locationRegex  = regexp.MustCompile(`#: *(.*)`)  // Source location comments
 	generalRegex   = regexp.MustCompile(`# *(.*)`)   // General translator comments

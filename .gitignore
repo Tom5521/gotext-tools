@@ -10,5 +10,6 @@ vendor
 *.test
 *.test.sh
 *.hexdump
+*_ign.*
 default.pot
 messages.*

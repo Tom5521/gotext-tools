@@ -17,7 +17,7 @@ var use = "msgofmt"
 var root = &cobra.Command{
 	Use:   use,
 	Short: `Generate binary message catalog from textual translation description.`,
-	Long: `Usage: msgfmt [OPTION] filename.po ...
+	Long: `Usage: msgofmt [OPTION] filename.po ...
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.
 If input file is -, standard input is read.`,
