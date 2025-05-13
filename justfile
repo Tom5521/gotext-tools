@@ -29,7 +29,11 @@ test:
     {{ gocmd }} clean -testcache
     {{ gocmd }} test \
     $([ "{{ verbose }}" -eq "1" ] && echo "-v") \
-    ./pkg/... ./internal/...
+    ./...
+
+test-versions:
+    just test
+    just gocmd=go1.18 test
 
 @benchmark:
     just verbose={{ verbose }} bench ./...

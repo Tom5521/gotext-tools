@@ -1,6 +1,7 @@
 package compile
 
 import (
+	"bytes"
 	bin "encoding/binary"
 	"fmt"
 	"io"
@@ -13,13 +14,6 @@ import (
 
 // u32 is an alias for uint32 used for convenience throughout the package.
 type u32 = uint32
-
-const (
-	// eot represents the End Of Transmission character (ASCII 0x04)
-	eot = "\x04"
-	// nul represents the null character (ASCII 0x00)
-	nul = "\x00"
-)
 
 // info logs an informational message if verbose logging is enabled.
 // It prepends "INFO:" to the message and sends it to the configured logger.
@@ -86,38 +80,44 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	}
 
 	mc.info("creating offsets...")
-	// Original code translated from: https://github.com/izimobil/polib/blob/master/polib.py#L553
 	var (
-		offsets   []u32
-		ids, strs string
+		idsBuf, strsBuf bytes.Buffer
+
+		idsOffsets  = make([]u32, len(entries))
+		idsLens     = make([]u32, len(entries))
+		strsOffsets = make([]u32, len(entries))
+		strsLens    = make([]u32, len(entries))
 	)
 
-	for _, e := range entries {
-		msgid := e.UnifiedID()
-		msgstr := e.UnifiedStr()
+	for index, entry := range entries {
+		msgid := entry.UnifiedID()
+		msgstr := entry.UnifiedStr()
 
-		offsets = append(offsets,
-			flen(ids),
-			flen(msgid),
-			flen(strs),
-			flen(msgstr),
-		)
-		ids += msgid + nul
-		strs += msgstr + nul
+		idsOffsets[index] = u32(idsBuf.Len())
+		idsLens[index] = flen(msgid)
+
+		strsOffsets[index] = u32(strsBuf.Len())
+		strsLens[index] = flen(msgstr)
+
+		idsBuf.WriteString(msgid)
+		idsBuf.WriteByte(0)
+		strsBuf.WriteString(msgstr)
+		strsBuf.WriteByte(0)
 	}
 
 	origStart := header.HashTabOffset + (hashTabSize * 4)
-	transStart := origStart + flen(ids)
+	transStart := origStart + u32(idsBuf.Len())
 
-	var origOffsets, transOffsets []u32
-	for i := 0; i < len(offsets); i += 4 {
-		o1 := offsets[i]
-		l1 := offsets[i+1]
-		o2 := offsets[i+2]
-		l2 := offsets[i+3]
+	origOffsets := make([]u32, 0, cap(idsOffsets)*2)
+	transOffsets := make([]u32, 0, cap(strsOffsets)*2)
 
-		origOffsets = append(origOffsets, l1, o1+origStart)
-		transOffsets = append(transOffsets, l2, o2+transStart)
+	for i := 0; i < len(idsOffsets); i++ {
+		origOffsets = append(origOffsets,
+			idsLens[i], idsOffsets[i]+origStart,
+		)
+		transOffsets = append(transOffsets,
+			strsLens[i], strsOffsets[i]+transStart,
+		)
 	}
 
 	mc.info("making hashes...")
@@ -131,8 +131,8 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		origOffsets,
 		transOffsets,
 		hashTable,
-		[]byte(ids),
-		[]byte(strs),
+		idsBuf.Bytes(),
+		strsBuf.Bytes(),
 	}
 
 	mc.info("encoding...")

@@ -60,19 +60,22 @@ func (e Entry) Validate() error {
 // For plural entries, it joins all plural forms using '\x00'.
 // For singular entries, it returns the Str field.
 func (e Entry) UnifiedStr() string {
-	str := e.Str
-	if e.IsPlural() {
-		var msgstrs []string
-		plurals := e.Plurals
+	var builder strings.Builder
+	builder.WriteString(e.Str)
+	if len(e.Plurals) > 0 {
+		plurals := slices.Clone(e.Plurals)
 		if !plurals.IsSorted() {
 			plurals = plurals.Sort()
 		}
-		for _, plural := range plurals {
-			msgstrs = append(msgstrs, plural.Str)
+		for i, pe := range plurals {
+			builder.WriteString(pe.Str)
+			if i != len(plurals)-1 {
+				builder.WriteByte(0)
+			}
 		}
-		str = strings.Join(msgstrs, "\x00")
 	}
-	return str
+
+	return builder.String()
 }
 
 // UnifiedID returns the unique identifier for the entry formatted for MO files.
@@ -80,14 +83,21 @@ func (e Entry) UnifiedStr() string {
 // This includes the context, msgid, and plural (if any),
 // separated by '\x04' and '\x00' as per gettext MO format.
 func (e Entry) UnifiedID() string {
-	id := e.ID
+	var builder strings.Builder
+
 	if e.HasContext() {
-		id = e.Context + "\x04" + id
+		builder.WriteString(e.Context)
+		builder.WriteByte(4)
 	}
-	if e.IsPlural() && e.Plural != "" {
-		id += "\x00" + e.Plural
+
+	builder.WriteString(e.ID)
+
+	if e.Plural != "" {
+		builder.WriteByte(0)
+		builder.WriteString(e.Plural)
 	}
-	return id
+
+	return builder.String()
 }
 
 // FullHash returns a hash based on the unified ID including context and plural.
@@ -101,11 +111,13 @@ func (e Entry) FullHash() uint32 {
 //
 // This is useful for identifying entries with or without plural forms.
 func (e Entry) Hash() uint32 {
-	id := e.ID
+	var builder strings.Builder
 	if e.HasContext() {
-		id = e.Context + "\x04" + id
+		builder.WriteString(e.Context)
+		builder.WriteByte(4)
 	}
-	return util.PJWHash(id)
+	builder.WriteString(e.ID)
+	return util.PJWHash(builder.String())
 }
 
 // Equal reports whether two entries are semantically equivalent.
@@ -137,4 +149,3 @@ func (e Entry) IsFuzzy() bool {
 func (e Entry) String() string {
 	return util.Format(e)
 }
-
