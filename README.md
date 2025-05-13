@@ -243,6 +243,44 @@ Check the [Releases](https://github.com/Tom5521/gotext-tools/releases) page for 
 
 ---
 
+### Notes
+
+**Recommendation:** the version of this module is go1.18, it will work fine, but if you need better performance I recommend you to use go1.21 as minimum, since several internal functions are manual implementations (since for go1.18 they haven't added some libraries yet) so they are a bit slower than the official implementations.
+
+Here is an example with benchmarks:
+
+#### Go 1.24.3
+
+```
+$ just bench ./pkg/po/compile/mo_benchmark_test.go
+goos: linux
+goarch: amd64
+cpu: Intel(R) Core(TM) i5-3330 CPU @ 3.00GHz
+BenchmarkMoCompiler/WithHashTable-4               169875              5946 ns/op
+BenchmarkMoCompiler/WithoutHashTable-4            218752              5495 ns/op
+PASS
+ok      command-line-arguments  2.350s
+```
+
+#### Go 1.18
+
+```
+$ just gocmd=go1.18 bench ./pkg/po/compile/mo_benchmark_test.go
+goos: linux
+goarch: amd64
+cpu: Intel(R) Core(TM) i5-3330 CPU @ 3.00GHz
+BenchmarkMoCompiler/WithHashTable-4               135243              7897 ns/op
+BenchmarkMoCompiler/WithoutHashTable-4            161006              7837 ns/op
+PASS
+ok      command-line-arguments  2.507s
+```
+
+I have to note that this only applies to the library,
+the CLI binaries use a module with version 1.23 and are
+compiled with the latest version of golang, so these problems do not affect them.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
