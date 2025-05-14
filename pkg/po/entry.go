@@ -1,7 +1,6 @@
 package po
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
@@ -48,11 +47,16 @@ func (e Entry) IsHeader() bool {
 
 // Validate checks the entry for internal inconsistencies.
 // It returns an error if the entry is both plural and singular.
-func (e Entry) Validate() error {
+func (e Entry) Validate() []error {
+	var errs []error
 	if e.Str != "" && e.IsPlural() && len(e.Plurals) > 0 {
-		return errors.New("the entry can't be plural and singular at the same time")
+		errs = append(errs, &InvalidEntryError{
+			ID:     e.UnifiedID(),
+			Reason: ErrBadPluralEntry,
+		},
+		)
 	}
-	return nil
+	return errs
 }
 
 // UnifiedStr returns the translation string formatted for MO files.

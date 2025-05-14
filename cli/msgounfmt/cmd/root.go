@@ -42,9 +42,9 @@ If no input file is given or if it is -, standard input is read.`,
 				return err
 			}
 
-			err = f.Validate()
-			if err != nil && !ignoreErrors {
-				return err
+			errs := f.Validate()
+			if len(errs) > 0 && !ignoreErrors {
+				return errs[0]
 			}
 
 			file.Entries = append(file.Entries, f.Entries...)

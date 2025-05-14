@@ -51,6 +51,31 @@ func (f File) Load(id string, context string) string {
 	return f.Entries[i].Str
 }
 
+func (f File) CatchDuplicateEntries() []error {
+	errs := f.Entries.CatchDuplicateEntries()
+
+	for i, err := range errs {
+		errs[i] = &InvalidFileError{
+			Filename: f.Name,
+			Reason:   err,
+		}
+	}
+
+	return errs
+}
+
+func (f File) Validate() []error {
+	errs := f.Entries.Validate()
+	for i, err := range errs {
+		errs[i] = &InvalidFileError{
+			Filename: f.Name,
+			Reason:   err,
+		}
+	}
+
+	return errs
+}
+
 // String returns the formatted representation of the file contents.
 func (f File) String() string {
 	return util.Format(f)

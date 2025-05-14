@@ -1,9 +1,6 @@
 package po
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
@@ -90,6 +87,34 @@ func (e Entries) PrepareSorter(cmp Cmp[Entry]) func() Entries {
 func (e Entries) SortFunc(cmp Cmp[Entry]) Entries {
 	slices.SortFunc(e, cmp)
 	return e
+}
+
+func (e Entries) CatchDuplicateEntries() []error {
+	var errs []error
+
+	seen := make(map[string]int)
+
+	for index, entry := range e {
+		uid := entry.UnifiedID()
+		orgIndex, ok := seen[uid]
+		if ok {
+			errs = append(errs,
+				&InvalidEntryAtIndexError{
+					Reason: &InvalidEntryError{
+						ID: uid,
+						Reason: &DuplicatedEntryError{
+							OriginalIndex: orgIndex,
+						},
+					},
+					Index: index,
+				},
+			)
+			continue
+		}
+		seen[uid] = index
+	}
+
+	return errs
 }
 
 func (e Entries) HasDuplicates() bool {
@@ -247,15 +272,20 @@ func (e Entries) FuzzyFind(id, context string) int {
 	)
 }
 
-func (e Entries) Validate() error {
-	if e.HasDuplicates() {
-		return errors.New("there are duplicate entries")
-	}
-	for i, entry := range e {
-		if err := entry.Validate(); err != nil {
-			return fmt.Errorf("entry nº%d is invalid: %w", i, err)
+func (e Entries) Validate() []error {
+	errs := e.CatchDuplicateEntries()
+
+	for index, entry := range e {
+		errs1 := entry.Validate()
+		for _, err := range errs1 {
+			errs = append(errs,
+				&InvalidEntryAtIndexError{
+					Reason: err,
+					Index:  index,
+				},
+			)
 		}
 	}
 
-	return nil
+	return errs
 }

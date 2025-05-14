@@ -69,7 +69,8 @@ If input file is -, standard input is read.`,
 						if err != nil {
 							return
 						}
-						if err = poFile.Validate(); err != nil {
+						if errs := poFile.Validate(); len(errs) > 0 {
+							err = errs[0]
 							return
 						}
 						err = compile.MoToFile(poFile, newMo)
@@ -98,7 +99,8 @@ If input file is -, standard input is read.`,
 			allEntries = append(allEntries, poFile.Entries...)
 		}
 
-		if err = allEntries.Validate(); err != nil {
+		if errs := allEntries.Validate(); len(errs) > 0 {
+			err = errs[0]
 			return
 		}
 
