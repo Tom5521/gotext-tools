@@ -107,3 +107,5 @@ cli-docs:
     cd cli
     rm -rf docs
     go run ./gotext-tools doc-tree -D docs
+release:
+    cd cli && goreleaser release
