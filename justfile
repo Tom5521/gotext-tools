@@ -73,6 +73,7 @@ clean:
     rm -rf \
     $(find . \( -name "*.po" -o -name "*.mo" -o -name "*.pot" -o -name "*.log" \)) \
     builds
+    cd cli && goreleaser --clean
     echo {{ GREEN }}"OK"{{ NORMAL }}
 
 diff:
@@ -101,90 +102,6 @@ root-install app:
 [unix]
 root-uninstall app:
     sudo rm /usr/local/bin/{{ app }}
-
-build app:
-    #!/usr/bin/env bash
-
-    echo -n {{ BOLD }}"{{ goos }}-{{ goarch }}..."{{ NORMAL }}
-
-    GOOS={{ goos }} GOARCH={{ goarch }} \
-    {{ gocmd }} build -C cli \
-    $([[ "{{ verbose }}" == "1" ]] && echo "-v") \
-    -o ../builds/{{ app }}-{{ goos }}-{{ goarch }}{{ ext }} \
-    -ldflags '-s -w' \
-    ./{{ app }}
-
-    if [[ $? == 0 ]]; then
-        echo {{ GREEN }}"OK"{{ NORMAL }}
-    else
-        echo {{ RED }}"ERROR: $?"{{ NORMAL }}
-    fi
-
-build-all-app app:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    export VERBOSE="{{ verbose }}"
-    export GOCMD={{ gocmd }}
-
-    archs=(
-      # 386 # Ahem...
-      amd64
-      # arm
-      arm64
-
-      # WHO TF USE THIS ARCHITECTURES?!?!?!?!
-      # ppc64
-      # ppc64le
-      # riscv64
-    )
-    oses=(
-      linux
-      # netbsd
-      # freebsd
-      windows
-      darwin
-
-      # And... the distros that nobody uses
-      # openbsd
-      # plan9
-      # solaris
-      # dragonfly
-    )
-
-    valid=$({{ gocmd }} tool dist list)
-
-    for os in "${oses[@]}"; do
-        for arch in "${archs[@]}"; do
-            if ! echo $valid | grep -qw "$os/$arch"; then
-                continue
-            fi
-            just goos="$os" goarch="$arch" build {{ app }}
-        done
-    done
-
-build-all: clean
-    #!/usr/bin/env bash 
-    set -euo pipefail
-    export VERBOSE={{ verbose }}
-    export GOCMD={{ gocmd }}
-
-    for app in ./cli/*; do
-        if ! ([[ -d "$app" ]] && find "$app" -maxdepth 1 -name "*.go"| grep -q .); then
-            continue
-        fi
-
-        name=$(basename "$app")
-        echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- $name -----"{{ NORMAL }}
-        just build-all-app "$name"
-    done
-    echo {{ BOLD }}{{ BG_WHITE }}{{ BLACK }}"----- FINISHED -----"{{ NORMAL }}
-
-[confirm]
-release: clean build-all
-    gh release create {{ `git describe --tags --abbrev=0` }} \
-    --generate-notes --fail-on-no-commits builds/*
-
 cli-docs:
     #!/usr/bin/env bash
     cd cli
