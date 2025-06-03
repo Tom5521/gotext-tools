@@ -35,7 +35,7 @@ type PoParser struct {
 func NewPo(path string, options ...PoOption) (*PoParser, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
 	return NewPoFromBytes(file, path, options...), nil
@@ -45,7 +45,7 @@ func NewPo(path string, options ...PoOption) (*PoParser, error) {
 func NewPoFromReader(r io.Reader, name string, options ...PoOption) (*PoParser, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading all reader: %w", err)
 	}
 
 	return NewPoFromBytes(data, name, options...), nil
@@ -107,7 +107,7 @@ func (p *PoParser) warn(format string, a ...any) {
 }
 
 // Error returns the first error encountered during parsing, if any.
-func (p PoParser) Error() error {
+func (p *PoParser) Error() error {
 	if len(p.errors) == 0 {
 		return nil
 	}
@@ -115,12 +115,12 @@ func (p PoParser) Error() error {
 }
 
 // Warnings returns all non-critical warnings encountered during parsing.
-func (p PoParser) Warnings() []error {
+func (p *PoParser) Warnings() []error {
 	return p.warns
 }
 
 // Errors returns all errors encountered during parsing.
-func (p PoParser) Errors() []error {
+func (p *PoParser) Errors() []error {
 	return p.errors
 }
 
@@ -146,7 +146,7 @@ func (p *PoParser) parseObsoleteEntries(tokens []lexer.Token) po.Entries {
 		}
 	}
 
-	var cleanedLines []string
+	cleanedLines := make([]string, 0, len(tokens))
 	for _, token := range tokens {
 		if token.Type != util.PoSymbols["Comment"] {
 			continue
@@ -196,7 +196,7 @@ func parseComments(entry *po.Entry, tokens []lexer.Token) (err error) {
 			if parts[1] != "" {
 				line, err = strconv.Atoi(parts[1])
 				if err != nil {
-					return err
+					return fmt.Errorf("error parsing integer: %w", err)
 				}
 			}
 
@@ -236,6 +236,9 @@ func (p *PoParser) ParseWithOptions(opts ...PoOption) *po.File {
 	return p.Parse()
 }
 
+const safeTemplate = `msgid "---"
+msgstr "---"`
+
 // Parse reads and parses the PO file into a po.File structure.
 func (p *PoParser) Parse() *po.File {
 	var entries po.Entries
@@ -243,8 +246,7 @@ func (p *PoParser) Parse() *po.File {
 
 	// Add temporary marker to handle edge cases
 	p.data = p.originalData
-	p.data = append(p.data, []byte(`msgid "---"
-msgstr "---"`)...)
+	p.data = append(p.data, []byte(safeTemplate)...)
 
 	// Parse the file using the participle parser
 	pFile, err := util.PoParser.ParseBytes(p.filename, p.data)

@@ -61,7 +61,7 @@ func max[T slices.Ordered](values ...T) T {
 // Returns an error if any step fails, unless IgnoreErrors is true.
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	mc.info("cleaning & sorting entries...")
-	entries := mc.File.Entries.Solve().CleanFuzzy().CleanObsoletes()
+	entries := mc.File.Entries.CleanDuplicates().CleanFuzzy().CleanObsoletes()
 	entries = entries.SortFunc(po.CompareEntryByID)
 
 	mc.info("creating header...")
@@ -70,13 +70,15 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		hashTabSize = max(3, util.NextPrime((flen(entries)*4)/3))
 	}
 
+	const origTabOffset = 7 * 4
+
 	header := util.MoHeader{
 		Magic:          mc.Config.Endianness.MagicNumber(),
 		Nstrings:       flen(entries),
-		OrigTabOffset:  7 * 4,
-		TransTabOffset: 7*4 + flen(entries)*8,
+		OrigTabOffset:  origTabOffset,
+		TransTabOffset: origTabOffset + flen(entries)*8,
 		HashTabSize:    hashTabSize,
-		HashTabOffset:  7*4 + 16*flen(entries),
+		HashTabOffset:  origTabOffset + 16*flen(entries),
 	}
 
 	mc.info("creating offsets...")

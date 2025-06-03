@@ -17,7 +17,7 @@ type (
 		Context     []string        `(Msgctxt @String+)?`
 		ID          []string        `Msgid @String+`
 		Str         []string        `(Msgstr @String+`
-		MsgidPlural []string        `| (Msgid Plural @String+`
+		MsgidPlural []string        `| (MsgidPlural @String+`
 		Plurals     []pluralEntries `@@*))`
 	}
 
@@ -45,9 +45,9 @@ var (
 		{Name: "RB", Pattern: `\]`},
 		{Name: "String", Pattern: `"(\\"|[^"])*"`},
 		{Name: "Msgctxt", Pattern: "msgctxt"},
+		{Name: "MsgidPlural", Pattern: "msgid_plural"},
 		{Name: "Msgid", Pattern: "msgid"},
 		{Name: "Msgstr", Pattern: "msgstr"},
-		{Name: "Plural", Pattern: "_plural"},
 		{Name: "Comment", Pattern: "#[^\n]*"},
 	}
 	PoLexer  = lexer.MustSimple(PoRules)

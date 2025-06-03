@@ -1,7 +1,6 @@
 package parse_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
@@ -36,7 +35,7 @@ func TestMoParse(t *testing.T) {
 
 	if !util.Equal(entries, parsedEntries.Entries) {
 		t.Error("Parsed entries differ!")
-		fmt.Println(util.NamedDiff("expected", "parsed", entries, parsedEntries.Entries))
+		t.Log(util.NamedDiff("expected", "parsed", entries, parsedEntries.Entries))
 		return
 	}
 }

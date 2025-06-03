@@ -93,42 +93,42 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	nplurals := ref.Header().Nplurals()
 	def = def.Solve()
 
-	for i, e := range def {
-		if ref.ContainsUnifiedID(e.UnifiedID()) || e.IsHeader() {
+	for i, entry := range def {
+		if ref.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
 			continue
 		}
 		switch {
 		case config.FuzzyMatch:
-			if bestID, ratio := ref.BestIDRatio(e); ratio >= 50 {
-				e.markAsFuzzy()
-				e.ID = ref[bestID].ID
+			if bestID, ratio := ref.BestIDRatio(entry); ratio >= 50 {
+				entry.markAsFuzzy()
+				entry.ID = ref[bestID].ID
 			} else {
-				e.markAsObsolete()
+				entry.markAsObsolete()
 			}
 		case config.KeepPreviousIDs:
-			e.markAsFuzzy()
+			entry.markAsFuzzy()
 		default:
-			e.markAsObsolete()
+			entry.markAsObsolete()
 		}
-		def[i] = e
+		def[i] = entry
 	}
 
-	for _, e := range ref {
-		if def.ContainsUnifiedID(e.UnifiedID()) || e.IsHeader() {
+	for _, entry := range ref {
+		if def.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
 			continue
 		}
 		if config.FuzzyMatch {
-			if bestID, ratio := def.BestIDRatio(e); ratio >= 50 {
-				e.markAsFuzzy()
+			if bestID, ratio := def.BestIDRatio(entry); ratio >= 50 {
+				entry.markAsFuzzy()
 				best := def[bestID]
-				mergeEntryStrings(&e, best)
+				mergeEntryStrings(&entry, best)
 			}
-		} else if e.IsPlural() {
+		} else if entry.IsPlural() {
 			for i := 0; i < int(nplurals); i++ {
-				e.Plurals = append(e.Plurals, PluralEntry{i, e.ID})
+				entry.Plurals = append(entry.Plurals, PluralEntry{i, entry.ID})
 			}
 		}
-		def = append(def, e)
+		def = append(def, entry)
 	}
 
 	if config.Sort {

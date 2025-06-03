@@ -1,5 +1,5 @@
 // The compile package contains structures and functions
-// used to compile Mo/Po files with their respective options
+// used to compile Mo/Po files with their respective options.
 package compile
 
 import (

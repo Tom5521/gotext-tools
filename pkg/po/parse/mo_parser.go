@@ -12,20 +12,20 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
-// Type aliases for cleaner code
+// Type aliases for cleaner code.
 type (
 	u32 = uint32
 	i64 = int64
 	i32 = int32
 )
 
-// Common byte sequences used in MO file parsing
+// Common byte sequences used in MO file parsing.
 var (
 	eot = []byte{4} // End Of Transmission marker
 	nul = []byte{0} // Null byte separator
 )
 
-// Ensure MoParser implements the po.Parser interface
+// Ensure MoParser implements the po.Parser interface.
 var _ po.Parser = (*MoParser)(nil)
 
 // MoParser handles parsing of MO files into po.File structures.

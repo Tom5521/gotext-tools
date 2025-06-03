@@ -31,7 +31,7 @@ type PoConfig struct {
 	markAllAsObsolete bool
 }
 
-// Restores the configuration state prior to the last
+// RestoreLastCfg restores the configuration state prior to the last
 // [PoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (p *PoConfig) RestoreLastCfg() {
 	if p.lastCfg != nil {
@@ -39,7 +39,7 @@ func (p *PoConfig) RestoreLastCfg() {
 	}
 }
 
-// Overwrite the configuration with the options provided,
+// ApplyOptions overwrite the configuration with the options provided,
 // saving the previous state so that it can be restored
 // later with [PoConfig.RestoreLastCfg] if desired.
 func (p *PoConfig) ApplyOptions(opts ...PoOption) {
@@ -51,7 +51,7 @@ func (p *PoConfig) ApplyOptions(opts ...PoOption) {
 
 // DefaultPoConfig returns a new PoConfig with recommended defaults:
 // - CleanDuplicates: true
-// - ParseObsoletes: true
+// - ParseObsoletes: true.
 func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
 		CleanDuplicates: true,

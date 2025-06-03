@@ -25,24 +25,24 @@ type PoCompiler struct {
 
 // error creates and logs an error message if error reporting is enabled.
 // Returns nil if IgnoreErrors is true.
-func (p PoCompiler) error(format string, a ...any) error {
-	if p.Config.IgnoreErrors {
+func (c PoCompiler) error(format string, a ...any) error {
+	if c.Config.IgnoreErrors {
 		return nil
 	}
 
 	format = "compile: " + format
 	err := fmt.Errorf(format, a...)
-	if p.Config.Logger != nil {
-		p.Config.Logger.Println("ERROR:", err)
+	if c.Config.Logger != nil {
+		c.Config.Logger.Println("ERROR:", err)
 	}
 
 	return err
 }
 
 // info logs an informational message if verbose logging is enabled.
-func (p PoCompiler) info(format string, a ...any) {
-	if p.Config.Logger != nil && p.Config.Verbose {
-		p.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
+func (c PoCompiler) info(format string, a ...any) {
+	if c.Config.Logger != nil && c.Config.Verbose {
+		c.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
 	}
 }
 
