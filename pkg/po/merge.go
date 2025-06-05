@@ -94,39 +94,15 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	def = def.Solve()
 
 	for i, entry := range def {
-		if ref.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
+		if mergeDef(config, &entry, ref) {
 			continue
-		}
-		switch {
-		case config.FuzzyMatch:
-			if bestID, ratio := ref.BestIDRatio(entry); ratio >= 50 {
-				entry.markAsFuzzy()
-				entry.ID = ref[bestID].ID
-			} else {
-				entry.markAsObsolete()
-			}
-		case config.KeepPreviousIDs:
-			entry.markAsFuzzy()
-		default:
-			entry.markAsObsolete()
 		}
 		def[i] = entry
 	}
 
 	for _, entry := range ref {
-		if def.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
+		if mergeRef(config, &entry, def, nplurals) {
 			continue
-		}
-		if config.FuzzyMatch {
-			if bestID, ratio := def.BestIDRatio(entry); ratio >= 50 {
-				entry.markAsFuzzy()
-				best := def[bestID]
-				mergeEntryStrings(&entry, best)
-			}
-		} else if entry.IsPlural() {
-			for i := 0; i < int(nplurals); i++ {
-				entry.Plurals = append(entry.Plurals, PluralEntry{i, entry.ID})
-			}
 		}
 		def = append(def, entry)
 	}
@@ -136,6 +112,44 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	}
 
 	return def
+}
+
+func mergeRef(config MergeConfig, entry *Entry, def Entries, nplurals uint) bool {
+	if def.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
+		return true
+	}
+	if config.FuzzyMatch {
+		if bestID, ratio := def.BestIDRatio(*entry); ratio >= 50 {
+			entry.markAsFuzzy()
+			best := def[bestID]
+			mergeEntryStrings(entry, best)
+		}
+	} else if entry.IsPlural() {
+		for i := 0; i < int(nplurals); i++ {
+			entry.Plurals = append(entry.Plurals, PluralEntry{i, entry.ID})
+		}
+	}
+	return false
+}
+
+func mergeDef(config MergeConfig, e *Entry, ref Entries) bool {
+	if ref.ContainsUnifiedID(e.UnifiedID()) || e.IsHeader() {
+		return true
+	}
+	switch {
+	case config.FuzzyMatch:
+		if bestID, ratio := ref.BestIDRatio(*e); ratio >= 50 {
+			e.markAsFuzzy()
+			e.ID = ref[bestID].ID
+		} else {
+			e.markAsObsolete()
+		}
+	case config.KeepPreviousIDs:
+		e.markAsFuzzy()
+	default:
+		e.markAsObsolete()
+	}
+	return false
 }
 
 // mergeEntryStrings copies translation strings from source to target.
