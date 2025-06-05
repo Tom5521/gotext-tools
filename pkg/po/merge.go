@@ -90,7 +90,7 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 // If KeepPreviousIDs is set, original IDs are preserved in unmatched entries.
 // If Sort is enabled, the resulting set is sorted using the given SortMode.
 func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
-	nplurals := ref.Header().Nplurals()
+	nplurals := int(ref.Header().Nplurals())
 	def = def.Solve()
 
 	for i, entry := range def {
@@ -114,7 +114,7 @@ func MergeWithConfig(config MergeConfig, def, ref Entries) Entries {
 	return def
 }
 
-func mergeRef(config MergeConfig, entry *Entry, def Entries, nplurals uint) bool {
+func mergeRef(config MergeConfig, entry *Entry, def Entries, nplurals int) bool {
 	if def.ContainsUnifiedID(entry.UnifiedID()) || entry.IsHeader() {
 		return true
 	}
@@ -125,7 +125,7 @@ func mergeRef(config MergeConfig, entry *Entry, def Entries, nplurals uint) bool
 			mergeEntryStrings(entry, best)
 		}
 	} else if entry.IsPlural() {
-		for i := 0; i < int(nplurals); i++ {
+		for i := 0; i < nplurals; i++ {
 			entry.Plurals = append(entry.Plurals, PluralEntry{i, entry.ID})
 		}
 	}
