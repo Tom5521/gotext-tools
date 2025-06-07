@@ -6,7 +6,14 @@ namespace po {
         + ToBytes() []byte
 
     }
+    class DuplicatedEntryError << (S,Aquamarine) >> {
+        + OriginalIndex int
+
+        + Error() string
+
+    }
     class Entries << (S,Aquamarine) >> {
+        + String() string
         + Equal(e2 Entries) bool
         + ContainsFunc(f <font color=blue>func</font>(Entry) bool) bool
         + ContainsUnifiedID(uid string) bool
@@ -21,6 +28,7 @@ namespace po {
         + Sort() Entries
         + PrepareSorter(cmp ) <font color=blue>func</font>() Entries
         + SortFunc(cmp ) Entries
+        + CatchDuplicateEntries() []error
         + HasDuplicates() bool
         + CleanObsoletes() Entries
         + CleanDuplicates() Entries
@@ -29,7 +37,7 @@ namespace po {
         + Solve() Entries
         + CleanFuzzy() Entries
         + FuzzyFind(id string, context string) int
-        + Validate() error
+        + Validate() []error
         + Header() Header
 
     }
@@ -52,7 +60,7 @@ namespace po {
         - markAsFuzzy() 
 
         + IsHeader() bool
-        + Validate() error
+        + Validate() []error
         + UnifiedStr() string
         + UnifiedID() string
         + FullHash() uint32
@@ -71,6 +79,9 @@ namespace po {
         + Set(id string, context string, e Entry) 
         + LoadByUnifiedID(uid string) string
         + Load(id string, context string) string
+        + CatchDuplicateEntries() []error
+        + Validate() []error
+        + String() string
 
     }
     class Header << (S,Aquamarine) >> {
@@ -98,13 +109,14 @@ namespace po {
         + LanguageTeam string
         + Language string
         + MimeVersion string
-        + ContentType string
+        + MediaType string
         + Charset string
         + ContentTransferEncoding string
         + Nplurals uint
         + Plural string
         + XGenerator string
 
+        + String() string
         + Validate() []error
         + ToHeader() Header
 
@@ -114,14 +126,40 @@ namespace po {
         + Value string
 
     }
+    class InvalidEntryAtIndexError << (S,Aquamarine) >> {
+        + Index int
+        + Reason error
+
+        + Error() string
+        + Unwrap() error
+
+    }
+    class InvalidEntryError << (S,Aquamarine) >> {
+        + ID string
+        + Reason error
+
+        + Error() string
+        + Unwrap() error
+
+    }
+    class InvalidFileError << (S,Aquamarine) >> {
+        + Filename string
+        + Reason error
+
+        + Error() string
+        + Unwrap() error
+
+    }
     class Location << (S,Aquamarine) >> {
         + Line int
         + File string
 
+        + String() string
         + Equal(l2 Location) bool
 
     }
     class Locations << (S,Aquamarine) >> {
+        + String() string
         + Equal(l2 Locations) bool
         + IsSorted() bool
         + IsSortedFunc(cmp ) bool
@@ -145,6 +183,7 @@ namespace po {
 
     }
     class PluralEntries << (S,Aquamarine) >> {
+        + String() string
         + Equal(p2 PluralEntries) bool
         + Solve() PluralEntries
         + IsSorted() bool
@@ -157,6 +196,7 @@ namespace po {
         + ID int
         + Str string
 
+        + String() string
         + Equal(p2 PluralEntry) bool
 
     }
