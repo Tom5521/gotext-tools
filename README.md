@@ -226,7 +226,7 @@ msgstr "mundo"`
 ```sh
 git clone https://github.com/Tom5521/gotext-tools
 cd gotext-tools
-just # Now check ./builds!
+make local-install app=gotext-tools
 ```
 
 #### Or...
@@ -234,7 +234,7 @@ just # Now check ./builds!
 ```sh
 git clone https://github.com/Tom5521/gotext-tools
 cd gotext-tools
-just go-install app
+make go-install-gotext-tools
 ```
 
 ### Pre-built Binaries
