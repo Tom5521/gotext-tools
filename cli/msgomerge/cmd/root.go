@@ -9,6 +9,7 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/parse"
+
 	"github.com/spf13/cobra"
 )
 
@@ -39,9 +40,7 @@ Where an exact match cannot be found, fuzzy matching is used to produce better r
 
 		return nil
 	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		initConfig()
-	},
+	PreRun: initConfig,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		defPath, refPath := args[0], args[1]
 

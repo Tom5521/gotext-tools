@@ -28,7 +28,7 @@ If output file is -, output is written to standard output.`)
 	)
 	flags.BoolVarP(&force, "force", "f", false, "Overwrites generated files if they already exist")
 	flags.BoolVar(&noHashTable, "no-hash", false, "binary file will not include the hash table")
-	flags.BoolVar(&verbose, "verbose", false, "")
+	flags.BoolVarP(&verbose, "verbose", "v", false, "")
 }
 
 var compilerCfg = compile.DefaultMoConfig()

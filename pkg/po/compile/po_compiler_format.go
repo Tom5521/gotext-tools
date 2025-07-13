@@ -106,7 +106,7 @@ func (c PoCompiler) formatMultiline(str string) string {
 	if c.Config.WordWrap {
 		lines := strings.Split(str, "\n")
 		for i, line := range lines {
-			fmt.Fprintf(&builder, "%q", line)
+			fmt.Fprintf(&builder, "%q\n", line)
 			if i != len(lines)-1 {
 				builder.WriteByte('\n')
 			}

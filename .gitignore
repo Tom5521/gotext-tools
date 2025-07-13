@@ -13,5 +13,5 @@ vendor
 *_ign.*
 default.pot
 messages.*
-# Added by goreleaser init:
-dist/
+changelog.md
+completions

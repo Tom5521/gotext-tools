@@ -6,6 +6,8 @@ import (
 
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
+
+	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
@@ -14,7 +16,7 @@ var (
 	compilerCfg compile.PoConfig
 )
 
-func initConfig() {
+func initConfig(cmd *cobra.Command, args []string) {
 	compilerCfg = compile.PoConfig{
 		NoLocation:  noLocation,
 		AddLocation: compile.PoLocationMode(addLocation),

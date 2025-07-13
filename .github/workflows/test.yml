@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: extractions/setup-just@v3
-
       - name: Install gettext
         run: sudo apt install gettext
       - name: Set up Go
@@ -19,6 +17,6 @@ jobs:
         with:
           go-version: "1.18"
       - name: Test
-        run: just test
+        run: make test
       - name: Benchmark
-        run: just benchmark
+        run: make benchmark
