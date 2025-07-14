@@ -1,59 +1,64 @@
 SHELL=/usr/bin/bash
 
-gopath := $(shell go env GOPATH)
-goos := $(shell go env GOOS)
-goarch := $(shell go env GOARCH)
-goflags := GOOS=${goos} GOARCH=${goarch}
-gocmd := go
-verbose ?= 0
+GOPATH := $(shell go env GOPATH)
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
+GOFLAGS := GOOS=$(GOOS) GOARCH=$(GOARCH)
+GOCMD := go
+VERBOSE ?= 0
 
-supported_oses = windows linux darwin
-supported_archs = arm64 amd64
+SUPPORTED_OSES := windows linux darwin
+SUPPORTED_ARCHITECTURES := arm64 amd64
 
-puml_targets = ./pkg/{go,po}/parse ./pkg/po/compile ./pkg/po
+PUML_TARGETS := ./pkg/{go,po}/parse ./pkg/po/compile ./pkg/po
 
-local_prefix = $(HOME)/.local
-root_prefix = /usr/local
+LOCAL_PREFIX := $(HOME)/.local
+ROOT_PREFIX := /usr/local
+PREFIX=$(if $(filter local,$(1)),$(LOCAL_PREFIX),$(ROOT_PREFIX))
 
-override app_paths = $(shell ./scripts/app-paths.sh)
-override app_names = $(shell ./scripts/app-names.sh)
-override bin_ext := $(shell [[ $(goos) == "windows" ]] \
-	&& echo ".exe")
-override cmd = $(goflags) $(gocmd)
-override v_flag := $(shell [ $(verbose) -eq 1 ] && echo "-v")
+override APP_NAMES := $(shell ./scripts/app-names.sh)
+override WIN_EXT := $(if $(filter windows,$(GOOS)),.exe)
+override CMD = $(GOFLAGS) $(GOCMD)
+override V_FLAG := $(if $(filter 1,$(VERBOSE)),-v)
 
-.PHONY: $(shell grep -E '^[a-zA-Z0-9_-]+:' Makefile | cut -d ':' -f 1)
+.PHONY: all default benchmark bench test test-all run-% clean \
+	build-% build-tool-% build-all release puml completions \
+	completion-% go-install-all go-uninstall-all %-install-all \
+	%-uninstall-all %-install %-uninstall %-completions-install \
+	%-completions-uninstall go-install-% go-uninstall-%
+.DEFAULT_GOAL := default
+
 
 default:
-	for app in $(app_names);do \
+	for app in $(APP_NAMES);do \
 		$(MAKE) build-$$app;\
 	done
 
 benchmark:
-	$(MAKE) bench path="./..."
+	$(MAKE) bench PATH="./..."
 
 bench:
-	$(cmd) test $(v_flag) -bench=. $(path)
+	$(CMD) test $(V_FLAG) -bench=. $(PATH)
 
 test:
-	$(cmd) clean -testcache
-	$(cmd) test $(v_flag) ./...
+	$(CMD) clean -testcache
+	$(CMD) test $(V_FLAG) ./...
 
 test-all:
 	$(MAKE) test
-	$(MAKE) gocmd=go1.18 test
+	$(MAKE) GOCMD=go1.18 test
 
 run-%:
-	$(cmd) run -C ./cli $(v_flag) ./$* $(args)
+	$(CMD) run -C ./cli $(V_FLAG) ./$* $(args)
 
 clean:
 	rm -rf $$(find . \( -name "*.po" -o -name "*.mo" -o -name "*.pot" -o -name "*.log" \)) \
-		builds cli/dist completions
+		builds cli/dist completions changelog.md cli/builds
 
-diff:
+log.diff:
 	git diff --staged > log.diff
 
-_gen_releasemsg:
+changelog.md:
 	echo '## Changelog' > changelog.md
 	echo >> changelog.md
 
@@ -64,37 +69,36 @@ _gen_releasemsg:
 		$$penultimate_tag..$$latest_tag >> changelog.md
 
 build-%:
-	$(cmd) build -C ./cli $(v_flag) -o \
-		../builds/$*-$(goos)-$(goarch)$(bin_ext) \
-		-ldflags '-s -w' $(v_flag) \
+	$(CMD) build -C ./cli $(V_FLAG) -o \
+		../builds/$*-$(GOOS)-$(GOARCH)$(WIN_EXT) \
+		-ldflags '-s -w' \
 		./$*
 
 build-tool-%:
-	valid=$$($(cmd) tool dist list);\
-	for os in $(supported_oses); do \
-		for arch in $(supported_archs); do \
+	valid=$$($(CMD) tool dist list);\
+	for os in $(SUPPORTED_OSES); do \
+		for arch in $(SUPPORTED_ARCHITECTURES); do \
 			if ! echo $$valid | grep -qw "$$os/$$arch"; then \
 				continue;\
 			fi;\
-			$(MAKE) goos=$$os goarch=$$arch build-$*;\
+			$(MAKE) GOOS=$$os GOARCH=$$arch build-$*;\
 		done;\
 	done
 
 build-all: clean
-	for app in $(app_names); do \
+	for app in $(APP_NAMES); do \
 		$(MAKE) build-tool-$$app;\
 	done
 
-cli-docs:
-	rm -rf cli/docs
-	$(cmd) run -C cli ./gotext-tools doc-tree -D docs
+cli/docs:
+	$(CMD) run -C cli ./gotext-tools doc-tree -D docs
 
-release: clean _gen_releasemsg build-all
+release: clean changelog.md build-all
 	gh release create $$(git describe --tags --abbrev=0) \
 		--notes-file ./changelog.md --fail-on-no-commits builds/*
 
 puml:
-	for path in $(puml_targets); do \
+	for path in $(PUML_TARGETS); do \
 		structure="$$path/structure.puml";\
 		goplantuml "$$path" > "$$structure";\
 		plantuml -theme spacelab "$$structure";\
@@ -103,69 +107,63 @@ puml:
 completions:
 	mkdir -p completions
 
-	for app in $(app_names);do \
+	for app in $(APP_NAMES);do \
 		$(MAKE) completion-$$app;\
 	done
 
 completion-%:
+	mkdir -p completions
 	go run -C cli ./$* completion bash > ./completions/$*.bash
 	go run -C cli ./$* completion fish > ./completions/$*.fish
 	go run -C cli ./$* completion zsh > ./completions/$*.zsh
 
-_%-prefix:
-	@if [[ "$*" == "local" ]]; then \
-		echo $(local_prefix);\
-	else \
-		echo $(root_prefix);\
-	fi;
-
 go-install-all:
-	for app in $(app_names);do \
+	for app in $(APP_NAMES);do \
 		$(MAKE) go-install-$$app;\
 	done
 
 go-uninstall-all:
-	for app in $(app_names);do \
+	for app in $(APP_NAMES);do \
 		$(MAKE) go-uninstall-$$app;\
 	done
 
 %-install-all:
-	for app in $(app_names);do \
-		$(MAKE) $*-install app=$$app;\
+	for app in $(APP_NAMES);do \
+		$(MAKE) $*-install APP=$$app;\
 	done
 
 %-uninstall-all:
-	for app in $(app_names);do \
-		$(MAKE) $*-uninstall app=$$app;\
+	for app in $(APP_NAMES);do \
+		$(MAKE) $*-uninstall APP=$$app;\
 	done
 
-%-install: build-$(app)
-	install -D "./builds/$(app)-$(goos)-$(goarch)" \
-		"$$($(MAKE) -s _$*-prefix)/bin/$(app)"
+%-install: build-$(APP)
+	install -D "./builds/$(APP)-$(GOOS)-$(GOARCH)" \
+		$(call PREFIX,$*)/bin/$(APP)
 	$(MAKE) $*-completions-install
 
 %-uninstall:
-	rm -f "$$($(MAKE) -s _$*-prefix)/bin/$(app)"
+	rm -f $(call PREFIX,$*)/bin/$(APP)
 	$(MAKE) $*-completions-uninstall
 
-%-completions-install: completions
-	install -D "./completions/$(app).fish" \
-		"$$($(MAKE) -s _$*-prefix)/share/fish/vendor_completions.d/$(app).fish"
-	install -D "./completions/$(app).bash" \
-		"$$($(MAKE) -s _$*-prefix)/share/bash-completion/completions/$(app)"
-	install -D "./completions/$(app).zsh" \
-		"$$($(MAKE) -s _$*-prefix)/share/zsh/site-functions/_$(app)"
+%-completions-install: completion-$(APP)
+	install -D "./completions/$(APP).fish" \
+		$(call PREFIX,$*)/share/fish/vendor_completions.d/$(APP).fish
+	install -D "./completions/$(APP).bash" \
+		$(call PREFIX,$*)/share/bash-completion/completions/$(APP)
+	install -D "./completions/$(APP).zsh" \
+		$(call PREFIX,$*)/share/zsh/site-functions/_$(APP)
 
 %-completions-uninstall:
-	prefix=$$($(MAKE) -s _$*-prefix);\
-	rm -f "$$prefix/share/fish/vendor_completions.d/$(app).fish" \
-	"$$prefix/share/bash-completion/completions/$(app)" \
-	"$$prefix/share/zsh/site-functions/_$(app)"
+	prefix=$(call PREFIX,$*);\
+	rm -f "$$prefix/share/fish/vendor_completions.d/$(APP).fish" \
+	"$$prefix/share/bash-completion/completions/$(APP)" \
+	"$$prefix/share/zsh/site-functions/_$(APP)"
 
 go-install-%:
-	$(cmd) install -C cli $(v_flag) ./$*
-	$(MAKE) local-completions-install app=$*
+	$(CMD) install -C cli $(V_FLAG) ./$*
+	$(MAKE) local-completions-install APP=$*
 
 go-uninstall-%:
-	rm -f $(gopath)/bin/$*
-	$(MAKE) local-completions-uninstall app=$*
+	rm -f $(GOPATH)/bin/$*
+	$(MAKE) local-completions-uninstall APP=$*
