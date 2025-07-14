@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
-for path in $(./scripts/app-paths.sh); do
-  basename "$path"
+for app in ./cli/*; do
+  if ! ([[ -d "$app" ]] && find "$app" -maxdepth 1 -name "*.go" | grep -q .); then
+    continue
+  fi
+  basename "$app"
 done
