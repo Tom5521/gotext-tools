@@ -35,10 +35,10 @@ default:
 	done
 
 benchmark:
-	$(MAKE) bench PATH="./..."
+	$(MAKE) bench T_PATH="./..."
 
 bench:
-	$(CMD) test $(V_FLAG) -bench=. $(PATH)
+	$(CMD) test $(V_FLAG) -bench=. $(T_PATH)
 
 test:
 	$(CMD) clean -testcache
