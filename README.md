@@ -226,7 +226,7 @@ msgstr "mundo"`
 ```sh
 git clone https://github.com/Tom5521/gotext-tools
 cd gotext-tools
-make local-install app=gotext-tools
+make local-install APP=gotext-tools
 ```
 
 #### Or...
