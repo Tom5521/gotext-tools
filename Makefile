@@ -12,6 +12,8 @@ SUPPORTED_ARCHITECTURES := arm64 amd64
 
 PUML_TARGETS := ./pkg/{go,po}/parse ./pkg/po/compile ./pkg/po
 
+SUDO = $(if $(and $(filter root,$(1)),$(filter-out root,$(USER))),sudo)
+
 LOCAL_PREFIX := $(HOME)/.local
 ROOT_PREFIX := /usr/local
 PREFIX=$(if $(filter local,$(1)),$(LOCAL_PREFIX),$(ROOT_PREFIX))
@@ -26,12 +28,14 @@ override V_FLAG := $(if $(filter 1,$(VERBOSE)),-v)
 	completion-% go-install-all go-uninstall-all %-install-all \
 	%-uninstall-all %-install %-uninstall %-completions-install \
 	%-completions-uninstall go-install-% go-uninstall-%
+.ONESHELL: default changelog.md build-tool-% build-all puml \
+	completions go-install-all go-uninstall-all %-install-all \
+	%-uninstall-all %-completions-uninstall
 .DEFAULT_GOAL := default
 
-
 default:
-	for app in $(APP_NAMES);do \
-		$(MAKE) build-$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) build-$$app
 	done
 
 benchmark:
@@ -62,9 +66,9 @@ changelog.md:
 	echo '## Changelog' > changelog.md
 	echo >> changelog.md
 
-	latest_tag=$$(git describe --tags --abbrev=0);\
-	penultimate_tag=$$(git describe --tags --abbrev=0 "$$latest_tag^");\
-	\
+	latest_tag=$$(git describe --tags --abbrev=0)
+	penultimate_tag=$$(git describe --tags --abbrev=0 "$$latest_tag^")
+	
 	git log --pretty=format:'- [%h](https://github.com/Tom5521/gotext-tools/commit/%H): %s' \
 		$$penultimate_tag..$$latest_tag >> changelog.md
 
@@ -75,19 +79,19 @@ build-%:
 		./$*
 
 build-tool-%:
-	valid=$$($(CMD) tool dist list);\
-	for os in $(SUPPORTED_OSES); do \
-		for arch in $(SUPPORTED_ARCHITECTURES); do \
-			if ! echo $$valid | grep -qw "$$os/$$arch"; then \
-				continue;\
-			fi;\
-			$(MAKE) GOOS=$$os GOARCH=$$arch build-$*;\
-		done;\
+	valid=$$($(CMD) tool dist list)
+	for os in $(SUPPORTED_OSES); do
+		for arch in $(SUPPORTED_ARCHITECTURES); do
+			if ! echo $$valid | grep -qw "$$os/$$arch"; then
+				continue
+			fi
+			$(MAKE) GOOS=$$os GOARCH=$$arch build-$*
+		done
 	done
 
 build-all: clean
-	for app in $(APP_NAMES); do \
-		$(MAKE) build-tool-$$app;\
+	for app in $(APP_NAMES); do
+		$(MAKE) build-tool-$$app
 	done
 
 cli/docs:
@@ -98,17 +102,17 @@ release: clean changelog.md build-all
 		--notes-file ./changelog.md --fail-on-no-commits builds/*
 
 puml:
-	for path in $(PUML_TARGETS); do \
-		structure="$$path/structure.puml";\
-		goplantuml "$$path" > "$$structure";\
-		plantuml -theme spacelab "$$structure";\
+	for path in $(PUML_TARGETS); do
+		structure="$$path/structure.puml"
+		goplantuml "$$path" > "$$structure"
+		plantuml -theme spacelab "$$structure"
 	done
 
 completions:
 	mkdir -p completions
 
-	for app in $(APP_NAMES);do \
-		$(MAKE) completion-$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) completion-$$app
 	done
 
 completion-%:
@@ -118,45 +122,45 @@ completion-%:
 	go run -C cli ./$* completion zsh > ./completions/$*.zsh
 
 go-install-all:
-	for app in $(APP_NAMES);do \
-		$(MAKE) go-install-$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) go-install-$$app
 	done
 
 go-uninstall-all:
-	for app in $(APP_NAMES);do \
-		$(MAKE) go-uninstall-$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) go-uninstall-$$app
 	done
 
 %-install-all:
-	for app in $(APP_NAMES);do \
-		$(MAKE) $*-install APP=$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) $*-install APP=$$app
 	done
 
 %-uninstall-all:
-	for app in $(APP_NAMES);do \
-		$(MAKE) $*-uninstall APP=$$app;\
+	for app in $(APP_NAMES);do
+		$(MAKE) $*-uninstall APP=$$app
 	done
 
 %-install: build-$(APP)
-	install -D "./builds/$(APP)-$(GOOS)-$(GOARCH)" \
+	$(call SUDO,$*) install -D "./builds/$(APP)-$(GOOS)-$(GOARCH)" \
 		$(call PREFIX,$*)/bin/$(APP)
 	$(MAKE) $*-completions-install
 
 %-uninstall:
-	rm -f $(call PREFIX,$*)/bin/$(APP)
+	$(call SUDO,$*) rm -f $(call PREFIX,$*)/bin/$(APP)
 	$(MAKE) $*-completions-uninstall
 
 %-completions-install: completion-$(APP)
-	install -D "./completions/$(APP).fish" \
+	$(call SUDO,$*) install -D "./completions/$(APP).fish" \
 		$(call PREFIX,$*)/share/fish/vendor_completions.d/$(APP).fish
-	install -D "./completions/$(APP).bash" \
+	$(call SUDO,$*) install -D "./completions/$(APP).bash" \
 		$(call PREFIX,$*)/share/bash-completion/completions/$(APP)
-	install -D "./completions/$(APP).zsh" \
+	$(call SUDO,$*) install -D "./completions/$(APP).zsh" \
 		$(call PREFIX,$*)/share/zsh/site-functions/_$(APP)
 
 %-completions-uninstall:
-	prefix=$(call PREFIX,$*);\
-	rm -f "$$prefix/share/fish/vendor_completions.d/$(APP).fish" \
+	prefix=$(call PREFIX,$*)
+	$(call SUDO,$*) rm -f "$$prefix/share/fish/vendor_completions.d/$(APP).fish" \
 	"$$prefix/share/bash-completion/completions/$(APP)" \
 	"$$prefix/share/zsh/site-functions/_$(APP)"
 
