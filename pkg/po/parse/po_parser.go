@@ -275,10 +275,10 @@ func (p *PoParser) Parse() *po.File {
 
 		// Create new entry with joined strings
 		newEntry := po.Entry{
-			Context:  strings.Join(e.Context, "\n"),
-			ID:       strings.Join(e.ID, "\n"),
-			Str:      strings.Join(e.Str, "\n"),
-			Plural:   strings.Join(e.MsgidPlural, "\n"),
+			Context:  strings.Join(e.Context, ""),
+			ID:       strings.Join(e.ID, ""),
+			Str:      strings.Join(e.Str, ""),
+			Plural:   strings.Join(e.MsgidPlural, ""),
 			Obsolete: p.Config.markAllAsObsolete,
 		}
 
