@@ -30,7 +30,7 @@ func DefaultMoConfig(opts ...MoOption) MoConfig {
 	return mc
 }
 
-// Restores the configuration state prior to the last
+// RestoreLastCfg restores the configuration state prior to the last
 // [MoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (mc *MoConfig) RestoreLastCfg() {
 	if mc.lastCfg != nil {
@@ -38,7 +38,7 @@ func (mc *MoConfig) RestoreLastCfg() {
 	}
 }
 
-// Overwrite the configuration with the options provided,
+// ApplyOptions overwrites the configuration with the options provided,
 // saving the previous state so that it can be restored
 // later with [MoConfig.RestoreLastCfg] if desired.
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {

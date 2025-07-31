@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
+
 	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/gookit/color"
 )
@@ -20,7 +21,7 @@ var DefaultHighlight = &HighlightConfig{color.Magenta, color.Blue, color.Green}
 func Highlight(cfg *HighlightConfig, name, input string) ([]byte, error) {
 	lex, err := util.PoLexer.LexString(name, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error lexing string: %w", err)
 	}
 	return highlight(cfg, lex)
 }
@@ -28,7 +29,7 @@ func Highlight(cfg *HighlightConfig, name, input string) ([]byte, error) {
 func HighlightFromBytes(cfg *HighlightConfig, name string, input []byte) ([]byte, error) {
 	lex, err := util.PoLexer.LexString(name, string(input))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error lexing bytes: %w", err)
 	}
 	return highlight(cfg, lex)
 }
@@ -36,7 +37,7 @@ func HighlightFromBytes(cfg *HighlightConfig, name string, input []byte) ([]byte
 func HighlightFromReader(cfg *HighlightConfig, name string, input io.Reader) ([]byte, error) {
 	lex, err := util.PoLexer.Lex(name, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error lexing reader: %w", err)
 	}
 
 	return highlight(cfg, lex)
@@ -56,7 +57,7 @@ var strTokensMap = map[lexer.TokenType]struct{}{
 func highlight(cfg *HighlightConfig, lex lexer.Lexer) ([]byte, error) {
 	tokens, err := lexer.ConsumeAll(lex)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error consuming lexer tokens: %w", err)
 	}
 
 	for i := 0; i < len(tokens); i++ {
@@ -69,7 +70,7 @@ func highlight(cfg *HighlightConfig, lex lexer.Lexer) ([]byte, error) {
 
 		if _, ok := idTokensMap[ttype]; ok {
 			i += colorStrings(tokens, i+1, cfg.ID, cfg.Comment)
-		} else if _, ok := strTokensMap[ttype]; ok {
+		} else if _, ok = strTokensMap[ttype]; ok {
 			i += colorStrings(tokens, i+1, cfg.Str, cfg.Comment)
 		}
 	}

@@ -1,4 +1,4 @@
-// The compile package contains structures and functions
+// Package compile contains structures and functions
 // used to compile Mo/Po files with their respective options.
 package compile
 

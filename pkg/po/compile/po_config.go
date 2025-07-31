@@ -39,7 +39,15 @@ type PoConfig struct {
 	Highlight                *HighlightConfig
 }
 
-// Overwrite the configuration with the options provided,
+func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
+	var config PoConfig
+
+	config.ApplyOptions(opts...)
+
+	return config
+}
+
+// ApplyOptions overwrites the configuration with the options provided,
 // saving the previous state so that it can be restored
 // later with [PoConfig.RestoreLastCfg] if desired.
 func (c *PoConfig) ApplyOptions(opts ...PoOption) {
@@ -49,7 +57,7 @@ func (c *PoConfig) ApplyOptions(opts ...PoOption) {
 	}
 }
 
-// Restores the configuration state prior to the last
+// RestoreLastCfg restores the configuration state prior to the last
 // [PoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (c *PoConfig) RestoreLastCfg() {
 	*c = c.lastCfg.(PoConfig)
@@ -75,14 +83,6 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c.ApplyOptions(opts...)
 
 	return c
-}
-
-func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
-	var config PoConfig
-
-	config.ApplyOptions(opts...)
-
-	return config
 }
 
 type PoOption func(*PoConfig)
