@@ -15,8 +15,9 @@ import (
 var use = "msgofmt"
 
 var root = &cobra.Command{
-	Use:   use,
-	Short: `Generate binary message catalog from textual translation description.`,
+	Aliases: []string{"msgfmt"},
+	Use:     use,
+	Short:   `Generate binary message catalog from textual translation description.`,
 	Long: `Usage: msgofmt [OPTION] filename.po ...
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.

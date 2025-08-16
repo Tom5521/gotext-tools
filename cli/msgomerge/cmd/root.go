@@ -16,8 +16,9 @@ import (
 var use = "msgomerge"
 
 var root = &cobra.Command{
-	Use:   use,
-	Short: "Merges two Uniforum style .po files together.",
+	Aliases: []string{"msgmerge"},
+	Use:     use,
+	Short:   "Merges two Uniforum style .po files together.",
 	Long: `Merges two Uniforum style .po files together.  
 The def.po file is an existing PO file with translations which will be
 taken over to the newly created file as long as they still match;

@@ -14,7 +14,7 @@ var root = &cobra.Command{
 
 func init() {
 	root.AddCommand(
-		msgofmt, msgomerge, xgotext, msgounfmt,
+		msgofmt, msgomerge, xgotext, msgounfmt, msgocat,
 
 		docs, docTree)
 }

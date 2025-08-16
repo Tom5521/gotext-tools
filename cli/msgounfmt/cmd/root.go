@@ -12,8 +12,9 @@ import (
 const use = "msgounfmt"
 
 var root = &cobra.Command{
-	Use:   use,
-	Short: `Convert binary message catalog to Uniforum style .po file.`,
+	Aliases: []string{"msgunfmt"},
+	Use:     use,
+	Short:   `Convert binary message catalog to Uniforum style .po file.`,
 	Long: `Usage: msgounfmt [OPTIONS]... [FILE]...
 
 Convert binary message catalog to Uniforum style .po file.

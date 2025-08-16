@@ -15,8 +15,9 @@ var logger = log.New(os.Stdout, "", log.Ltime)
 var use = "xgotext"
 
 var root = &cobra.Command{
-	Use:   use,
-	Short: "Extract translatable strings from given input files.",
+	Aliases: []string{"xgettext"},
+	Use:     use,
+	Short:   "Extract translatable strings from given input files.",
 	Long: `Extract translatable strings from given input files.
 Mandatory arguments to long options are mandatory for short options too.
 Similarly for optional arguments.`,

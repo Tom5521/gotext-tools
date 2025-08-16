@@ -149,6 +149,12 @@ func (e Entry) IsFuzzy() bool {
 	return slices.Contains(e.Flags, "fuzzy")
 }
 
+func (e Entry) HasComments() bool {
+	return len(e.Flags) > 0 || len(e.Comments) > 0 ||
+		len(e.ExtractedComments) > 0 || len(e.Previous) > 0 ||
+		len(e.Locations) > 0
+}
+
 // String returns a formatted representation of the entry for debugging or display.
 func (e Entry) String() string {
 	return util.Format(e)
