@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"errors"
 	"os"
 
@@ -38,19 +37,6 @@ Mandatory arguments to long options are mandatory for short options too.`,
 		return nil
 	},
 	RunE: run,
-}
-
-func readFilesFrom(path string) ([]string, error) {
-	file, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var files []string
-	for _, line := range bytes.Split(file, []byte{'\n'}) {
-		files = append(files, string(line))
-	}
-
-	return files, nil
 }
 
 func Execute() {
