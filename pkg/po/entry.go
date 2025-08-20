@@ -82,11 +82,11 @@ func (e Entry) UnifiedStr() string {
 	return builder.String()
 }
 
-// UnifiedID returns the unique identifier for the entry formatted for MO files.
+// FullUnifiedID returns the unique identifier for the entry formatted for MO files.
 //
 // This includes the context, msgid, and plural (if any),
 // separated by '\x04' and '\x00' as per gettext MO format.
-func (e Entry) UnifiedID() string {
+func (e Entry) FullUnifiedID() string {
 	var builder strings.Builder
 
 	if e.HasContext() {
@@ -104,31 +104,42 @@ func (e Entry) UnifiedID() string {
 	return builder.String()
 }
 
-// FullHash returns a hash based on the unified ID including context and plural.
+// UnifiedID returns the unique identifier for the entry.
 //
-// WARNING: This is intended for internal use and is not compatible with gettext's hash.
-func (e Entry) FullHash() uint32 {
-	return util.PJWHash(e.UnifiedID())
-}
-
-// Hash returns a hash based on context and ID.
+// This includes the context and msgid. The plural_msgid is excluded
+// because this must be used to compare between entries.
 //
-// This is useful for identifying entries with or without plural forms.
-func (e Entry) Hash() uint32 {
+// Also, this must be used for entry indexing in hash maps and logical
+// comparisons.
+func (e Entry) UnifiedID() string {
 	var builder strings.Builder
 	if e.HasContext() {
 		builder.WriteString(e.Context)
 		builder.WriteByte(4)
 	}
 	builder.WriteString(e.ID)
-	return util.PJWHash(builder.String())
+	return builder.String()
+}
+
+// FullHash returns a hash based on the unified ID including context and plural.
+//
+// WARNING: This is intended for internal use and is not compatible with gettext's hash.
+func (e Entry) FullHash() uint32 {
+	return util.PJWHash(e.FullUnifiedID())
+}
+
+// Hash returns a hash based on context and ID.
+//
+// This is useful for identifying entries with or without plural forms.
+func (e Entry) Hash() uint32 {
+	return util.PJWHash(e.UnifiedID())
 }
 
 // Equal reports whether two entries are semantically equivalent.
 //
 // It compares ID, context, translation string, flags, and obsolete status.
 func (e Entry) Equal(x Entry) bool {
-	ok1 := e.UnifiedID() == x.UnifiedID() && e.UnifiedStr() == x.UnifiedStr()
+	ok1 := e.FullUnifiedID() == x.FullUnifiedID() && e.UnifiedStr() == x.UnifiedStr()
 	ok2 := slices.CompareFunc(e.Flags, x.Flags, strings.Compare) == 0
 	ok3 := e.Obsolete && x.Obsolete
 	return ok1 && ok2 && ok3

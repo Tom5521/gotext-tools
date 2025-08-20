@@ -92,7 +92,7 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	)
 
 	for index, entry := range entries {
-		msgid := entry.UnifiedID()
+		msgid := entry.FullUnifiedID()
 		msgstr := entry.UnifiedStr()
 
 		idsOffsets[index] = u32(idsBuf.Len())
