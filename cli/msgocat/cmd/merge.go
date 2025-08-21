@@ -24,8 +24,9 @@ type processState struct {
 
 // entryInfo tracks metadata about merged entries.
 type entryInfo struct {
-	index int    // Index in the entries slice
-	file  string // First file where the entry was found
+	index      int    // Index in the entries slice
+	file       string // First file where the entry was found
+	timesFound int
 }
 
 // mergePoFiles processes a single PO file and merges its entries.
@@ -39,11 +40,7 @@ func mergePoFiles(
 	}
 
 	for _, entry := range poFile.Entries {
-		err := handleEntry(entry, poFile.Name, state)
-		if err != nil {
-			return err
-		}
-
+		handleEntry(entry, poFile.Name, state)
 	}
 	return nil
 }
@@ -53,8 +50,27 @@ func handleEntry(
 	entry po.Entry,
 	filename string,
 	state *processState,
-) error {
-	return nil
+) {
+	uid := entry.UnifiedID()
+	original, duplicated := state.entriesMap[uid]
+	if duplicated {
+		state.entriesSlice[original.index] = mergeEntry(
+			state.entriesSlice[original.index],
+			entry,
+			original.file,
+			filename,
+		)
+		original.timesFound++
+		state.entriesMap[uid] = original
+		return
+	}
+
+	state.entriesMap[uid] = entryInfo{
+		index:      len(state.entriesSlice),
+		file:       filename,
+		timesFound: 1,
+	}
+	state.entriesSlice = append(state.entriesSlice, entry)
 }
 
 // mergeEntry merges two conflicting PO entries.
@@ -110,7 +126,11 @@ func mergeEntry(
 		),
 	}
 
-	mergePlurals(originalEntry, newEntry, originalFilename, newFilename)
+	if !mergedEntry.IsFuzzy() &&
+		(originalEntry.FullUnifiedID() != newEntry.FullUnifiedID() ||
+			originalEntry.UnifiedStr() != newEntry.UnifiedStr()) {
+		mergedEntry.Flags = append(mergedEntry.Flags, "fuzzy")
+	}
 
 	return mergedEntry
 }
@@ -120,7 +140,29 @@ func mergePlurals(
 	originalEntry, newEntry po.Entry,
 	originalFilename, newFilename string,
 ) po.PluralEntries {
-	return nil
+	if !originalEntry.IsPlural() {
+		return originalEntry.Plurals
+	}
+
+	mergedEntries := make(po.PluralEntries, 0, len(originalEntry.Plurals)+len(newEntry.Plurals))
+
+	for i, original := range originalEntry.Plurals {
+		if i >= len(newEntry.Plurals) {
+			mergedEntries = append(mergedEntries, original)
+			continue
+		}
+
+		newPlural := newEntry.Plurals[i]
+		mergedEntries = append(mergedEntries, po.PluralEntry{
+			ID: original.ID,
+			Str: mergeStrings(
+				original.Str, newPlural.Str,
+				originalFilename, newFilename,
+			),
+		})
+	}
+
+	return mergedEntries
 }
 
 func mergeStrings(originalStr, newStr string, originalFilename, newFilename string) string {

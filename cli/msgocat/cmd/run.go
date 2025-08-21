@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/spf13/cobra"
 )
 
@@ -26,5 +28,12 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return nil
+	return compile.PoToWriter(
+		state.entriesSlice,
+		os.Stdout,
+
+		compile.PoWithWordWrap(true),
+		compile.PoWithHighlight(compile.DefaultHighlight),
+		compile.PoWithOmitHeader(true),
+	)
 }
