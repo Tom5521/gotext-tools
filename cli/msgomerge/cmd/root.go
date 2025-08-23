@@ -16,7 +16,7 @@ import (
 var use = "msgomerge"
 
 var root = &cobra.Command{
-	Aliases: []string{"msgmerge"},
+	Aliases: []string{"msgmerge", "merge"},
 	Use:     use,
 	Short:   "Merges two Uniforum style .po files together.",
 	Long: `Merges two Uniforum style .po files together.  

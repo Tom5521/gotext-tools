@@ -12,7 +12,7 @@ import (
 const use = "msgounfmt"
 
 var root = &cobra.Command{
-	Aliases: []string{"msgunfmt"},
+	Aliases: []string{"msgunfmt", "unfmt"},
 	Use:     use,
 	Short:   `Convert binary message catalog to Uniforum style .po file.`,
 	Long: `Usage: msgounfmt [OPTIONS]... [FILE]...
