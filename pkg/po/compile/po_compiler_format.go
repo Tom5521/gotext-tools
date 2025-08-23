@@ -104,25 +104,32 @@ func (c PoCompiler) formatMultiline(str string) string {
 	var builder strings.Builder
 
 	if c.Config.WordWrap {
-		lines := strings.Split(str, "\n")
-		if len(lines) > 1 {
-			builder.WriteString("\"\"\n")
-		}
-		for i, line := range lines {
-			isLastLine := i == len(lines)-1
-			if !isLastLine {
-				line += "\n"
-			}
-			fmt.Fprintf(&builder, "%q", line)
-			if !isLastLine {
-				builder.WriteByte('\n')
-			}
-		}
+		c.processWordWrap(&builder, str)
 	} else {
 		fmt.Fprintf(&builder, "%q", str)
 	}
 
 	return builder.String()
+}
+
+func (c PoCompiler) processWordWrap(builder *strings.Builder, str string) {
+	lines := strings.Split(str, "\n")
+	if len(lines) > 1 {
+		builder.WriteString("\"\"\n")
+	}
+	for i, line := range lines {
+		if line == "" {
+			continue
+		}
+		isLastLine := i == len(lines)-1
+		if !isLastLine {
+			line += "\n"
+		}
+		fmt.Fprintf(builder, "%q", line)
+		if !isLastLine {
+			builder.WriteByte('\n')
+		}
+	}
 }
 
 func (c PoCompiler) formatMsgstr(i string) string {

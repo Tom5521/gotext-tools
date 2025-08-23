@@ -110,15 +110,20 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		writer = io.MultiWriter(buf, &reader)
 	}
 
-	c.info("writing header...")
-	if !c.Config.OmitHeader {
-		if c.Config.HeaderConfig != nil {
-			c.header = c.Config.HeaderConfig.ToHeader()
+	if c.Config.ManageHeader {
+		c.info("writing header...")
+		if !c.Config.OmitHeader {
+			if c.Config.HeaderConfig != nil {
+				c.header = c.Config.HeaderConfig.ToHeader()
+			}
+			c.writeHeader(writer)
 		}
-		c.writeHeader(writer)
 	}
-	c.info("cleaning duplicates...")
-	entries := c.File.CutHeader().CleanDuplicates()
+	entries := c.File.Entries
+	if c.Config.CleanDuplicates {
+		c.info("cleaning duplicates...")
+		entries = c.File.CutHeader().CleanDuplicates()
+	}
 	c.info("writing entries...")
 
 	for _, e := range entries {

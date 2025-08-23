@@ -286,7 +286,7 @@ func (p *PoParser) Parse() *po.File {
 		for _, pe := range e.Plurals {
 			np := po.PluralEntry{
 				ID:  pe.ID,
-				Str: strings.Join(pe.Str, "\n"),
+				Str: strings.Join(pe.Str, ""),
 			}
 
 			newEntry.Plurals = append(newEntry.Plurals, np)

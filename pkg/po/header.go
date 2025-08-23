@@ -12,6 +12,21 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 )
 
+var knownHeaderFields = map[string]struct{}{
+	"Project-Id-Version":        {},
+	"Report-Msgid-Bugs-To":      {},
+	"POT-Creation-Date":         {},
+	"PO-Revision-Date":          {},
+	"Last-Translator":           {},
+	"Language-Team":             {},
+	"Language":                  {},
+	"MIME-Version":              {},
+	"Content-Type":              {},
+	"Content-Transfer-Encoding": {},
+	"Plural-Forms":              {},
+	"X-Generator":               {},
+}
+
 // HeaderField represents a single key-value pair in a header.
 type HeaderField struct {
 	Key   string // The name of the header field.
@@ -61,8 +76,8 @@ func (h Header) String() string {
 	return util.Format(h)
 }
 
-func (h HeaderConfig) String() string {
-	return util.Format(h)
+func (cfg HeaderConfig) String() string {
+	return util.Format(cfg)
 }
 
 func (h Header) ToConfig() HeaderConfig {
@@ -101,6 +116,16 @@ func (h Header) ToConfig() HeaderConfig {
 		}
 	}
 
+	extraFields := make([]HeaderField, 0, len(h.Fields))
+
+	for _, hf := range h.Fields {
+		if _, known := knownHeaderFields[hf.Key]; !known {
+			extraFields = append(extraFields, hf)
+		}
+	}
+
+	extraFields = slices.Clip(extraFields)
+
 	return HeaderConfig{
 		Template:                h.Template,
 		ProjectIDVersion:        h.Load("Project-Id-Version"),
@@ -116,7 +141,8 @@ func (h Header) ToConfig() HeaderConfig {
 		ContentTransferEncoding: "8bit",
 		Plural:                  plural,
 		Nplurals:                nplurals,
-		XGenerator:              h.Load("XGenerator"),
+		XGenerator:              h.Load("X-Generator"),
+		ExtraFields:             extraFields,
 	}
 }
 
@@ -169,31 +195,32 @@ type HeaderConfig struct {
 	Nplurals                uint
 	Plural                  string
 	XGenerator              string
+	ExtraFields             []HeaderField
 }
 
-func (h HeaderConfig) Validate() []error {
+func (cfg HeaderConfig) Validate() []error {
 	var errs []error
 
-	if h.Plural != "" || h.Nplurals != 0 {
-		if h.Plural == "" {
+	if cfg.Plural != "" || cfg.Nplurals != 0 {
+		if cfg.Plural == "" {
 			errs = append(errs, errors.New("plural not specified"))
 		}
-		if h.Nplurals == 0 {
+		if cfg.Nplurals == 0 {
 			errs = append(errs, errors.New("nplurals can't be zero"))
 		}
 	}
 
-	if h.MediaType != "text/plain" && h.MediaType != "" {
-		errs = append(errs, fmt.Errorf("media type (%s) must be text/plain", h.MediaType))
+	if cfg.MediaType != "text/plain" && cfg.MediaType != "" {
+		errs = append(errs, fmt.Errorf("media type (%s) must be text/plain", cfg.MediaType))
 	}
-	if h.ContentTransferEncoding != "8bit" && h.ContentTransferEncoding != "" {
+	if cfg.ContentTransferEncoding != "8bit" && cfg.ContentTransferEncoding != "" {
 		errs = append(
 			errs,
-			fmt.Errorf("content-transfer-encoding(%s) must be 8bit", h.ContentTransferEncoding),
+			fmt.Errorf("content-transfer-encoding(%s) must be 8bit", cfg.ContentTransferEncoding),
 		)
 	}
-	if !util.SupportedCharsets[h.Charset] && h.Charset != "" {
-		errs = append(errs, fmt.Errorf("%q isn't a supported charset", h.Charset))
+	if !util.SupportedCharsets[cfg.Charset] && cfg.Charset != "" {
+		errs = append(errs, fmt.Errorf("%q isn't a supported charset", cfg.Charset))
 	}
 
 	return errs
@@ -226,6 +253,9 @@ func (cfg HeaderConfig) ToHeader() (h Header) {
 	}
 	h.sSet("X-Generator", cfg.XGenerator)
 
+	for _, field := range cfg.ExtraFields {
+		h.sSet(field.Key, field.Value)
+	}
 	return
 }
 
@@ -278,11 +308,12 @@ func DefaultTemplateHeaderConfig(opts ...HeaderOption) HeaderConfig {
 	return h
 }
 
-func (e Entries) Header() (h Header) {
-	i := e.Index("", "")
-	if i == -1 {
-		return
-	}
+func (e Entries) HasHeader() bool {
+	return e.Index("", "") != -1
+}
+
+func (e Entries) HeaderFromIndex(i int) Header {
+	var h Header
 	entry := e[i]
 
 	h.Template = entry.IsFuzzy()
@@ -300,7 +331,17 @@ func (e Entries) Header() (h Header) {
 			},
 		)
 	}
-	return
+
+	return h
+}
+
+func (e Entries) Header() Header {
+	i := e.Index("", "")
+	if i == -1 {
+		return Header{}
+	}
+
+	return e.HeaderFromIndex(i)
 }
 
 // Register adds a new header field to the Header object if the key does not already exist.
@@ -318,9 +359,9 @@ func (h *Header) Register(key string, d ...string) {
 		return
 	}
 
-	var values []any
-	for _, b := range d {
-		values = append(values, b)
+	values := make([]any, len(d))
+	for i := range d {
+		values[i] = d[i]
 	}
 
 	// Append a new HeaderField to the Values slice.

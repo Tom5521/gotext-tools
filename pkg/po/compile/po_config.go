@@ -29,8 +29,10 @@ type PoConfig struct {
 	IgnoreErrors    bool           // If true, allows compilation to proceed despite non-critical errors.
 	Verbose         bool
 	CommentFuzzy    bool
+	ManageHeader    bool
 	HeaderComments  bool
 	HeaderFields    bool
+	CleanDuplicates bool
 	WordWrap        bool
 	HeaderConfig    *po.HeaderConfig
 
@@ -73,11 +75,10 @@ const (
 
 func DefaultPoConfig(opts ...PoOption) PoConfig {
 	c := PoConfig{
-		Logger:         log.New(io.Discard, "", 0),
-		PackageName:    "PACKAGE NAME",
-		AddLocation:    PoLocationModeFull,
-		HeaderComments: true,
-		HeaderFields:   true,
+		Logger:       log.New(io.Discard, "", 0),
+		PackageName:  "PACKAGE NAME",
+		AddLocation:  PoLocationModeFull,
+		ManageHeader: false,
 	}
 
 	c.ApplyOptions(opts...)
@@ -102,6 +103,18 @@ func PoWithUseCustomObsoletePrefix(u bool) PoOption {
 func PoWithCustomObsoletePrefixRune(r rune) PoOption {
 	return func(pc *PoConfig) {
 		pc.CustomObsoletePrefixRune = r
+	}
+}
+
+func PoWithCleanDuplicates(c bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.CleanDuplicates = c
+	}
+}
+
+func PoWithManageHeader(b bool) PoOption {
+	return func(pc *PoConfig) {
+		pc.ManageHeader = b
 	}
 }
 

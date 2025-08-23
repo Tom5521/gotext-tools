@@ -38,6 +38,8 @@ namespace po {
         + CleanFuzzy() Entries
         + FuzzyFind(id string, context string) int
         + Validate() []error
+        + HasHeader() bool
+        + HeaderFromIndex(i int) Header
         + Header() Header
 
     }
@@ -62,6 +64,7 @@ namespace po {
         + IsHeader() bool
         + Validate() []error
         + UnifiedStr() string
+        + FullUnifiedID() string
         + UnifiedID() string
         + FullHash() uint32
         + Hash() uint32
@@ -69,6 +72,7 @@ namespace po {
         + IsPlural() bool
         + HasContext() bool
         + IsFuzzy() bool
+        + HasComments() bool
         + String() string
 
     }
@@ -115,6 +119,7 @@ namespace po {
         + Nplurals uint
         + Plural string
         + XGenerator string
+        + ExtraFields []HeaderField
 
         + String() string
         + Validate() []error
@@ -176,6 +181,14 @@ namespace po {
         + ApplyOption(opts ...MergeOption) 
 
     }
+    class MsgcatMergeConfig << (S,Aquamarine) >> {
+        + LessThan uint
+        + MoreThan uint
+        + UseFirst bool
+
+        + ApplyOption(opts ...MsgcatMergeOption) 
+
+    }
     interface Parser  {
         + Parse() *File
         + Error() error
@@ -204,6 +217,20 @@ namespace po {
         + SortMethod(entries Entries) <font color=blue>func</font>() Entries
 
     }
+    class msgcatEntryInfo << (S,Aquamarine) >> {
+        - index int
+        - file string
+        - timesFound uint
+
+    }
+    class msgcatMergeProcess << (S,Aquamarine) >> {
+        - entriesMap <font color=blue>map</font>[string]msgcatEntryInfo
+        - entriesSlice Entries
+        - config MsgcatMergeConfig
+
+        - handleEntry(entry Entry, filename string) 
+
+    }
     class po.Cmp << (T, #FF7700) >>  {
     }
     class po.Entries << (T, #FF7700) >>  {
@@ -216,6 +243,8 @@ namespace po {
     }
     class po.MergeOption << (T, #FF7700) >>  {
     }
+    class po.MsgcatMergeOption << (T, #FF7700) >>  {
+    }
     class po.PluralEntries << (T, #FF7700) >>  {
     }
     class po.SortMode << (T, #FF7700) >>  {
@@ -227,6 +256,7 @@ namespace po {
 "__builtin__.int" #.. "po.SortMode"
 "po.<font color=blue>func</font>(*HeaderConfig) " #.. "po.HeaderOption"
 "po.<font color=blue>func</font>(*MergeConfig) " #.. "po.MergeOption"
+"po.<font color=blue>func</font>(*MsgcatMergeConfig) " #.. "po.MsgcatMergeOption"
 "po.<font color=blue>func</font>(Entry, Entry) *Entry" #.. "po.MergeFunc"
 "po.<font color=blue>func</font>(X, X) int" #.. "po.Cmp"
 "po.[]Entry" #.. "po.Entries"

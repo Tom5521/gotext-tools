@@ -49,6 +49,7 @@ namespace compile {
         - fprintfln(w io.Writer, e po.Entry, format string, args ...any) 
         - writeComment(w io.Writer, e po.Entry) 
         - formatMultiline(str string) string
+        - processWordWrap(builder *strings.Builder, str string) 
         - formatMsgstr(i string) string
         - formatMsgid(i string) string
         - writeEntry(w io.Writer, e po.Entry) 
@@ -82,8 +83,10 @@ namespace compile {
         + IgnoreErrors bool
         + Verbose bool
         + CommentFuzzy bool
+        + ManageHeader bool
         + HeaderComments bool
         + HeaderFields bool
+        + CleanDuplicates bool
         + WordWrap bool
         + HeaderConfig *po.HeaderConfig
         + UseCustomObsoletePrefix bool
