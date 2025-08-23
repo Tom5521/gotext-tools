@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,9 +9,14 @@ import (
 var use = "msgocat"
 
 var root = &cobra.Command{
-	Aliases: []string{"msgcat"},
+	Aliases: []string{"msgcat", "cat"},
 	Use:     use,
-	Args:    cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if filesFrom != "" || directory != "" {
+			return nil
+		}
+		return cobra.MinimumNArgs(1)(cmd, args)
+	},
 	Short: `Usage: msgocat [OPTION] [INPUTFILE]...
 
 Concatenates and merges the specified PO files.
@@ -30,13 +34,8 @@ that if --use-first is specified, they will be taken from the first PO file
 to define them.
 
 Mandatory arguments to long options are mandatory for short options too.`,
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if lessThan <= 1 {
-			return errors.New("impossible selection criteria specified")
-		}
-		return nil
-	},
-	RunE: run,
+	PreRunE: initCfg,
+	RunE:    run,
 }
 
 func Execute() {

@@ -1,18 +1,27 @@
 package cmd
 
-import "math"
+import (
+	"errors"
+	"math"
+	"os"
+
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
+	"github.com/spf13/cobra"
+	"golang.org/x/term"
+)
 
 var (
-	filesFrom   string
-	directory   string
-	outputFile  string
-	lessThan    uint
-	moreThan    uint
-	unique      bool
-	useFirst    bool
-	lang        string
-	color       string
-	forcePo     bool
+	filesFrom string
+	directory string
+	output    string
+	lessThan  uint
+	moreThan  uint
+	unique    bool
+	useFirst  bool
+	lang      string
+	color     string
+	// forcePo     bool
 	noLocation  bool
 	addLocation string
 	noWrap      bool
@@ -30,7 +39,7 @@ func init() {
 		`add DIRECTORY to list for input files search
 If input file is -, standard input is read.`,
 	)
-	flags.StringVarP(&outputFile, "output-file", "o", "",
+	flags.StringVarP(&output, "output-file", "o", "-",
 		`write output to specified file
 The results are written to standard output if no output file is specified
 or if it is -.`,
@@ -58,14 +67,68 @@ message, don't merge several translations`)
 	flags.StringVar(
 		&color,
 		"color",
-		"",
+		"auto",
 		`use colors and other text attributes, may be 'always', 'never', 'auto'`,
 	)
-	flags.BoolVar(&forcePo, "force-po", false, `write PO file even if empty`)
+	// flags.BoolVar(&forcePo, "force-po", false, `write PO file even if empty`)
 	flags.BoolVar(&noLocation, "no-location", false, `do not write '#: filename:line' lines`)
-	flags.StringVar(&addLocation, "add-location", "", `generate '#: filename:line' lines (default)`)
+	flags.StringVar(
+		&addLocation,
+		"add-location",
+		"full",
+		`generate '#: filename:line' lines (default)`,
+	)
 	flags.BoolVar(&noWrap, "no-wrap", false, `do not break long message lines, longer than
 the output page width, into several lines`)
 	flags.BoolVarP(&sortOutput, "sort-output", "s", false, `generate sorted output`)
 	flags.BoolVarP(&sortByFile, "sort-by-file", "F", false, `sort output by file location`)
+
+	root.MarkFlagsMutuallyExclusive("unique", "less-than")
+	root.MarkFlagsMutuallyExclusive("no-location", "add-location")
+	root.MarkFlagsMutuallyExclusive("sort-output", "sort-by-file")
+}
+
+var (
+	mergeCfg    po.MsgcatMergeConfig
+	compilerCfg = compile.DefaultPoConfig()
+)
+
+func initCfg(cmd *cobra.Command, args []string) error {
+	if lessThan <= 1 {
+		return errors.New("impossible selection criteria specified")
+	}
+
+	mergeCfg = po.MsgcatMergeConfig{
+		LessThan: lessThan,
+		MoreThan: moreThan,
+		UseFirst: useFirst,
+	}
+
+	if unique {
+		mergeCfg.LessThan = 2
+	}
+
+	compilerCfg.ApplyOptions(
+		compile.PoWithWordWrap(!noWrap),
+		compile.PoWithNoLocation(noLocation),
+	)
+
+	switch addLocation {
+	case string(compile.PoLocationModeFile),
+		string(compile.PoLocationModeFull),
+		string(compile.PoLocationModeNever):
+		compilerCfg.AddLocation = compile.PoLocationMode(addLocation)
+	}
+
+	switch color {
+	case "auto":
+		if !term.IsTerminal(int(os.Stdout.Fd())) || output != "-" {
+			break
+		}
+		fallthrough
+	case "always":
+		compilerCfg.Highlight = compile.DefaultHighlight
+	}
+
+	return nil
 }
