@@ -60,10 +60,15 @@ func max[T slices.Ordered](values ...T) T {
 //
 // Returns an error if any step fails, unless IgnoreErrors is true.
 func (mc *MoCompiler) writeTo(writer io.Writer) error {
-	mc.info("cleaning & sorting entries...")
-	entries := mc.File.Entries.CleanDuplicates().CleanFuzzy().CleanObsoletes()
-	entries = entries.SortFunc(po.CompareEntryByID)
-
+	entries := mc.File.Entries
+	if mc.Config.DepureEntries {
+		mc.info("cleaning entries...")
+		entries = mc.File.Entries.CleanDuplicates().CleanFuzzy().CleanObsoletes()
+	}
+	if mc.Config.SortEntries {
+		mc.info("sorting entries...")
+		entries = entries.SortFunc(po.CompareEntryByID)
+	}
 	mc.info("creating header...")
 	var hashTabSize u32
 	if mc.Config.HashTable {

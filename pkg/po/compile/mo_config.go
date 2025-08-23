@@ -21,6 +21,15 @@ type MoConfig struct {
 	Endianness   Endianness
 	// If true, compiles the hash table.
 	HashTable bool
+
+	// DepureEntries determines whether fuzzy,
+	// obsolete, and duplicate entries will be
+	// deleted before starting the process.
+	//
+	// WARNING: Only disable this if you know what you're doing.
+	DepureEntries bool
+	// WARNING: Only disable this if you know what you're doing.
+	SortEntries bool
 }
 
 type Endianness = util.Endianness
@@ -31,7 +40,7 @@ const (
 	NativeEndian = util.NativeEndian
 )
 
-// Overwrite the configuration with the options provided,
+// ApplyOptions overwrites the configuration with the options provided,
 // saving the previous state so that it can be restored
 // later with [MoConfig.RestoreLastCfg] if desired.
 func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
@@ -42,7 +51,7 @@ func (mc *MoConfig) ApplyOptions(opts ...MoOption) {
 	}
 }
 
-// Restores the configuration state prior to the last
+// RestoreLastCfg restores the configuration state prior to the last
 // [MoConfig.ApplyOptions] if it exists, otherwise it does nothing.
 func (mc *MoConfig) RestoreLastCfg() {
 	if mc.lastCfg != nil {
@@ -54,58 +63,72 @@ func (mc *MoConfig) RestoreLastCfg() {
 // Applies any provided options during creation.
 func DefaultMoConfig(opts ...MoOption) MoConfig {
 	c := MoConfig{
-		HashTable: true,
+		HashTable:     true,
+		DepureEntries: true,
+		SortEntries:   true,
 	}
 	c.ApplyOptions(opts...)
 	return c
 }
 
-// MoOption defines functions that modify MoConfig
+// MoOption defines functions that modify MoConfig.
 type MoOption func(c *MoConfig)
 
-// MoWithEndianness sets the byte order for MO file output
+// MoWithEndianness sets the byte order for MO file output.
 func MoWithEndianness(e Endianness) MoOption {
 	return func(c *MoConfig) {
 		c.Endianness = e
 	}
 }
 
-// MoWithConfig replaces the entire configuration
+func MoWithDepureEntries(b bool) MoOption {
+	return func(c *MoConfig) {
+		c.DepureEntries = b
+	}
+}
+
+func MoWithSortEntries(s bool) MoOption {
+	return func(c *MoConfig) {
+		c.SortEntries = s
+	}
+}
+
+// MoWithConfig replaces the entire configuration.
 func MoWithConfig(n MoConfig) MoOption {
 	return func(c *MoConfig) {
 		*c = n
 	}
 }
 
-// MoWithHashTable toggles hash table generation
+// MoWithHashTable toggles hash table generation.
 func MoWithHashTable(h bool) MoOption {
 	return func(c *MoConfig) {
 		c.HashTable = h
 	}
 }
 
-// MoWithForce toggles file overwrite behavior
+// MoWithForce toggles file overwrite behavior.
 func MoWithForce(f bool) MoOption {
 	return func(c *MoConfig) {
 		c.Force = f
 	}
 }
 
-// MoWithIgnoreErrors toggles error suppression
+// MoWithIgnoreErrors toggles error suppression.
 func MoWithIgnoreErrors(i bool) MoOption {
 	return func(c *MoConfig) {
 		c.IgnoreErrors = i
 	}
 }
 
-// MoWithLogger sets the output logger
+// MoWithLogger sets the output logger.
 func MoWithLogger(l *log.Logger) MoOption {
 	return func(c *MoConfig) {
 		c.Logger = l
 	}
 }
 
-// MoWithVerbose toggles detailed logging
+// MoWithVerbose toggles detailed logging.
 func MoWithVerbose(v bool) MoOption {
 	return func(c *MoConfig) {
 		c.Verbose = v
