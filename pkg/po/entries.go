@@ -233,7 +233,7 @@ func SolveMerge(a, b Entry) *Entry {
 // It groups entries by a unified identifier (UnifiedID) and merges duplicates using the merger.
 // The result is a cleaned list of Entries with duplicates resolved.
 func (e Entries) SolveFunc(merger MergeFunc) Entries {
-	var cleaned Entries
+	cleaned := make(Entries, 0, len(e))
 	seened := make(map[string]int) // Tracks indices of seen unified IDs.
 
 	for _, entry := range e {
@@ -253,7 +253,7 @@ func (e Entries) SolveFunc(merger MergeFunc) Entries {
 		cleaned = append(cleaned, entry)
 	}
 
-	return cleaned
+	return slices.Clip(cleaned)
 }
 
 // Solve is a convenience method that uses the default SolveMerge function to resolve duplicates in Entries.

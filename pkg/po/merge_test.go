@@ -3,7 +3,6 @@ package po_test
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -119,13 +118,7 @@ func TestMergeWithMsgmerge(t *testing.T) {
 				}
 			}
 
-			outBytes, err := os.ReadFile(outPath)
-			if err != nil {
-				t.Error(err)
-				return
-			}
-
-			expected, err := parse.PoFromBytes(outBytes, outPath,
+			expected, err := parse.Po(outPath,
 				parse.PoWithSkipHeader(true),
 				parse.PoWithIgnoreComments(true),
 			)
