@@ -1,7 +1,16 @@
 @startuml
 namespace compile {
-    class HighlightConfig << (S,Aquamarine) >> {
-        + ID color.Color
+    class HighlightCSSProperties << (S,Aquamarine) >> {
+        + Color hcolor
+        + BackgroundColor hcolor
+        + FontWeight HighlightFontWeight
+        + FontStyle HighlightFontStyle
+        + TextDecoration HighlightTextDecoration
+
+    }
+    interface HighlightColor  {
+        + Sprint( ...any) string
+        + Sprintf( string,  ...any) string
 
     }
     class MoCompiler << (S,Aquamarine) >> {
@@ -30,6 +39,8 @@ namespace compile {
         + IgnoreErrors bool
         + Endianness Endianness
         + HashTable bool
+        + DepureEntries bool
+        + SortEntries bool
 
         + ApplyOptions(opts ...MoOption) 
         + RestoreLastCfg() 
@@ -91,20 +102,32 @@ namespace compile {
         + HeaderConfig *po.HeaderConfig
         + UseCustomObsoletePrefix bool
         + CustomObsoletePrefixRune rune
-        + Highlight *HighlightConfig
+        + Highlight CSSClassesHighlighting
 
         + ApplyOptions(opts ...PoOption) 
         + RestoreLastCfg() 
         + Validate() error
 
     }
+    class compile.CSSClassesHighlighting << (T, #FF7700) >>  {
+    }
     class compile.Endianness << (T, #FF7700) >>  {
+    }
+    class compile.HighlightFontStyle << (T, #FF7700) >>  {
+    }
+    class compile.HighlightFontWeight << (T, #FF7700) >>  {
+    }
+    class compile.HighlightTextDecoration << (T, #FF7700) >>  {
     }
     class compile.MoOption << (T, #FF7700) >>  {
     }
     class compile.PoLocationMode << (T, #FF7700) >>  {
     }
     class compile.PoOption << (T, #FF7700) >>  {
+    }
+    class compile.hcolor << (T, #FF7700) >>  {
+    }
+    class compile.properties << (T, #FF7700) >>  {
     }
     class compile.u32 << (T, #FF7700) >>  {
     }
@@ -114,9 +137,15 @@ namespace compile {
 }
 
 
+"__builtin__.int" #.. "compile.HighlightFontStyle"
+"__builtin__.int" #.. "compile.HighlightFontWeight"
+"__builtin__.int" #.. "compile.HighlightTextDecoration"
 "__builtin__.string" #.. "compile.PoLocationMode"
 "__builtin__.uint32" #.. "compile.u32"
 "compile.<font color=blue>func</font>(*MoConfig) " #.. "compile.MoOption"
 "compile.<font color=blue>func</font>(*PoConfig) " #.. "compile.PoOption"
+"compile.<font color=blue>map</font>[string]properties" #.. "compile.CSSClassesHighlighting"
+"compile.HighlightCSSProperties" #.. "compile.properties"
+"compile.HighlightColor" #.. "compile.hcolor"
 "compile.utilEndianness" #.. "compile.Endianness"
 @enduml
