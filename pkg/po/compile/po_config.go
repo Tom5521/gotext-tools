@@ -8,6 +8,13 @@ import (
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
+// NOTE: The PoConfig structure should focus less on meeting the needs of gettext tools implementation and focus more on fulfilling the requirements as a library.
+//
+// This should be refactored.
+//
+// By the way, the options like CleanDuplicates must be removed, because
+// it's just unnesessary.
+
 // PoConfig holds the settings for the compiler, affecting how translations are processed.
 type PoConfig struct {
 	// It is used to restore the configuration using the method [PoConfig.RestoreLastCfg]
@@ -15,7 +22,11 @@ type PoConfig struct {
 	lastCfg any
 
 	// The logger can be nil, otherwise this logger will be used to print all errors by default.
-	Logger          *log.Logger
+	Logger *log.Logger
+
+	// NOTE: This setting behavior is WRONG; it should be changed.
+
+	// But, currently, it works as it says fortunately.
 	ForcePo         bool           // If true, forces the creation of a `.po` file, even if not strictly needed.
 	OmitHeader      bool           // If true, omits the header section in the generated `.po` file.
 	PackageName     string         // Name of the package associated with the translation.
@@ -38,7 +49,7 @@ type PoConfig struct {
 
 	UseCustomObsoletePrefix  bool
 	CustomObsoletePrefixRune rune
-	Highlight                *HighlightConfig
+	Highlight                CSSClassesHighlighting
 }
 
 func NewPoConfigFromOptions(opts ...PoOption) PoConfig {
@@ -88,7 +99,7 @@ func DefaultPoConfig(opts ...PoOption) PoConfig {
 
 type PoOption func(*PoConfig)
 
-func PoWithHighlight(h *HighlightConfig) PoOption {
+func PoWithHighlight(h CSSClassesHighlighting) PoOption {
 	return func(pc *PoConfig) {
 		pc.Highlight = h
 	}

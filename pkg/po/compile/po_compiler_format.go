@@ -100,6 +100,7 @@ func (c PoCompiler) writeComment(w io.Writer, e po.Entry) {
 	}
 }
 
+// TODO: Rename this to something like manageWordWrapping
 func (c PoCompiler) formatMultiline(str string) string {
 	var builder strings.Builder
 
@@ -114,6 +115,8 @@ func (c PoCompiler) formatMultiline(str string) string {
 
 func (c PoCompiler) processWordWrap(builder *strings.Builder, str string) {
 	lines := strings.Split(str, "\n")
+
+	// TODO: Explain why the hell this thing writes **that** to the builder.
 	if len(lines) > 1 {
 		builder.WriteString("\"\"\n")
 	}

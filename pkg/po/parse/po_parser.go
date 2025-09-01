@@ -244,6 +244,10 @@ func (p *PoParser) Parse() *po.File {
 	var entries po.Entries
 	p.errors = nil
 
+	// NOTE: REAAALYY there isn't a better way to do this???
+	// bruh; limitations of the parser, but it was this, or the
+	// unnecessary heavy and slow thing of ANTLR.
+
 	// Add temporary marker to handle edge cases
 	p.data = p.originalData
 	p.data = append(p.data, []byte(safeTemplate)...)
@@ -322,6 +326,9 @@ func (p *PoParser) Parse() *po.File {
 			entries = slices.Delete(entries, i, i+1)
 		}
 	}
+
+	// TODO: Remove this later because it's unnecessary and only
+	// adds more garbage logic to this already 'heavy' process.
 	if p.Config.CleanDuplicates {
 		entries = entries.CleanDuplicates()
 	}

@@ -7,16 +7,6 @@ import (
 	"strings"
 )
 
-func readFilesFrom(content string) []string {
-	var files []string
-	for _, line := range strings.Split(content, "\n") {
-		files = append(files, line)
-	}
-
-	return files
-}
-
-// expandArgsWithFiles handles the --files-from functionality.
 func expandArgsWithFiles(args []string) ([]string, error) {
 	var filesFromBinContent []byte
 	var filesFromContent []string
@@ -33,7 +23,7 @@ func expandArgsWithFiles(args []string) ([]string, error) {
 	}
 
 	if len(filesFromContent) > 0 {
-		filesFromContent = readFilesFrom(string(filesFromBinContent))
+		filesFromContent = strings.Split(string(filesFromBinContent), "\n")
 	}
 
 	var directoryContent []string

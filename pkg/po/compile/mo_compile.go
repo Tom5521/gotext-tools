@@ -5,9 +5,7 @@ import (
 	bin "encoding/binary"
 	"fmt"
 	"io"
-	"reflect"
 
-	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
@@ -40,14 +38,10 @@ func (mc MoCompiler) error(format string, a ...any) error {
 
 // flen returns the length of the given value as a fixed-size u32.
 // It uses reflection to get the length of various types.
-func flen(value any) u32 {
-	return u32(reflect.ValueOf(value).Len())
-}
-
-// max returns the maximum value among the provided values of ordered types.
-// It uses generics to work with any type that satisfies the Ordered constraint.
-func max[T slices.Ordered](values ...T) T {
-	return slices.Max(values)
+//
+// flen is an alias for fixed length.
+func flen[X any, Y ~[]X](value Y) u32 {
+	return u32(len(value))
 }
 
 // writeTo writes the compiled MO file data to the provided writer.
@@ -72,7 +66,10 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 	mc.info("creating header...")
 	var hashTabSize u32
 	if mc.Config.HashTable {
-		hashTabSize = max(3, util.NextPrime((flen(entries)*4)/3))
+		hashTabSize = util.NextPrime((flen(entries) * 4) / 3)
+		if hashTabSize < 3 {
+			hashTabSize = 3
+		}
 	}
 
 	const origTabOffset = 7 * 4
@@ -101,10 +98,10 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 		msgstr := entry.UnifiedStr()
 
 		idsOffsets[index] = u32(idsBuf.Len())
-		idsLens[index] = flen(msgid)
+		idsLens[index] = u32(len(msgid))
 
 		strsOffsets[index] = u32(strsBuf.Len())
-		strsLens[index] = flen(msgstr)
+		strsLens[index] = u32(len(msgstr))
 
 		idsBuf.WriteString(msgid)
 		idsBuf.WriteByte(0)
@@ -158,16 +155,15 @@ func (mc *MoCompiler) writeTo(writer io.Writer) error {
 // https://github.com/autotools-mirror/gettext/blob/master/gettext-tools/src/write-mo.c#L876
 //
 // It uses open addressing with double hashing to handle collisions.
-// Each entry's sequence number (1-based) is stored at its calculated position.
 func buildHashTable(entries po.Entries, size u32) []u32 {
 	hashMap := make([]u32, size)
 
-	var seq u32 = 1
-	for _, e := range entries {
-		hashVal := e.Hash()
+	for j := u32(0); j < flen(entries); j++ {
+		hashVal := entries[j].Hash()
 		idx := hashVal % size
 
 		if hashMap[idx] != 0 {
+			/* We need the second hashing function.  */
 			incr := 1 + (hashVal % (size - 2))
 			for {
 				diff := size - incr
@@ -182,8 +178,7 @@ func buildHashTable(entries po.Entries, size u32) []u32 {
 			}
 		}
 
-		hashMap[idx] = seq
-		seq++
+		hashMap[idx] = j + 1
 	}
 
 	return hashMap

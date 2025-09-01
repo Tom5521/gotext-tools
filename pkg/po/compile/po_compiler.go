@@ -120,6 +120,8 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 		}
 	}
 	entries := c.File.Entries
+
+	// TODO: Remove this later.
 	if c.Config.CleanDuplicates {
 		c.info("cleaning duplicates...")
 		entries = c.File.CutHeader().CleanDuplicates()
@@ -137,6 +139,9 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 			c.File.Name,
 			reader.Bytes(),
 		)
+		// Second revision: Why the hell does it send an error
+		// but the algorithm continues regardless, and why
+		// does it still write h to the buffer?
 		if err != nil {
 			c.error("error highlighting output: %w", err)
 		}

@@ -5,6 +5,9 @@ import (
 )
 
 type PoConfig struct {
+	// NOTE: Two copies of the same struct ALWAYS? Good.
+	// They REAALYY need a backup?
+
 	// It is used to restore the configuration using the method [PoConfig.RestoreLastCfg]
 	// and is saved when using the asd method [PoConfig.ApplyOptions].
 	lastCfg any
@@ -19,6 +22,9 @@ type PoConfig struct {
 	Verbose bool
 	// SkipHeader controls whether to skip the metadata header entry.
 	SkipHeader bool
+
+	// TODO: Remove this because it's just useless and unnecessary.
+
 	// CleanDuplicates controls whether to remove duplicate entries during parsing.
 	CleanDuplicates bool
 	// ParseObsoletes controls whether to parse obsolete entries (marked with #~).

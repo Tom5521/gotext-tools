@@ -84,6 +84,8 @@ func MergeWithKeepPreviousIDs(k bool) MergeOption {
 	return func(mc *MergeConfig) { mc.KeepPreviousIDs = k }
 }
 
+// NOTE: This thing is slightly broken.
+
 // MergeWithConfig merges entries from def and ref using the provided MergeConfig.
 //
 // If FuzzyMatch is enabled, unmatched entries may be matched based on string similarity.

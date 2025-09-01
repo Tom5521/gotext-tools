@@ -289,6 +289,8 @@ func (m *MoParser) makeEntries(
 	return
 }
 
+// Is there a way to make this code more... clean? maybe...
+
 // makeEntry creates a single po.Entry from raw message ID and string data.
 func makeEntry(msgid, msgstr []byte) (entry po.Entry) {
 	var (

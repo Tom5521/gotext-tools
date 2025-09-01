@@ -12,7 +12,7 @@ const msgcatFileTemplate = "#-#-#-#-#  %s  #-#-#-#-#"
 
 func DefaultMsgcatMergeConfig(opts ...MsgcatMergeOption) MsgcatMergeConfig {
 	cfg := MsgcatMergeConfig{
-		LessThan: math.MaxInt, // Infinite.
+		LessThan: math.MaxUint, // Infinite.
 	}
 
 	cfg.ApplyOption(opts...)
@@ -50,6 +50,8 @@ func MsgcatMergeWithUseFirst(uf bool) MsgcatMergeOption {
 	return func(mc *MsgcatMergeConfig) { mc.UseFirst = uf }
 }
 
+// NOTE: I THINK, I should rename this to something more... thechnical... or expresive.
+
 func MsgcatMergeFiles(files []*File, opts ...MsgcatMergeOption) Entries {
 	process := newMsgcatMergeProcess(opts...)
 
@@ -62,14 +64,8 @@ func MsgcatMergeFiles(files []*File, opts ...MsgcatMergeOption) Entries {
 	return slices.DeleteFunc(process.entriesSlice, func(entry Entry) bool {
 		info := process.entriesMap[entry.UnifiedID()]
 
-		if info.timesFound >= process.config.LessThan {
-			return true
-		}
-		if info.timesFound <= process.config.MoreThan {
-			return true
-		}
-
-		return false
+		return info.timesFound >= process.config.LessThan &&
+			info.timesFound <= process.config.MoreThan
 	})
 }
 

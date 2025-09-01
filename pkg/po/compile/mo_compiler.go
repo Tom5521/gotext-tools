@@ -91,7 +91,7 @@ func (mc MoCompiler) ToFile(f string) error {
 		flags |= os.O_EXCL
 	}
 	mc.info("opening file...")
-	file, err := os.OpenFile(f, flags, os.ModePerm)
+	file, err := os.OpenFile(f, flags, 0o600)
 	if err != nil && !mc.Config.IgnoreErrors {
 		err = mc.error("error opening file: %w", err)
 		return err

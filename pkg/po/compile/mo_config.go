@@ -13,6 +13,14 @@ type MoConfig struct {
 
 	// The logger can be nil, otherwise this logger will be used to print all errors by default.
 	Logger *log.Logger
+
+	// NOTE: Change the behavior of this, its should be modified
+	// to follow the general of the gettext tools.
+	//
+	// NOTE: (2) It really has to be changed? This library has nothing to do
+	// with the gettext tools, it's independent of it. The PoConfig & PoCompiler
+	// should be changed to be more general and utilitarian purpose.
+
 	// If true, it still writes to the file if it already exists, in the method [MoCompiler.ToFile].
 	Force bool
 	// If true, process information and warnings are also printed.
@@ -21,6 +29,8 @@ type MoConfig struct {
 	Endianness   Endianness
 	// If true, compiles the hash table.
 	HashTable bool
+
+	// NOTE: This reaaaaalyyy need to be exposed?
 
 	// DepureEntries determines whether fuzzy,
 	// obsolete, and duplicate entries will be

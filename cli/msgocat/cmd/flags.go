@@ -5,10 +5,11 @@ import (
 	"math"
 	"os"
 
-	"github.com/Tom5521/gotext-tools/v2/pkg/po"
-	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
+
+	"github.com/Tom5521/gotext-tools/v2/pkg/po"
+	"github.com/Tom5521/gotext-tools/v2/pkg/po/compile"
 )
 
 var (
@@ -21,7 +22,9 @@ var (
 	useFirst  bool
 	lang      string
 	color     string
+
 	// forcePo     bool
+
 	noLocation  bool
 	addLocation string
 	noWrap      bool
