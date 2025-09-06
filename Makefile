@@ -5,7 +5,7 @@ GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 GOFLAGS := GOOS=$(GOOS) GOARCH=$(GOARCH)
 GOCMD := go
-VERBOSE ?= 0
+verbose ?= 0
 
 SUPPORTED_OSES := windows linux darwin
 SUPPORTED_ARCHITECTURES := arm64 amd64
@@ -18,10 +18,13 @@ LOCAL_PREFIX := $(HOME)/.local
 ROOT_PREFIX := /usr/local
 PREFIX=$(if $(filter local,$(1)),$(LOCAL_PREFIX),$(ROOT_PREFIX))
 
-override APP_NAMES := $(shell ./scripts/app-names.sh)
+override APP_DIRS := $(foreach dir,$(wildcard ./cli/*/),\
+	$(if $(wildcard ${dir}*.go),${dir}))
+override APP_NAMES := $(foreach dir,$(APP_DIRS),\
+	$(shell basename ${dir}))
 override WIN_EXT := $(if $(filter windows,$(GOOS)),.exe)
 override CMD = $(GOFLAGS) $(GOCMD)
-override V_FLAG := $(if $(filter 1,$(VERBOSE)),-v)
+override V_FLAG := $(if $(filter 1,$(verbose)),-v)
 
 .PHONY: all default benchmark bench test test-all run-% clean \
 	build-% build-tool-% build-all release puml completions \
