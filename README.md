@@ -65,6 +65,32 @@ xgotext -o [output.po] [file1.go] [file2.go] ...
 
 [More information here](/cli/xgotext/README.md)
 
+### `msgocat`
+
+A cross-platform alternative to `msgcat`, used to concatenate
+and merge `.po` files.
+
+**Usage:**
+
+```sh
+msgocat [file1.po] [file2.po]
+```
+
+[More information here](/cli/msgocat/README.md)
+
+### `msgounfmt`
+
+A cross-platform alternative to `msgunfmt`, used to convert `.mo` files
+to `.po` format.
+
+**Usage:**
+
+```sh
+msgounfmt myFile.mo -o myFile.po
+```
+
+[More information here](/cli/msgounfmt/README.md)
+
 ---
 
 📌 **Coming Soon:** More CLI tools for advanced Gettext operations.
@@ -252,7 +278,7 @@ Here is an example with benchmarks:
 #### Go 1.24.3
 
 ```
-$ just bench ./pkg/po/compile/mo_benchmark_test.go
+$ make bench path=./pkg/po/compile/mo_benchmark_test.go
 goos: linux
 goarch: amd64
 cpu: Intel(R) Core(TM) i5-3330 CPU @ 3.00GHz
@@ -265,7 +291,7 @@ ok      command-line-arguments  2.350s
 #### Go 1.18
 
 ```
-$ just gocmd=go1.18 bench ./pkg/po/compile/mo_benchmark_test.go
+$ make GOCMD=go1.18 bench path=./pkg/po/compile/mo_benchmark_test.go
 goos: linux
 goarch: amd64
 cpu: Intel(R) Core(TM) i5-3330 CPU @ 3.00GHz
