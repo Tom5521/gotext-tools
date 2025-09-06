@@ -21,6 +21,8 @@ type PoCompiler struct {
 
 	nplurals uint      // Number of plural forms from the header
 	header   po.Header // Parsed header information
+
+	writer io.Writer
 }
 
 // error creates and logs an error message if error reporting is enabled.
@@ -94,7 +96,9 @@ func (c *PoCompiler) ToBytesWithOptions(opts ...PoOption) []byte {
 
 // init initializes the compiler by parsing header information.
 func (c *PoCompiler) init() {
-	c.header = c.File.Header()
+	if c.Config.ManageHeader {
+		c.header = c.File.Header()
+	}
 	c.nplurals = c.header.Nplurals()
 }
 
@@ -121,11 +125,6 @@ func (c PoCompiler) ToWriter(w io.Writer) error {
 	}
 	entries := c.File.Entries
 
-	// TODO: Remove this later.
-	if c.Config.CleanDuplicates {
-		c.info("cleaning duplicates...")
-		entries = c.File.CutHeader().CleanDuplicates()
-	}
 	c.info("writing entries...")
 
 	for _, e := range entries {

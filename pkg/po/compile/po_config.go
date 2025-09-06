@@ -43,7 +43,6 @@ type PoConfig struct {
 	ManageHeader    bool
 	HeaderComments  bool
 	HeaderFields    bool
-	CleanDuplicates bool
 	WordWrap        bool
 	HeaderConfig    *po.HeaderConfig
 
@@ -114,12 +113,6 @@ func PoWithUseCustomObsoletePrefix(u bool) PoOption {
 func PoWithCustomObsoletePrefixRune(r rune) PoOption {
 	return func(pc *PoConfig) {
 		pc.CustomObsoletePrefixRune = r
-	}
-}
-
-func PoWithCleanDuplicates(c bool) PoOption {
-	return func(pc *PoConfig) {
-		pc.CleanDuplicates = c
 	}
 }
 

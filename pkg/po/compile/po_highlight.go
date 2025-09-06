@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"regexp"
 
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 
@@ -142,17 +141,6 @@ func HighlightFromReader(
 	return highlight(cfg, lex)
 }
 
-/* var idTokensMap = map[lexer.TokenType]struct{}{
-	util.PoSymbols["Msgid"]:   {},
-	util.PoSymbols["Msgctxt"]: {},
-	util.PoSymbols["Plural"]:  {},
-}
-
-var strTokensMap = map[lexer.TokenType]struct{}{
-	util.PoSymbols["Msgstr"]: {},
-	util.PoSymbols["RB"]:     {},
-} */
-
 // TODO: Finish this.
 func highlight(cfg CSSClassesHighlighting, lex lexer.Lexer) ([]byte, error) {
 	tokens, err := lexer.ConsumeAll(lex)
@@ -186,34 +174,4 @@ func highlight(cfg CSSClassesHighlighting, lex lexer.Lexer) ([]byte, error) {
 	}
 
 	return builder.Bytes(), nil
-}
-
-var strRegex = regexp.MustCompile(`"(.*)"`)
-
-func colorStrings(tokens []lexer.Token, offset int, unq, comment hcolor) int {
-	var mod int
-
-	for i := offset; i < len(tokens); i++ {
-		t := tokens[i]
-
-		switch t.Type {
-		case util.PoSymbols["WS"]:
-			continue
-		case util.PoSymbols["Comment"]:
-			t.Value = comment.Sprint(t.Value)
-		case util.PoSymbols["String"]:
-			// NOTE:
-			// The lexer guarantees that tokens of type "String" are always properly quoted.
-			// Therefore, it's safe to access the first capture group without additional checks.
-			unquoted := strRegex.FindStringSubmatch(t.Value)[1]
-			t.Value = fmt.Sprintf(`"%s"`, unq.Sprint(unquoted))
-		default:
-			return mod
-		}
-
-		mod++
-		tokens[i] = t
-	}
-
-	return mod
 }
