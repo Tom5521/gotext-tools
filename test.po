@@ -1,5 +1,0 @@
-msgctxt "h"
-msgid "hello worls"
-msgid_plural "hi"
-msgstr[0] ""
-msgstr[1] ""
