@@ -153,13 +153,13 @@ func (h Header) Nplurals() (nplurals uint) {
 	if np, ok := parseAdvHeaderField(value)["nplurals"]; ok {
 		n, err := strconv.ParseUint(np, 10, 64)
 		if err != nil {
-			return
+			return nplurals
 		}
 
 		nplurals = uint(n)
 	}
 
-	return
+	return nplurals
 }
 
 func (h Header) ToEntry() Entry {
@@ -256,7 +256,7 @@ func (cfg HeaderConfig) ToHeader() (h Header) {
 	for _, field := range cfg.ExtraFields {
 		h.sSet(field.Key, field.Value)
 	}
-	return
+	return h
 }
 
 func HeaderConfigFromOptions(options ...HeaderOption) HeaderConfig {
@@ -312,9 +312,8 @@ func (e Entries) HasHeader() bool {
 	return e.Index("", "") != -1
 }
 
-func (e Entries) HeaderFromIndex(i int) Header {
+func EntryToHeader(entry Entry) Header {
 	var h Header
-	entry := e[i]
 
 	h.Template = entry.IsFuzzy()
 	header := entry.Str
@@ -333,6 +332,10 @@ func (e Entries) HeaderFromIndex(i int) Header {
 	}
 
 	return h
+}
+
+func (e Entries) HeaderFromIndex(i int) Header {
+	return EntryToHeader(e[i])
 }
 
 func (e Entries) Header() Header {

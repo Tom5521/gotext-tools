@@ -22,6 +22,24 @@ func TestPoCompiler(t *testing.T) {
 			},
 		},
 		{ID: "id3", Str: "Hello3"},
+		{
+			Flags:             []string{"fuzzy"},
+			Comments:          []string{"Plural forms for items"},
+			ExtractedComments: []string{"Shopping cart module"},
+			Previous:          []string{},
+			// Obsolete:          true,
+			ID:      "%d item\nlol\nline2",
+			Context: "shopping_cart",
+			Plural:  "%d items",
+			Plurals: po.PluralEntries{
+				{ID: 0, Str: "%d artículo"},
+				{ID: 1, Str: "%d artículos"},
+			},
+			Locations: po.Locations{
+				{Line: 88, File: "cart.go"},
+				{Line: 92, File: "cart.go"},
+			},
+		},
 	}
 
 	tests := []struct {

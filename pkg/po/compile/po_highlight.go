@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/Tom5521/gotext-tools/v2/internal/color"
 	"github.com/Tom5521/gotext-tools/v2/internal/util"
 
 	"github.com/alecthomas/participle/v2/lexer"
@@ -31,7 +32,7 @@ type hcolor = HighlightColor
 //
 // Multiple classes are separated by spaces in the key field.
 //
-// Ex: CSSClassesHighlighting{"my-class1 my-class2":{Color: color.Red}}
+// Ex: CSSClassesHighlighting{"my-class1 my-class2":{Color: color.Red}}.
 type CSSClassesHighlighting map[string]properties
 
 // NOTE: I'll keep this only for internal documentation purpose.
@@ -96,18 +97,18 @@ type HighlightCSSProperties struct {
 type properties = HighlightCSSProperties
 
 var DefaultHighlight = CSSClassesHighlighting{
-	"translator-comment": {Color: util.Green},
-	"obsolete":           {Color: util.Green},
-	"extracted-comment":  {Color: util.Green, FontWeight: FontWeightBold},
+	"translator-comment": {Color: color.Green},
+	"obsolete":           {Color: color.Green},
+	"extracted-comment":  {Color: color.Green, FontWeight: FontWeightBold},
 	"flag":               {TextDecoration: TextDecorationUnderline},
 	"fuzzy-flag":         {TextDecoration: TextDecorationNone},
-	"text":               {Color: util.Magenta},
-	"msgstr text":        {Color: util.Blue},
-	"fuzzy msgstr text":  {Color: util.Red},
+	"text":               {Color: color.Magenta},
+	"msgstr text":        {Color: color.Blue},
+	"fuzzy msgstr text":  {Color: color.Red},
 	"format-directive":   {FontWeight: FontWeightBold},
 	"invalid-format-directive": {
-		BackgroundColor: util.Red,
-		Color:           util.White,
+		BackgroundColor: color.Red,
+		Color:           color.White,
 		FontWeight:      FontWeightBold,
 	},
 }

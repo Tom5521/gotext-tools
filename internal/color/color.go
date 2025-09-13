@@ -1,4 +1,4 @@
-package util
+package color
 
 import (
 	"fmt"
@@ -38,6 +38,10 @@ const (
 	BgMagenta
 	BgCyan
 	BgWhite
+)
+
+const (
+	ColorFormat = "\x1b[%dm"
 )
 
 func (c Color) Sprint(a ...any) string {

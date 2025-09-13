@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
@@ -18,11 +19,15 @@ type PoCompiler struct {
 	File *po.File
 	// Config contains compilation settings and options
 	Config PoConfig
+}
 
-	nplurals uint      // Number of plural forms from the header
-	header   po.Header // Parsed header information
-
-	writer io.Writer
+// NewPo creates a new PoCompiler instance with the given PO file and options.
+// The options are applied to configure the compiler behavior.
+func NewPo(file *po.File, options ...PoOption) PoCompiler {
+	return PoCompiler{
+		File:   file,
+		Config: DefaultPoConfig(options...),
+	}
 }
 
 // error creates and logs an error message if error reporting is enabled.
@@ -45,15 +50,6 @@ func (c PoCompiler) error(format string, a ...any) error {
 func (c PoCompiler) info(format string, a ...any) {
 	if c.Config.Logger != nil && c.Config.Verbose {
 		c.Config.Logger.Println("INFO:", fmt.Sprintf(format, a...))
-	}
-}
-
-// NewPo creates a new PoCompiler instance with the given PO file and options.
-// The options are applied to configure the compiler behavior.
-func NewPo(file *po.File, options ...PoOption) PoCompiler {
-	return PoCompiler{
-		File:   file,
-		Config: DefaultPoConfig(options...),
 	}
 }
 
@@ -94,61 +90,50 @@ func (c *PoCompiler) ToBytesWithOptions(opts ...PoOption) []byte {
 	return c.ToBytes()
 }
 
-// init initializes the compiler by parsing header information.
-func (c *PoCompiler) init() {
-	if c.Config.ManageHeader {
-		c.header = c.File.Header()
-	}
-	c.nplurals = c.header.Nplurals()
-}
-
 // ToWriter writes compiled PO content to an io.Writer.
 // Handles header writing, duplicate cleaning, and optional syntax highlighting.
-func (c PoCompiler) ToWriter(w io.Writer) error {
-	c.init()
-
-	var reader bytes.Buffer
-	buf := bufio.NewWriter(w)
-	var writer io.Writer = buf
-	if c.Config.Highlight != nil {
-		writer = io.MultiWriter(buf, &reader)
-	}
-
-	if c.Config.ManageHeader {
-		c.info("writing header...")
-		if !c.Config.OmitHeader {
-			if c.Config.HeaderConfig != nil {
-				c.header = c.Config.HeaderConfig.ToHeader()
-			}
-			c.writeHeader(writer)
-		}
-	}
+func (c PoCompiler) ToWriter(outputWriter io.Writer) error {
 	entries := c.File.Entries
 
-	c.info("writing entries...")
+	var highlightBackup *bytes.Buffer
+	buffer := bufio.NewWriter(outputWriter)
 
-	for _, e := range entries {
-		c.writeEntry(writer, e)
+	var writer io.Writer = buffer
+	if c.Config.Highlight != nil {
+		highlightBackup = &bytes.Buffer{}
+		writer = io.MultiWriter(buffer, highlightBackup)
+	}
+
+	if c.Config.OmitHeader {
+		i := c.File.Index("", "")
+		if i != -1 {
+			entries = slices.Delete(entries, i, i+1)
+		}
+	}
+
+	eb := entryBuilder{
+		buffer: &bytes.Buffer{},
+		Config: c.Config,
+	}
+
+	if c.Config.ManageHeader && !c.Config.OmitHeader {
+		err := c.writeHeader(writer, &entries, &eb)
+		if err != nil {
+			return c.error("error writing header: %w", err)
+		}
+	}
+
+	err := c.compileEntries(writer, &eb, entries)
+	if err != nil {
+		return c.error("error compiling entries: %w", err)
 	}
 
 	if c.Config.Highlight != nil {
-		c.info("highlighting info...")
-		h, err := HighlightFromBytes(
-			c.Config.Highlight,
-			c.File.Name,
-			reader.Bytes(),
-		)
-		// Second revision: Why the hell does it send an error
-		// but the algorithm continues regardless, and why
-		// does it still write h to the buffer?
-		if err != nil {
-			c.error("error highlighting output: %w", err)
-		}
-		buf.Reset(w)
-		buf.Write(h)
+		err = c.highlightFile(highlightBackup.Bytes(), buffer, outputWriter)
+		return c.error("error highlighting output: %w", err)
 	}
 
-	err := buf.Flush()
+	err = buffer.Flush()
 	if err != nil {
 		return c.error("error flushing buffer: %w", err)
 	}
@@ -165,7 +150,7 @@ func (c PoCompiler) ToFile(f string) error {
 	}
 
 	c.info("opening file...")
-	file, err := os.OpenFile(f, flags, os.ModePerm)
+	file, err := os.OpenFile(f, flags, 0o600)
 	if err != nil {
 		return c.error("error opening file: %w", err)
 	}

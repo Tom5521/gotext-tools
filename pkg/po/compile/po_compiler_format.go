@@ -1,189 +1,205 @@
 package compile
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
-const (
-	copyrightFormat = `# Copyright (C) %s
-# This file is distributed under the same license as the %s package.`
-	foreignCopyrightFormat = `# This file is put in the public domain.`
-	headerFormat           = `# %s
-%s
-#
-` + headerEntry
-	headerEntry = `msgid ""
-msgstr ""
-`
-	headerFieldFormat = `"%s: %s\n"`
-)
+type entryBuilder struct {
+	po.Entry
+	buffer *bytes.Buffer
+	Config PoConfig
+}
 
-func (c PoCompiler) writeHeader(w io.Writer) {
-	if c.Config.HeaderComments {
-		copyright := fmt.Sprintf(copyrightFormat, c.Config.CopyrightHolder, c.Config.PackageName)
-		if c.Config.ForeignUser {
+func (eb *entryBuilder) print(a ...any) {
+	fmt.Fprint(eb.buffer, a...)
+}
+
+func (eb *entryBuilder) printf(format string, args ...any) {
+	fmt.Fprintf(eb.buffer, format, args...)
+}
+
+func (eb *entryBuilder) println(a ...any) {
+	fmt.Fprintln(eb.buffer, a...)
+}
+
+func (eb *entryBuilder) BuildEntry() []byte {
+	defer eb.buffer.Reset()
+	eb.comment()
+	eb.msgid()
+	eb.msgstr()
+
+	commentFuzzy := eb.IsFuzzy() && eb.Config.CommentFuzzy
+
+	if eb.Obsolete || commentFuzzy {
+		entry := eb.buffer.String()
+		var fixed string
+		prefix := "#"
+		if eb.Obsolete {
+			if eb.Config.UseCustomObsoletePrefix {
+				prefix += string(eb.Config.CustomObsoletePrefixRune)
+			} else {
+				prefix += "~"
+			}
+		}
+		prefix += " "
+
+		for _, line := range strings.Split(entry, "\n") {
+			if strings.HasPrefix(line, "#") || line == "" {
+				fixed += line + "\n"
+				continue
+			}
+
+			fixed += prefix + line + "\n"
+		}
+
+		eb.buffer.Reset()
+		eb.buffer.WriteString(fixed)
+	}
+	return eb.buffer.Bytes()
+}
+
+func (eb *entryBuilder) BuildHeader(header po.Header) []byte {
+	defer eb.buffer.Reset()
+
+	if eb.Config.HeaderComments {
+		copyright := fmt.Sprintf(copyrightFormat, eb.Config.CopyrightHolder, eb.Config.PackageName)
+		if eb.Config.ForeignUser {
 			copyright = foreignCopyrightFormat
 		}
 
-		fmt.Fprintf(w, headerFormat, c.Config.Title, copyright)
+		eb.printf(headerFormat, eb.Config.Title, copyright)
 	} else {
-		fmt.Fprint(w, headerEntry)
+		eb.print(headerEntry)
 	}
 
-	if c.Config.HeaderFields {
-		for i, field := range c.header.Fields {
-			fmt.Fprintf(w, headerFieldFormat, field.Key, field.Value)
+	if eb.Config.HeaderFields {
+		for i, field := range header.Fields {
+			eb.printf(headerFieldFormat, field.Key, field.Value)
 
-			if i != len(c.header.Fields) {
-				fmt.Fprint(w, "\n")
+			if i != len(header.Fields) {
+				eb.print("\n")
 			}
 		}
 	}
 
-	fmt.Fprintln(w)
+	eb.println()
+
+	eb.msgid()
+	eb.msgstr()
+
+	return eb.buffer.Bytes()
 }
 
-func (c PoCompiler) fprintfln(w io.Writer, e po.Entry, format string, args ...any) {
-	var prefix string
-	if !strings.HasPrefix(format, "#") {
-		if c.Config.CommentFuzzy && e.IsFuzzy() {
-			prefix = "# "
-		}
-		if e.Obsolete {
-			prefixRune := '~'
-			if c.Config.UseCustomObsoletePrefix {
-				prefixRune = c.Config.CustomObsoletePrefixRune
+func (eb *entryBuilder) msgid() {
+	if eb.HasContext() {
+		eb.print("msgctxt ")
+		eb.string(eb.Context)
+	}
+	eb.print("msgid ")
+	eb.string(eb.ID)
+
+	if eb.IsPlural() {
+		eb.print("msgid_plural ")
+		eb.string(eb.Plural)
+	}
+}
+
+func (eb *entryBuilder) msgstr() {
+	const format = "msgstr[%d] "
+	if eb.IsPlural() {
+		if len(eb.Plurals) == 0 {
+			for i := 0; i < 2; i++ {
+				eb.printf(format, i)
+				eb.string(eb.ID)
 			}
-			prefix = string([]rune{'#', prefixRune, ' '})
+			return
 		}
-	}
-	str := fmt.Sprintf(prefix+format, args...)
+		for _, pe := range eb.Plurals {
+			eb.printf(format, pe.ID)
+			eb.string(
+				eb.Config.MsgstrPrefix + pe.Str + eb.Config.MsgstrSuffix,
+			)
+		}
 
-	fmt.Fprintln(w, str)
+		return
+	}
+
+	eb.print("msgstr ")
+	eb.string(
+		eb.Config.MsgstrPrefix + eb.Str + eb.Config.MsgstrSuffix,
+	)
 }
 
-func (c PoCompiler) writeComment(w io.Writer, e po.Entry) {
-	write := func(format string, args ...any) {
-		c.fprintfln(w, e, format, args...)
+func (eb *entryBuilder) comment() {
+	eb.translatorComment()
+	eb.extractedComment()
+	eb.referenceComment()
+	eb.flagComment()
+	eb.previousComment()
+}
+
+func (eb *entryBuilder) translatorComment() {
+	for _, comment := range eb.Comments {
+		eb.printf("# %s\n", comment)
+	}
+}
+
+func (eb *entryBuilder) extractedComment() {
+	for _, comment := range eb.ExtractedComments {
+		eb.printf("#. %s\n", comment)
+	}
+}
+
+func (eb *entryBuilder) referenceComment() {
+	if eb.Config.NoLocation || eb.Config.AddLocation == PoLocationModeNever {
+		return
+	}
+	var writeRef func(id int)
+	switch eb.Config.AddLocation {
+	case PoLocationModeFull:
+		writeRef = func(id int) {
+			l := eb.Locations[id]
+			eb.printf("%s:%d\n", l.File, l.Line)
+		}
+	case PoLocationModeFile:
+		writeRef = func(id int) {
+			l := eb.Locations[id]
+			eb.printf("%s\n", l.File)
+		}
 	}
 
-	for _, comment := range e.Comments {
-		write("# %s", comment)
+	for i := range eb.Locations {
+		eb.print("#: ")
+		writeRef(i)
 	}
-	for _, xcomment := range e.ExtractedComments {
-		write("#. %s", xcomment)
+}
+
+func (eb *entryBuilder) flagComment() {
+	for _, f := range eb.Flags {
+		eb.printf("#, %s\n", f)
 	}
-	// Add location comments if not suppressed by the configuration.
-	if !c.Config.NoLocation && c.Config.AddLocation != PoLocationModeNever {
-		switch c.Config.AddLocation {
-		case PoLocationModeFull:
-			for _, location := range e.Locations {
-				write("#: %s:%d", location.File, location.Line)
+}
+
+func (eb *entryBuilder) previousComment() {
+	for _, p := range eb.Previous {
+		eb.printf("#| %s\n", p)
+	}
+}
+
+func (eb *entryBuilder) string(str string) {
+	if eb.Config.WordWrap {
+		lines := strings.Split(str, "\n")
+		for i, line := range lines {
+			if i != len(lines)-1 {
+				line += "\n"
 			}
-		case PoLocationModeFile:
-			for _, location := range e.Locations {
-				write("#: %s", location.File)
-			}
+			eb.printf("\"%s\"\n", escapePOString(line))
 		}
+		return
 	}
-
-	for _, flag := range e.Flags {
-		write("#, %s", flag)
-	}
-
-	for _, previous := range e.Previous {
-		write("#| %s", previous)
-	}
-}
-
-// TODO: Rename this to something like manageWordWrapping
-func (c PoCompiler) formatMultiline(str string) string {
-	var builder strings.Builder
-
-	if c.Config.WordWrap {
-		c.processWordWrap(&builder, str)
-	} else {
-		fmt.Fprintf(&builder, "%q", str)
-	}
-
-	return builder.String()
-}
-
-func (c PoCompiler) processWordWrap(builder *strings.Builder, str string) {
-	lines := strings.Split(str, "\n")
-
-	// TODO: Explain why the hell this thing writes **that** to the builder.
-	if len(lines) > 1 {
-		builder.WriteString("\"\"\n")
-	}
-	for i, line := range lines {
-		if line == "" {
-			continue
-		}
-		isLastLine := i == len(lines)-1
-		if !isLastLine {
-			line += "\n"
-		}
-		fmt.Fprintf(builder, "%q", line)
-		if !isLastLine {
-			builder.WriteByte('\n')
-		}
-	}
-}
-
-func (c PoCompiler) formatMsgstr(i string) string {
-	return c.formatMultiline(c.formatPrefixAndSuffix(i))
-}
-
-func (c PoCompiler) formatMsgid(i string) string {
-	return c.formatMultiline(i)
-}
-
-func (c PoCompiler) writeEntry(w io.Writer, e po.Entry) {
-	// Helper function to append formatted lines to the builder.
-	write := func(format string, args ...any) {
-		c.fprintfln(w, e, format, args...)
-	}
-
-	c.writeComment(w, e)
-
-	id := c.formatMsgid(e.ID)
-	context := c.formatMsgid(e.Context)
-	plural := c.formatMsgid(e.Plural)
-
-	// Add context if available.
-	if e.HasContext() {
-		write("msgctxt %s", context)
-	}
-
-	// Add singular form.
-	write("msgid %s", id)
-
-	// Add plural forms if present.
-	if e.IsPlural() {
-		write("msgid_plural %s", plural)
-
-		if len(e.Plurals) == 0 {
-			for i := uint(0); i < c.nplurals; i++ {
-				write(`msgstr[%d] %s`, i, c.formatMsgstr(e.ID))
-			}
-		} else {
-			for _, pe := range e.Plurals {
-				write("msgstr[%d] %s", pe.ID, c.formatMsgstr(pe.Str))
-			}
-		}
-	} else {
-		// Add empty msgstr for singular strings.
-		write(`msgstr %s`, c.formatMsgstr(e.Str))
-	}
-
-	fmt.Fprintln(w)
-}
-
-func (c PoCompiler) formatPrefixAndSuffix(id string) string {
-	return c.Config.MsgstrPrefix + id + c.Config.MsgstrSuffix
+	eb.printf("\"%s\"\n", escapePOString(str))
 }
