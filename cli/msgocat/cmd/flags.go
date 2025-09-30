@@ -130,7 +130,7 @@ func initCfg(cmd *cobra.Command, args []string) error {
 		}
 		fallthrough
 	case "always":
-		compilerCfg.Highlight = compile.DefaultHighlight
+		compilerCfg.Highlight = compile.TestHighlight
 	}
 
 	return nil

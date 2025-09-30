@@ -112,7 +112,6 @@ func (c PoCompiler) ToWriter(outputWriter io.Writer) error {
 	}
 
 	eb := entryBuilder{
-		buffer: &bytes.Buffer{},
 		Config: c.Config,
 	}
 
@@ -129,8 +128,10 @@ func (c PoCompiler) ToWriter(outputWriter io.Writer) error {
 	}
 
 	if c.Config.Highlight != nil {
-		err = c.highlightFile(highlightBackup.Bytes(), buffer, outputWriter)
-		return c.error("error highlighting output: %w", err)
+		/* 		err = c.highlightFile(highlightBackup.Bytes(), buffer, outputWriter)
+		   		if err != nil {
+		   			return c.error("error highlighting output: %w", err)
+		   		} */
 	}
 
 	err = buffer.Flush()

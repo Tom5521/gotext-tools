@@ -5,38 +5,80 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tom5521/gotext-tools/v2/internal/color"
+	"github.com/Tom5521/gotext-tools/v2/internal/slices"
 	"github.com/Tom5521/gotext-tools/v2/pkg/po"
 )
 
 type entryBuilder struct {
 	po.Entry
-	buffer *bytes.Buffer
 	Config PoConfig
 }
 
-func (eb *entryBuilder) print(a ...any) {
-	fmt.Fprint(eb.buffer, a...)
+func (eb *entryBuilder) applyStyle(str string, names ...string) string {
+	if eb.Config.Highlight == nil {
+		return str
+	}
+
+	name := strings.Join(names, " ")
+	properties, found := eb.Config.Highlight[name]
+	if !found {
+		if len(names) > 1 {
+			return eb.applyStyle(str, slices.Delete(names, 0, 1)...)
+		}
+
+		return str
+	}
+	str = applyColor(properties.BackgroundColor, str)
+	str = applyColor(properties.Color, str)
+	str = applyWeight(properties.FontWeight, str)
+	str = applyStyle(properties.FontStyle, str)
+	str = applyDecoration(properties.TextDecoration, str)
+	return str
 }
 
-func (eb *entryBuilder) printf(format string, args ...any) {
-	fmt.Fprintf(eb.buffer, format, args...)
+func applyDecoration(d HighlightTextDecoration, str string) string {
+	if d != TextDecorationUnderline {
+		return str
+	}
+	return color.Underline.Sprint(str)
 }
 
-func (eb *entryBuilder) println(a ...any) {
-	fmt.Fprintln(eb.buffer, a...)
+func applyStyle(s HighlightFontStyle, str string) string {
+	switch s {
+	case FontStyleItalic, FontStyleOblique:
+		return color.Italic.Sprint(str)
+	}
+
+	return str
+}
+
+func applyWeight(w HighlightFontWeight, str string) string {
+	if w != FontWeightBold {
+		return str
+	}
+	return color.Bold.Sprint(str)
+}
+
+func applyColor(c TermColorer, str string) string {
+	if c == nil {
+		return str
+	}
+	return c.Sprint(str)
 }
 
 func (eb *entryBuilder) BuildEntry() []byte {
-	defer eb.buffer.Reset()
-	eb.comment()
-	eb.msgid()
-	eb.msgstr()
+	var buf bytes.Buffer
+	buf.WriteString(eb.comment())
+	buf.WriteString(eb.msgid())
+	buf.WriteString(eb.msgstr())
 
 	commentFuzzy := eb.IsFuzzy() && eb.Config.CommentFuzzy
 
 	if eb.Obsolete || commentFuzzy {
-		entry := eb.buffer.String()
-		var fixed string
+		entry := buf.String()
+		buf.Reset()
+
 		prefix := "#"
 		if eb.Obsolete {
 			if eb.Config.UseCustomObsoletePrefix {
@@ -49,21 +91,20 @@ func (eb *entryBuilder) BuildEntry() []byte {
 
 		for _, line := range strings.Split(entry, "\n") {
 			if strings.HasPrefix(line, "#") || line == "" {
-				fixed += line + "\n"
+				buf.WriteString(line + "\n")
 				continue
 			}
 
-			fixed += prefix + line + "\n"
+			buf.WriteString(prefix + line + "\n")
 		}
-
-		eb.buffer.Reset()
-		eb.buffer.WriteString(fixed)
 	}
-	return eb.buffer.Bytes()
+
+	buf.WriteByte('\n')
+	return buf.Bytes()
 }
 
 func (eb *entryBuilder) BuildHeader(header po.Header) []byte {
-	defer eb.buffer.Reset()
+	var buf bytes.Buffer
 
 	if eb.Config.HeaderComments {
 		copyright := fmt.Sprintf(copyrightFormat, eb.Config.CopyrightHolder, eb.Config.PackageName)
@@ -71,135 +112,189 @@ func (eb *entryBuilder) BuildHeader(header po.Header) []byte {
 			copyright = foreignCopyrightFormat
 		}
 
-		eb.printf(headerFormat, eb.Config.Title, copyright)
+		fmt.Fprintf(&buf, headerFormat, eb.Config.Title, copyright)
 	} else {
-		eb.print(headerEntry)
+		fmt.Fprint(&buf, headerEntry)
 	}
 
 	if eb.Config.HeaderFields {
 		for i, field := range header.Fields {
-			eb.printf(headerFieldFormat, field.Key, field.Value)
+			fmt.Fprintf(&buf, headerFieldFormat, field.Key, field.Value)
 
 			if i != len(header.Fields) {
-				eb.print("\n")
+				fmt.Fprint(&buf, "\n")
 			}
 		}
 	}
 
-	eb.println()
+	fmt.Fprintln(&buf)
 
-	eb.msgid()
-	eb.msgstr()
+	buf.WriteString(eb.msgid())
+	buf.WriteString(eb.msgstr())
 
-	return eb.buffer.Bytes()
+	return buf.Bytes()
 }
 
-func (eb *entryBuilder) msgid() {
+func (eb *entryBuilder) msgid() string {
+	var b strings.Builder
 	if eb.HasContext() {
-		eb.print("msgctxt ")
-		eb.string(eb.Context)
+		b.WriteString(eb.keyword("msgctxt"))
+		b.WriteString(eb.string(eb.Context, "msgid"))
 	}
-	eb.print("msgid ")
-	eb.string(eb.ID)
+	b.WriteString(eb.keyword("msgid"))
+	b.WriteString(eb.string(eb.ID, "msgid"))
 
 	if eb.IsPlural() {
-		eb.print("msgid_plural ")
-		eb.string(eb.Plural)
+		b.WriteString(eb.keyword("msgid_plural"))
+		b.WriteString(eb.string(eb.Plural, "msgid"))
 	}
+
+	return b.String()
 }
 
-func (eb *entryBuilder) msgstr() {
-	const format = "msgstr[%d] "
+func (eb *entryBuilder) msgstr() string {
+	var msgstr strings.Builder
+	const format = "msgstr[%d]"
 	if eb.IsPlural() {
 		if len(eb.Plurals) == 0 {
+			id := eb.string(eb.ID, "msgstr")
 			for i := 0; i < 2; i++ {
-				eb.printf(format, i)
-				eb.string(eb.ID)
+				fmt.Fprint(&msgstr, eb.keyword(fmt.Sprintf(format, i)))
+				fmt.Fprint(&msgstr, id)
 			}
-			return
+			return msgstr.String()
 		}
 		for _, pe := range eb.Plurals {
-			eb.printf(format, pe.ID)
-			eb.string(
-				eb.Config.MsgstrPrefix + pe.Str + eb.Config.MsgstrSuffix,
+			fmt.Fprint(&msgstr, eb.keyword(fmt.Sprintf(format, pe.ID)))
+			fmt.Fprint(&msgstr,
+				eb.string(
+					eb.Config.MsgstrPrefix+pe.Str+eb.Config.MsgstrSuffix,
+					"msgstr",
+				),
 			)
 		}
 
-		return
+		return msgstr.String()
 	}
 
-	eb.print("msgstr ")
-	eb.string(
-		eb.Config.MsgstrPrefix + eb.Str + eb.Config.MsgstrSuffix,
-	)
+	fmt.Fprint(&msgstr, eb.keyword("msgstr"))
+	fmt.Fprint(&msgstr, eb.string(
+		eb.Config.MsgstrPrefix+eb.Str+eb.Config.MsgstrSuffix,
+		"msgstr",
+	))
+
+	return msgstr.String()
 }
 
-func (eb *entryBuilder) comment() {
-	eb.translatorComment()
-	eb.extractedComment()
-	eb.referenceComment()
-	eb.flagComment()
-	eb.previousComment()
+func (eb *entryBuilder) comment() string {
+	var b strings.Builder
+	b.WriteString(eb.translatorComment())
+	b.WriteString(eb.extractedComment())
+	b.WriteString(eb.referenceComment())
+	b.WriteString(eb.flagComment())
+	b.WriteString(eb.previousComment())
+
+	return eb.applyStyle(b.String(), "comment")
 }
 
-func (eb *entryBuilder) translatorComment() {
+func (eb *entryBuilder) translatorComment() string {
+	var b strings.Builder
 	for _, comment := range eb.Comments {
-		eb.printf("# %s\n", comment)
+		fmt.Fprintf(&b, "# %s\n", comment)
 	}
+	return b.String()
 }
 
-func (eb *entryBuilder) extractedComment() {
+func (eb *entryBuilder) extractedComment() string {
+	var b strings.Builder
 	for _, comment := range eb.ExtractedComments {
-		eb.printf("#. %s\n", comment)
+		fmt.Fprintf(&b, "#. %s\n", comment)
 	}
+	return b.String()
 }
 
-func (eb *entryBuilder) referenceComment() {
+func (eb *entryBuilder) referenceComment() string {
 	if eb.Config.NoLocation || eb.Config.AddLocation == PoLocationModeNever {
-		return
+		return ""
 	}
+	var b strings.Builder
+
 	var writeRef func(id int)
 	switch eb.Config.AddLocation {
 	case PoLocationModeFull:
 		writeRef = func(id int) {
 			l := eb.Locations[id]
-			eb.printf("%s:%d\n", l.File, l.Line)
+			fmt.Fprintf(&b, "%s:%d\n", l.File, l.Line)
 		}
 	case PoLocationModeFile:
 		writeRef = func(id int) {
 			l := eb.Locations[id]
-			eb.printf("%s\n", l.File)
+			fmt.Fprintf(&b, "%s\n", l.File)
 		}
 	}
 
 	for i := range eb.Locations {
-		eb.print("#: ")
+		fmt.Fprint(&b, "#: ")
 		writeRef(i)
 	}
+
+	return b.String()
 }
 
-func (eb *entryBuilder) flagComment() {
+func (eb *entryBuilder) flagComment() string {
+	var comments string
 	for _, f := range eb.Flags {
-		eb.printf("#, %s\n", f)
+		comment := fmt.Sprintf("#, %s\n", f)
+		comments += comment
 	}
+
+	return comments
 }
 
-func (eb *entryBuilder) previousComment() {
+func (eb *entryBuilder) previousComment() string {
+	var b strings.Builder
 	for _, p := range eb.Previous {
-		eb.printf("#| %s\n", p)
+		fmt.Fprintf(&b, "#| %s\n", p)
 	}
+	return b.String()
 }
 
-func (eb *entryBuilder) string(str string) {
+func (eb *entryBuilder) string(str string, styles ...string) string {
+	var builder strings.Builder
 	if eb.Config.WordWrap {
 		lines := strings.Split(str, "\n")
 		for i, line := range lines {
 			if i != len(lines)-1 {
 				line += "\n"
 			}
-			eb.printf("\"%s\"\n", escapePOString(line))
+			fmt.Fprint(&builder, `"`)
+			fmt.Fprint(&builder, eb.text(escapePOString(line),
+				slices.Delete(styles, 0, 1)...))
+			builder.WriteString(eb.applyStyle(`"`, "string") + "\n")
 		}
-		return
+		return eb.applyStyle(
+			builder.String(),
+			append(styles, "string")...,
+		)
 	}
-	eb.printf("\"%s\"\n", escapePOString(str))
+
+	fmt.Fprint(&builder, `"`)
+	fmt.Fprint(&builder, eb.text(escapePOString(str),
+		slices.Delete(styles, 0, 1)...,
+	))
+	builder.WriteString(eb.applyStyle(`"`, "string") + "\n")
+	// fmt.Fprintf(&builder, "\"%s\"\n", escapePOString(str))
+
+	return eb.applyStyle(
+		builder.String(),
+		append(styles, "string")...,
+	)
+}
+
+func (eb *entryBuilder) text(str string, styles ...string) string {
+	return eb.applyStyle(str, append(styles, "text")...)
+}
+
+func (eb *entryBuilder) keyword(kw string) string {
+	return eb.applyStyle(kw, "keyword") + " "
 }

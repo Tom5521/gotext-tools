@@ -10,14 +10,18 @@ type Color uint8
 
 const (
 	Default Color = 39
+	Normal        = Default
+)
 
-	Normal       = Default
-	Bold   Color = iota + 1
-	_            // Skip 2
+const (
+	Reset Color = iota
+	Bold
+	_
 	Italic
 	Underline
 )
 
+// Regular colors.
 const (
 	Black Color = iota + 30
 	Red
@@ -29,6 +33,7 @@ const (
 	White
 )
 
+// Background colors.
 const (
 	BgBlack Color = iota + 40
 	BgRed
@@ -41,6 +46,7 @@ const (
 )
 
 const (
+	ResetFormat = "\x1b[0m"
 	ColorFormat = "\x1b[%dm"
 )
 
@@ -54,7 +60,7 @@ func (c Color) Sprint(a ...any) string {
 		return str
 	}
 
-	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", c, str)
+	return fmt.Sprintf("\x1b[%dm%s"+ResetFormat, c, str)
 }
 
 func (c Color) Sprintf(format string, args ...any) string {

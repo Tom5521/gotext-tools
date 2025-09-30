@@ -7,5 +7,5 @@ import (
 )
 
 func TestColor(t *testing.T) {
-	t.Log(color.BgRed.Sprint(color.Black.Sprint("hi")))
+	t.Log(color.BgWhite.Sprint(color.Bold.Sprint(color.Red.Sprint("hi"))))
 }
